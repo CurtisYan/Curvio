@@ -73,6 +73,9 @@ export function HomeSections({
             kindness: messages.recordKindness,
             open_source: messages.recordOpenWork,
           }}
+          showAuthor
+          byLabel={messages.by}
+          anonymousLabel={messages.anonymous}
         />
         <div className="mt-8 text-center">
           <ButtonLink href={localizePath(locale, "/explore")} variant="ghost">

@@ -24,7 +24,8 @@
     "statDonations": "Donations",
     "statKindnessActs": "Kindness Acts",
     "statOpenWork": "Open Work",
-    "statMembers": "Members"
+    "statMembers": "Members",
+    "by": "by"
   },
   "home": {
     "heroTitle": "Record kindness. Make goodwill visible.",
@@ -113,5 +114,25 @@
     "allowFollows": "Allow follows",
     "hideAmountsDefault": "Hide donation amounts by default",
     "showAnnualSummary": "Show annual summary"
+    ,"amount": "Amount",
+    "currency": "Currency",
+    "amountPlaceholder": "0.00",
+    "amountVisible": "Fill amount",
+    "amountHidden": "Do not show amount",
+    "profileSettingsTitle": "Profile",
+    "displayName": "Display name",
+    "avatar": "Avatar",
+    "bio": "Bio",
+    "principle": "Personal principle",
+    "website": "Website",
+    "profileLayoutTitle": "Profile layout",
+    "profileLayoutNote": "Choose which sections appear on your public profile and keep them in a quiet order.",
+    "sectionDonations": "Donation records",
+    "sectionProjects": "Open-source projects",
+    "sectionKindness": "Kindness records",
+    "sectionAnnual": "Annual summary",
+    "moveUp": "Move up",
+    "visible": "Visible",
+    "privacyTitle": "Privacy"
   }
 }

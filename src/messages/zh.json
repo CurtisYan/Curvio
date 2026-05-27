@@ -24,7 +24,8 @@
     "statDonations": "捐赠记录",
     "statKindnessActs": "善事记录",
     "statOpenWork": "开源项目",
-    "statMembers": "成员"
+    "statMembers": "成员",
+    "by": "来自"
   },
   "home": {
     "heroTitle": "记录善意，让善意被看见。",
@@ -112,6 +113,26 @@
     "publicProfile": "公开个人主页",
     "allowFollows": "允许他人关注",
     "hideAmountsDefault": "默认隐藏捐赠金额",
-    "showAnnualSummary": "展示年度总结"
+    "showAnnualSummary": "展示年度总结",
+    "amount": "金额",
+    "currency": "币种",
+    "amountPlaceholder": "0.00",
+    "amountVisible": "填写金额",
+    "amountHidden": "不显示金额",
+    "profileSettingsTitle": "个人资料",
+    "displayName": "展示名",
+    "avatar": "头像",
+    "bio": "简介",
+    "principle": "个人理念",
+    "website": "个人网站",
+    "profileLayoutTitle": "主页展示排序",
+    "profileLayoutNote": "选择哪些栏目出现在公开主页，并保持克制、安静的展示顺序。",
+    "sectionDonations": "捐赠记录",
+    "sectionProjects": "开源项目",
+    "sectionKindness": "善事记录",
+    "sectionAnnual": "年度总结",
+    "moveUp": "上移",
+    "visible": "显示",
+    "privacyTitle": "隐私设置"
   }
 }

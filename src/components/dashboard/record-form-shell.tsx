@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
+import { AmountVisibilityField } from "./amount-visibility-field";
 
 export function RecordFormShell({
   title,
@@ -23,6 +24,11 @@ export function RecordFormShell({
     hideAmount: string;
     anonymous: string;
     saveDraft: string;
+    amount: string;
+    currency: string;
+    amountPlaceholder: string;
+    amountVisible: string;
+    amountHidden: string;
   };
 }) {
   return (
@@ -50,14 +56,11 @@ export function RecordFormShell({
         {labels.fieldDescription}
         <Textarea placeholder={labels.descriptionPlaceholder} />
       </label>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <AmountVisibilityField labels={labels} />
+      <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
           <input type="checkbox" />
           {labels.visibilityPublic}
-        </label>
-        <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
-          <input type="checkbox" defaultChecked />
-          {labels.hideAmount}
         </label>
         <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
           <input type="checkbox" />

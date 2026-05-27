@@ -10,11 +10,17 @@ export function Timeline({
   locale,
   hiddenAmountLabel,
   typeLabels,
+  showAuthor = false,
+  byLabel = "by",
+  anonymousLabel = "Anonymous",
 }: {
   records: GoodwillRecord[];
   locale: Locale;
   hiddenAmountLabel: string;
   typeLabels?: Partial<Record<GoodwillRecord["type"], string>>;
+  showAuthor?: boolean;
+  byLabel?: string;
+  anonymousLabel?: string;
 }) {
   return (
     <div className="relative ml-3 border-l border-border-subtle pl-8">
@@ -31,7 +37,15 @@ export function Timeline({
             </time>
             <Card className="hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
               <div className="mb-4 flex items-start justify-between gap-4">
-                <h3 className="text-xl font-medium">{record.title}</h3>
+                <div>
+                  <h3 className="text-xl font-medium">{record.title}</h3>
+                  {showAuthor ? (
+                    <p className="mt-2 text-xs text-muted">
+                      {byLabel}{" "}
+                      {record.isAnonymous ? anonymousLabel : record.authorDisplayName}
+                    </p>
+                  ) : null}
+                </div>
                 <Badge>
                   <RecordIcon className="h-3.5 w-3.5" type={record.type} />
                   {typeLabels?.[record.type] ?? recordLabel(record.type)}
