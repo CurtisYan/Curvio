@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-geist-sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", "SFMono-Regular", Consolas, monospace;
+  --background: #f9f9f7;
+  --foreground: #1a1c1b;
+  --surface: #f9f9f7;
+  --surface-offwhite: #fdfdfb;
+  --surface-container-low: #f4f4f2;
+  --surface-container: #eeeeec;
+  --surface-container-high: #e8e8e6;
+  --surface-container-highest: #e2e3e1;
+  --border-subtle: #e2e2df;
+  --outline: #727976;
+  --primary: #47645d;
+  --primary-strong: #2f4c45;
+  --secondary: #5d5f5a;
+  --tertiary: #7a554e;
+  --muted: #636363;
+  --on-surface-variant: #414846;
+  --error: #ba1a1a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-offwhite: var(--surface-offwhite);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-border-subtle: var(--border-subtle);
+  --color-outline: var(--outline);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-secondary: var(--secondary);
+  --color-tertiary: var(--tertiary);
+  --color-muted: var(--muted);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-error: var(--error);
   --font-sans: var(--font-geist-sans);
+  --font-body: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --spacing-container: 70rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), var(--font-geist-sans), system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #c9e9e0;
+  color: #02201a;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  outline-color: var(--primary);
+}
+
+.container-page {
+  width: min(100% - 32px, 1120px);
+  margin-inline: auto;
+}
+
+.container-narrow {
+  width: min(100% - 32px, 800px);
+  margin-inline: auto;
 }
