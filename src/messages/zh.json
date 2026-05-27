@@ -131,8 +131,8 @@
     "sectionProjects": "开源项目",
     "sectionKindness": "善事记录",
     "sectionAnnual": "年度总结",
-    "moveUp": "上移",
     "visible": "显示",
+    "dragHandle": "拖动排序",
     "privacyTitle": "隐私设置"
   }
 }

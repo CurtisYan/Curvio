@@ -1,6 +1,5 @@
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ProfileLayoutSorter } from "@/components/dashboard/profile-layout-sorter";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -21,10 +20,10 @@ export default async function SettingsPage({
     messages.dashboard.showAnnualSummary,
   ];
   const sections = [
-    messages.dashboard.sectionDonations,
-    messages.dashboard.sectionProjects,
-    messages.dashboard.sectionKindness,
-    messages.dashboard.sectionAnnual,
+    { id: "donations", label: messages.dashboard.sectionDonations },
+    { id: "projects", label: messages.dashboard.sectionProjects },
+    { id: "kindness", label: messages.dashboard.sectionKindness },
+    { id: "annual", label: messages.dashboard.sectionAnnual },
   ];
 
   return (
@@ -82,28 +81,13 @@ export default async function SettingsPage({
               {messages.dashboard.profileLayoutNote}
             </p>
           </div>
-          <div className="grid gap-3">
-            {sections.map((section, index) => (
-              <div
-                className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface-container-low p-4 sm:flex-row sm:items-center sm:justify-between"
-                key={section}
-              >
-                <div className="flex items-center gap-3">
-                  <Badge>{index + 1}</Badge>
-                  <span className="text-sm font-medium">{section}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-sm text-muted">
-                    <input type="checkbox" defaultChecked />
-                    {messages.dashboard.visible}
-                  </label>
-                  <Button disabled type="button" variant="secondary">
-                    {messages.dashboard.moveUp}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProfileLayoutSorter
+            labels={{
+              visible: messages.dashboard.visible,
+              dragHandle: messages.dashboard.dragHandle,
+            }}
+            sections={sections}
+          />
         </section>
 
         <section className="space-y-4 border-t border-border-subtle pt-6">

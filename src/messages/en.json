@@ -131,8 +131,8 @@
     "sectionProjects": "Open-source projects",
     "sectionKindness": "Kindness records",
     "sectionAnnual": "Annual summary",
-    "moveUp": "Move up",
     "visible": "Visible",
+    "dragHandle": "Drag to reorder",
     "privacyTitle": "Privacy"
   }
 }
