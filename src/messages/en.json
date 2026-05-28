@@ -88,7 +88,13 @@
     "submitRegister": "Create Account",
     "note": "Use your Curvio account to manage records and profile settings.",
     "createAccount": "Create an account",
-    "alreadyHaveAccount": "Already have an account"
+    "alreadyHaveAccount": "Already have an account",
+    "verificationTitle": "Verify your email",
+    "verificationNote": "Enter the 6-digit code we sent to your email. After verification, you will be signed in automatically.",
+    "verificationCode": "Verification code",
+    "verifyEmail": "Verify and continue",
+    "resendCode": "Resend code",
+    "codeSent": "A new verification code has been sent."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -125,6 +131,8 @@
     "profileSettingsTitle": "Profile",
     "displayName": "Display name",
     "avatar": "Avatar",
+    "avatarUpload": "Upload avatar",
+    "avatarHelp": "PNG, JPG, or WebP. Stored in your R2 avatar object and replaced when you upload a new file.",
     "bio": "Bio",
     "principle": "Personal principle",
     "website": "Website",
@@ -137,5 +145,8 @@
     "visible": "Visible",
     "dragHandle": "Drag to reorder",
     "privacyTitle": "Privacy"
+    ,"saveSettings": "Save settings",
+    "settingsSaved": "Settings saved.",
+    "settingsError": "Settings could not be saved."
   }
 }

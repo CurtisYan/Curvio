@@ -4,10 +4,11 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 
 ## Current Phase
 
-- This repository currently implements the phase-one front-end shell.
-- Data is mock-only in `src/lib/mock-data.ts`.
-- Supabase client helpers are scaffolded in `src/utils/supabase`, but Auth, database tables, RLS policies, storage buckets, and real account flows are not implemented yet.
-- Login and register pages are visual placeholders for the next phase.
+- This repository implements the phase-one front-end shell plus the first real Supabase account flow.
+- Public browsing data is still mostly mock-driven in `src/lib/mock-data.ts`.
+- Supabase Auth uses email OTP verification: register with `signUp()`, enter the mailed token, then complete with `verifyOtp({ type: "signup" })`.
+- Dashboard settings read/write the authenticated user's profile and profile section order.
+- Avatar uploads are designed for Cloudflare R2 using a stable object key: `avatars/{userId}/avatar`.
 
 ## Product Boundaries
 
@@ -25,6 +26,7 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 - Reusable UI should stay in `src/components`.
 - Mock types live in `src/lib/types.ts`; keep these close to the future Supabase schema.
 - Supabase env vars are documented in `.env.example`; local values belong in `.env.local`.
+- R2 server-side env vars are also documented in `.env.example`; never expose R2 secret keys to the browser.
 - Next.js 16 session refresh should use `src/proxy.ts`, not the deprecated `middleware.ts` route entry.
 - `next/font` is intentionally not used so production builds do not depend on fetching Google Fonts.
 

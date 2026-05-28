@@ -15,7 +15,7 @@ function readLocale(formData: FormData): Locale {
   return isLocale(locale) ? locale : "en";
 }
 
-function fail(locale: Locale, path: "login" | "register", message: string): never {
+function fail(locale: Locale, path: "login" | "register" | "register/verify", message: string): never {
   redirect(`/${locale}/${path}?error=${encodeURIComponent(message)}`);
 }
 
@@ -39,6 +39,10 @@ export async function signInAction(formData: FormData) {
   });
 
   if (error) {
+    if (error.message.toLowerCase().includes("email not confirmed")) {
+      redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}`);
+    }
+
     fail(locale, "login", error.message);
   }
 
@@ -84,6 +88,7 @@ export async function signUpAction(formData: FormData) {
     password,
     options: {
       data: {
+        lang: locale,
         username,
         display_name: username,
         preferred_language: locale,
@@ -95,8 +100,59 @@ export async function signUpAction(formData: FormData) {
     fail(locale, "register", error.message);
   }
 
+  redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}`);
+}
+
+export async function verifyOtpAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const email = readString(formData, "email").toLowerCase();
+  const token = readString(formData, "token").replace(/\s/g, "");
+
+  if (!email || !email.includes("@")) {
+    fail(locale, "register/verify", "Please enter the email address you used to register.");
+  }
+
+  if (!/^[0-9]{6}$/.test(token)) {
+    fail(locale, "register/verify", "Please enter the 6-digit verification code.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "signup",
+  });
+
+  if (error) {
+    fail(locale, "register/verify", error.message);
+  }
+
   revalidatePath("/", "layout");
   redirect(`/${locale}/dashboard`);
+}
+
+export async function resendOtpAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const email = readString(formData, "email").toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    fail(locale, "register/verify", "Please enter the email address you used to register.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/dashboard`,
+    },
+  });
+
+  if (error) {
+    fail(locale, "register/verify", error.message);
+  }
+
+  redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}&sent=1`);
 }
 
 export async function signOutAction(formData: FormData) {

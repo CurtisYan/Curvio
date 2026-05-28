@@ -88,7 +88,13 @@
     "submitRegister": "创建账号",
     "note": "使用你的 Curvio 账号管理记录和个人主页设置。",
     "createAccount": "创建账号",
-    "alreadyHaveAccount": "已有账号"
+    "alreadyHaveAccount": "已有账号",
+    "verificationTitle": "验证你的邮箱",
+    "verificationNote": "输入邮件里的 6 位验证码。验证成功后会自动登录。",
+    "verificationCode": "验证码",
+    "verifyEmail": "验证并继续",
+    "resendCode": "重新发送验证码",
+    "codeSent": "新的验证码已发送。"
   },
   "dashboard": {
     "title": "控制台",
@@ -125,6 +131,8 @@
     "profileSettingsTitle": "个人资料",
     "displayName": "展示名",
     "avatar": "头像",
+    "avatarUpload": "上传头像",
+    "avatarHelp": "支持 PNG、JPG 或 WebP。头像会写入你的 R2 固定头像对象，重新上传会替换旧图。",
     "bio": "简介",
     "principle": "个人理念",
     "website": "个人网站",
@@ -136,6 +144,9 @@
     "sectionAnnual": "年度总结",
     "visible": "显示",
     "dragHandle": "拖动排序",
-    "privacyTitle": "隐私设置"
+    "privacyTitle": "隐私设置",
+    "saveSettings": "保存设置",
+    "settingsSaved": "设置已保存。",
+    "settingsError": "设置保存失败。"
   }
 }

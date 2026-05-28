@@ -18,13 +18,14 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type ProfileSection = {
   id: string;
   label: string;
+  visible?: boolean;
 };
 
 export function ProfileLayoutSorter({
@@ -77,6 +78,7 @@ export function ProfileLayoutSorter({
               key={section.id}
               labels={labels}
               section={section}
+              setItems={setItems}
             />
           ))}
         </div>
@@ -89,6 +91,7 @@ function SortableProfileSection({
   section,
   index,
   labels,
+  setItems,
 }: {
   section: ProfileSection;
   index: number;
@@ -96,6 +99,7 @@ function SortableProfileSection({
     visible: string;
     dragHandle: string;
   };
+  setItems: Dispatch<SetStateAction<ProfileSection[]>>;
 }) {
   const {
     attributes,
@@ -120,6 +124,7 @@ function SortableProfileSection({
       ref={setNodeRef}
       style={style}
     >
+      <input name="section_order" type="hidden" value={section.id} />
       <div className="flex items-center gap-3">
         <button
           aria-label={labels.dragHandle}
@@ -134,7 +139,19 @@ function SortableProfileSection({
         <span className="text-sm font-medium">{section.label}</span>
       </div>
       <label className="flex items-center gap-2 text-sm text-muted">
-        <input type="checkbox" defaultChecked />
+        <input
+          checked={section.visible ?? true}
+          name="section_visible"
+          onChange={(event) => {
+            setItems((currentItems) =>
+              currentItems.map((item) =>
+                item.id === section.id ? { ...item, visible: event.target.checked } : item,
+              ),
+            );
+          }}
+          type="checkbox"
+          value={section.id}
+        />
         {labels.visible}
       </label>
     </div>

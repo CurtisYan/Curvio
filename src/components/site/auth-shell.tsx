@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 
+type AuthLabels = {
+  email: string;
+  password: string;
+  username: string;
+  createAccount: string;
+  alreadyHaveAccount: string;
+};
+
 export function AuthShell({
   locale,
   title,
@@ -19,13 +27,7 @@ export function AuthShell({
   title: string;
   submit: string;
   note: string;
-  labels: {
-    email: string;
-    password: string;
-    username: string;
-    createAccount: string;
-    alreadyHaveAccount: string;
-  };
+  labels: AuthLabels;
   mode: "login" | "register";
   action: (formData: FormData) => void | Promise<void>;
   error?: string;
@@ -60,7 +62,7 @@ export function AuthShell({
               autoComplete={mode === "register" ? "new-password" : "current-password"}
               minLength={6}
               name="password"
-              placeholder="••••••••"
+              placeholder="password"
               required
               type="password"
             />
