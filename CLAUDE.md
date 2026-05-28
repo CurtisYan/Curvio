@@ -6,7 +6,7 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 
 - This repository currently implements the phase-one front-end shell.
 - Data is mock-only in `src/lib/mock-data.ts`.
-- There is no Supabase Auth, database, RLS, storage, or real account system yet.
+- Supabase client helpers are scaffolded in `src/utils/supabase`, but Auth, database tables, RLS policies, storage buckets, and real account flows are not implemented yet.
 - Login and register pages are visual placeholders for the next phase.
 
 ## Product Boundaries
@@ -24,6 +24,8 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 - User-facing strings should live in `src/messages/en.json` and `src/messages/zh.json`.
 - Reusable UI should stay in `src/components`.
 - Mock types live in `src/lib/types.ts`; keep these close to the future Supabase schema.
+- Supabase env vars are documented in `.env.example`; local values belong in `.env.local`.
+- Next.js 16 session refresh should use `src/proxy.ts`, not the deprecated `middleware.ts` route entry.
 - `next/font` is intentionally not used so production builds do not depend on fetching Google Fonts.
 
 ## Verification
