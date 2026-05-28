@@ -1,17 +1,23 @@
 import { AuthShell } from "@/components/site/auth-shell";
+import { signUpAction } from "@/app/auth-actions";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
 export default async function RegisterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { locale: rawLocale } = await params;
+  const { error } = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
 
   return (
     <AuthShell
+      action={signUpAction}
+      error={error}
       labels={messages.auth}
       locale={locale}
       mode="register"

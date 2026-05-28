@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { signOutAction } from "@/app/auth-actions";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -8,15 +9,19 @@ type NavMessages = {
   donate: string;
   about: string;
   signIn: string;
+  signOut: string;
+  dashboard: string;
   language: string;
 };
 
 export function SiteHeader({
   locale,
   messages,
+  userEmail,
 }: {
   locale: Locale;
   messages: NavMessages;
+  userEmail?: string | null;
 }) {
   const nav = [
     { href: "/explore", label: messages.explore },
@@ -48,12 +53,32 @@ export function SiteHeader({
         </div>
         <div className="flex items-center gap-4">
           <LocaleSwitcher label={messages.language} locale={locale} />
-          <Link
-            className="hidden text-sm font-medium text-primary transition-opacity hover:opacity-75 sm:inline-flex"
-            href={localizePath(locale, "/login")}
-          >
-            {messages.signIn}
-          </Link>
+          {userEmail ? (
+            <>
+              <Link
+                className="hidden text-sm font-medium text-primary transition-opacity hover:opacity-75 sm:inline-flex"
+                href={localizePath(locale, "/dashboard")}
+              >
+                {messages.dashboard}
+              </Link>
+              <form action={signOutAction} className="hidden sm:block">
+                <input name="locale" type="hidden" value={locale} />
+                <button
+                  className="text-sm text-muted transition-colors hover:text-primary"
+                  type="submit"
+                >
+                  {messages.signOut}
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link
+              className="hidden text-sm font-medium text-primary transition-opacity hover:opacity-75 sm:inline-flex"
+              href={localizePath(locale, "/login")}
+            >
+              {messages.signIn}
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -4,6 +4,7 @@
     "donate": "公益入口",
     "about": "关于",
     "signIn": "登录",
+    "signOut": "退出",
     "dashboard": "控制台",
     "language": "English / 中文"
   },
@@ -85,7 +86,9 @@
     "username": "用户名",
     "submitLogin": "登录",
     "submitRegister": "创建账号",
-    "note": "认证功能会在 Supabase 阶段接入。当前表单是前端应用壳。"
+    "note": "使用你的 Curvio 账号管理记录和个人主页设置。",
+    "createAccount": "创建账号",
+    "alreadyHaveAccount": "已有账号"
   },
   "dashboard": {
     "title": "控制台",

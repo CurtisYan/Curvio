@@ -12,13 +12,23 @@ export function AuthShell({
   note,
   labels,
   mode,
+  action,
+  error,
 }: {
   locale: Locale;
   title: string;
   submit: string;
   note: string;
-  labels: { email: string; password: string; username: string };
+  labels: {
+    email: string;
+    password: string;
+    username: string;
+    createAccount: string;
+    alreadyHaveAccount: string;
+  };
   mode: "login" | "register";
+  action: (formData: FormData) => void | Promise<void>;
+  error?: string;
 }) {
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
@@ -27,33 +37,46 @@ export function AuthShell({
           <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-3 text-sm leading-6 text-muted">{note}</p>
         </div>
-        <form className="space-y-4">
+        {error ? (
+          <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-sm text-error">
+            {error}
+          </div>
+        ) : null}
+        <form action={action} className="space-y-4">
+          <input name="locale" type="hidden" value={locale} />
           {mode === "register" ? (
             <label className="space-y-2 text-sm font-medium">
               {labels.username}
-              <Input placeholder="elara_writes" />
+              <Input autoComplete="username" name="username" placeholder="elara_writes" required />
             </label>
           ) : null}
           <label className="space-y-2 text-sm font-medium">
             {labels.email}
-            <Input placeholder="you@example.com" type="email" />
+            <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
           </label>
           <label className="space-y-2 text-sm font-medium">
             {labels.password}
-            <Input placeholder="••••••••" type="password" />
+            <Input
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
+              minLength={6}
+              name="password"
+              placeholder="••••••••"
+              required
+              type="password"
+            />
           </label>
-          <Button className="w-full" disabled type="button">
+          <Button className="w-full" type="submit">
             {submit}
           </Button>
         </form>
         <div className="border-t border-border-subtle pt-4 text-center text-sm text-muted">
           {mode === "login" ? (
             <Link className="text-primary hover:text-primary-strong" href={localizePath(locale, "/register")}>
-              Create an account
+              {labels.createAccount}
             </Link>
           ) : (
             <Link className="text-primary hover:text-primary-strong" href={localizePath(locale, "/login")}>
-              Already have an account
+              {labels.alreadyHaveAccount}
             </Link>
           )}
         </div>

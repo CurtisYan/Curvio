@@ -4,6 +4,7 @@
     "donate": "Donate",
     "about": "About",
     "signIn": "Sign In",
+    "signOut": "Sign Out",
     "dashboard": "Dashboard",
     "language": "English / 中文"
   },
@@ -85,7 +86,9 @@
     "username": "Username",
     "submitLogin": "Sign In",
     "submitRegister": "Create Account",
-    "note": "Authentication is reserved for the Supabase phase. This form is a front-end shell."
+    "note": "Use your Curvio account to manage records and profile settings.",
+    "createAccount": "Create an account",
+    "alreadyHaveAccount": "Already have an account"
   },
   "dashboard": {
     "title": "Dashboard",
