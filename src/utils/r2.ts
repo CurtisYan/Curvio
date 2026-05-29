@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { recordTypeToSegment } from "@/lib/record-types";
 import type { RecordType } from "@/lib/types";
 
@@ -12,7 +12,7 @@ const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
 const allowedAvatarTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 const maxAvatarSize = 5 * 1024 * 1024;
 const allowedRecordImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
-const maxRecordImageSize = 10 * 1024 * 1024;
+const maxRecordImageSize = 4 * 1024 * 1024;
 
 let client: S3Client | null = null;
 
@@ -94,7 +94,7 @@ export async function uploadRecordImageToR2({
   }
 
   if (file.size > maxRecordImageSize) {
-    throw new Error("Record image must be 10 MB or smaller.");
+    throw new Error("Record image must be 4 MB or smaller.");
   }
 
   const extension = getExtensionFromMimeType(file.type);
@@ -117,4 +117,13 @@ export async function uploadRecordImageToR2({
     key,
     url: `${normalizePublicBaseUrl(publicBaseUrl!)}/${key}?v=${Date.now()}`,
   };
+}
+
+export async function deleteRecordImageFromR2(key: string) {
+  await getClient().send(
+    new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    }),
+  );
 }

@@ -49,7 +49,7 @@ export default async function RecordDetailPage({
 
   const { data: images } = await supabase
     .from("record_images")
-    .select("id, r2_url, sort_order")
+    .select("id, r2_url, sort_order, is_cover")
     .eq("record_id", record.id)
     .order("sort_order", { ascending: true });
 
@@ -123,20 +123,35 @@ export default async function RecordDetailPage({
 
       {images && images.length > 0 ? (
         <section className="mt-10">
+          {(() => {
+            const cover = images.find((image) => image.is_cover);
+            return cover ? (
+            <div className="mb-6 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low">
+              <img
+                alt={record.title}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                src={cover.r2_url}
+              />
+            </div>
+            ) : null;
+          })()}
           <div className="grid gap-4 md:grid-cols-2">
-            {images.map((image) => (
-              <div
-                className="overflow-hidden rounded-xl border border-border-subtle bg-surface-container-low"
-                key={image.id}
-              >
-                <img
-                  alt={record.title}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                  src={image.r2_url}
-                />
-              </div>
-            ))}
+            {images
+              .filter((image) => !image.is_cover)
+              .map((image) => (
+                <div
+                  className="overflow-hidden rounded-xl border border-border-subtle bg-surface-container-low"
+                  key={image.id}
+                >
+                  <img
+                    alt={record.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    src={image.r2_url}
+                  />
+                </div>
+              ))}
           </div>
         </section>
       ) : null}

@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 
 export function AmountVisibilityField({
   labels,
+  defaultHidden = false,
+  defaultAmount = "",
+  defaultCurrency = "USD",
 }: {
   labels: {
     amount: string;
@@ -14,9 +17,12 @@ export function AmountVisibilityField({
     amountVisible: string;
     amountHidden: string;
   };
+  defaultHidden?: boolean;
+  defaultAmount?: string;
+  defaultCurrency?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHidden, setIsHidden] = useState(false);
+  const [isHidden, setIsHidden] = useState(defaultHidden);
 
   return (
     <div className="rounded-xl border border-border-subtle bg-surface-offwhite p-4">
@@ -69,8 +75,17 @@ export function AmountVisibilityField({
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
-          <Input inputMode="decimal" name="amount" placeholder={labels.amountPlaceholder} />
-          <Input defaultValue="USD" aria-label={labels.currency} name="currency" />
+          <Input
+            defaultValue={defaultAmount}
+            inputMode="decimal"
+            name="amount"
+            placeholder={labels.amountPlaceholder}
+          />
+          <Input
+            aria-label={labels.currency}
+            defaultValue={defaultCurrency}
+            name="currency"
+          />
         </div>
       )}
     </div>

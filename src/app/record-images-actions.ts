@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
 import type { RecordType } from "@/lib/types";
-import { uploadRecordImageToR2 } from "@/utils/r2";
+import { deleteRecordImageFromR2, uploadRecordImageToR2 } from "@/utils/r2";
 import { createClient } from "@/utils/supabase/server";
 
 const MAX_RECORD_IMAGES = 20;
@@ -24,6 +25,45 @@ function readLocale(formData: FormData): Locale {
   return isLocale(locale) ? locale : "en";
 }
 
+function redirectToEdit(locale: Locale, recordId: string, status: "saved" | "error", message?: string): never {
+  const params = new URLSearchParams({ status });
+  if (message) {
+    params.set("message", message);
+  }
+  redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
+}
+
+function imageActionMessage(locale: Locale, key: string) {
+  const messages = {
+    en: {
+      auth: "Please sign in before uploading images.",
+      record: "Record not found.",
+      type: "Record type mismatch.",
+      limit: `Each record can include up to ${MAX_RECORD_IMAGES} images.`,
+      missing: "Please choose at least one image.",
+      upload: "Image upload failed.",
+      save: "Image metadata could not be saved.",
+      delete: "Image could not be deleted.",
+      cover: "Cover image updated.",
+      order: "Image order updated.",
+    },
+    zh: {
+      auth: "请先登录再上传图片。",
+      record: "记录不存在。",
+      type: "记录类型不匹配。",
+      limit: `每篇记录最多上传 ${MAX_RECORD_IMAGES} 张图片。`,
+      missing: "请先选择图片。",
+      upload: "图片上传失败。",
+      save: "图片元数据保存失败。",
+      delete: "图片删除失败。",
+      cover: "已设置主图。",
+      order: "图片顺序已更新。",
+    },
+  };
+
+  return messages[locale]?.[key as keyof (typeof messages)["en"]] ?? messages.en[key as keyof (typeof messages)["en"]];
+}
+
 function readFiles(formData: FormData, key: string) {
   return formData
     .getAll(key)
@@ -37,15 +77,15 @@ export async function uploadRecordImagesAction(formData: FormData) {
   const files = readFiles(formData, "images");
 
   if (!recordId) {
-    return { ok: false, message: "Record id is required." };
+    redirect(`/${locale}/dashboard/records`);
   }
 
   if (!isRecordType(recordTypeValue)) {
-    return { ok: false, message: "Record type is invalid." };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "type"));
   }
 
   if (files.length === 0) {
-    return { ok: false, message: "Please choose at least one image." };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "missing"));
   }
 
   const supabase = await createClient();
@@ -55,7 +95,7 @@ export async function uploadRecordImagesAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { ok: false, message: "Please sign in before uploading images." };
+    redirect(`/${locale}/login`);
   }
 
   const { data: record, error: recordError } = await supabase
@@ -65,11 +105,11 @@ export async function uploadRecordImagesAction(formData: FormData) {
     .maybeSingle();
 
   if (recordError || !record || record.user_id !== user.id) {
-    return { ok: false, message: "Record not found." };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
   }
 
   if (record.type !== recordTypeValue) {
-    return { ok: false, message: "Record type mismatch." };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "type"));
   }
 
   const { count, error: countError } = await supabase
@@ -78,13 +118,22 @@ export async function uploadRecordImagesAction(formData: FormData) {
     .eq("record_id", recordId);
 
   if (countError) {
-    return { ok: false, message: "Failed to check existing images." };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
   }
 
   const currentCount = count ?? 0;
   if (currentCount + files.length > MAX_RECORD_IMAGES) {
-    return { ok: false, message: `Each record can include up to ${MAX_RECORD_IMAGES} images.` };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "limit"));
   }
+
+  const { data: existingCover } = await supabase
+    .from("record_images")
+    .select("id")
+    .eq("record_id", recordId)
+    .eq("is_cover", true)
+    .maybeSingle();
+
+  const shouldSetCover = !existingCover;
 
   const uploads = await Promise.all(
     files.map((file) =>
@@ -105,16 +154,198 @@ export async function uploadRecordImagesAction(formData: FormData) {
     mime_type: files[index].type,
     file_size: files[index].size,
     sort_order: currentCount + index + 1,
+    is_cover: shouldSetCover && index === 0,
   }));
 
   const { error: insertError } = await supabase.from("record_images").insert(rows);
 
   if (insertError) {
-    return { ok: false, message: insertError.message };
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
   }
 
   revalidatePath(`/${locale}/dashboard/records`);
   revalidatePath(`/${locale}/explore`);
 
-  return { ok: true, images: rows };
+  redirectToEdit(locale, recordId, "saved");
+}
+
+export async function deleteRecordImageAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const imageId = readString(formData, "image_id");
+
+  if (!recordId || !imageId) {
+    redirect(`/${locale}/dashboard/records`);
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: image, error: imageError } = await supabase
+    .from("record_images")
+    .select("id, r2_key, is_cover")
+    .eq("id", imageId)
+    .eq("record_id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (imageError || !image) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "delete"));
+  }
+
+  try {
+    await deleteRecordImageFromR2(image.r2_key);
+  } catch {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "delete"));
+  }
+
+  const { error: deleteError } = await supabase
+    .from("record_images")
+    .delete()
+    .eq("id", imageId)
+    .eq("user_id", user.id);
+
+  if (deleteError) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "delete"));
+  }
+
+  if (image.is_cover) {
+    const { data: nextImage } = await supabase
+      .from("record_images")
+      .select("id")
+      .eq("record_id", recordId)
+      .eq("user_id", user.id)
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (nextImage?.id) {
+      await supabase
+        .from("record_images")
+        .update({ is_cover: true })
+        .eq("id", nextImage.id)
+        .eq("user_id", user.id);
+    }
+  }
+
+  revalidatePath(`/${locale}/dashboard/records`);
+  redirectToEdit(locale, recordId, "saved");
+}
+
+export async function setCoverImageAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const imageId = readString(formData, "image_id");
+
+  if (!recordId || !imageId) {
+    redirect(`/${locale}/dashboard/records`);
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: image } = await supabase
+    .from("record_images")
+    .select("id")
+    .eq("id", imageId)
+    .eq("record_id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!image) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
+  }
+
+  await supabase
+    .from("record_images")
+    .update({ is_cover: false })
+    .eq("record_id", recordId)
+    .eq("user_id", user.id);
+
+  const { error: coverError } = await supabase
+    .from("record_images")
+    .update({ is_cover: true })
+    .eq("id", imageId)
+    .eq("user_id", user.id);
+
+  if (coverError) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
+  }
+
+  revalidatePath(`/${locale}/dashboard/records`);
+  redirectToEdit(locale, recordId, "saved", imageActionMessage(locale, "cover"));
+}
+
+export async function moveRecordImageAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const imageId = readString(formData, "image_id");
+  const direction = readString(formData, "direction");
+
+  if (!recordId || !imageId || !direction) {
+    redirect(`/${locale}/dashboard/records`);
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: images } = await supabase
+    .from("record_images")
+    .select("id, sort_order")
+    .eq("record_id", recordId)
+    .eq("user_id", user.id)
+    .order("sort_order", { ascending: true });
+
+  if (!images || images.length === 0) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
+  }
+
+  const index = images.findIndex((image) => image.id === imageId);
+  if (index < 0) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
+  }
+
+  const swapWith = direction === "up" ? index - 1 : index + 1;
+  if (swapWith < 0 || swapWith >= images.length) {
+    redirectToEdit(locale, recordId, "saved");
+  }
+
+  const current = images[index];
+  const target = images[swapWith];
+
+  await supabase
+    .from("record_images")
+    .update({ sort_order: target.sort_order })
+    .eq("id", current.id)
+    .eq("user_id", user.id);
+
+  await supabase
+    .from("record_images")
+    .update({ sort_order: current.sort_order })
+    .eq("id", target.id)
+    .eq("user_id", user.id);
+
+  revalidatePath(`/${locale}/dashboard/records`);
+  redirectToEdit(locale, recordId, "saved", imageActionMessage(locale, "order"));
 }

@@ -37,6 +37,19 @@ type RecordFormState = {
   message?: string;
 };
 
+function recordEditRedirect(
+  locale: Locale,
+  recordId: string,
+  status: "saved" | "error",
+  message?: string,
+): never {
+  const params = new URLSearchParams({ status });
+  if (message) {
+    params.set("message", message);
+  }
+  redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
+}
+
 function recordFormMessage(locale: Locale, key: string) {
   const messages = {
     en: {
@@ -163,6 +176,7 @@ export async function createRecordAction(
         mime_type: files[index].type,
         file_size: files[index].size,
         sort_order: index + 1,
+        is_cover: index === 0,
       }));
 
       const { error: insertError } = await supabase.from("record_images").insert(rows);
@@ -181,6 +195,77 @@ export async function createRecordAction(
   redirect(
     `/${locale}/u/${profile.username}/${recordTypeToSegment(typeValue)}/${record.id}`,
   );
+}
+
+export async function updateRecordAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const title = readString(formData, "title");
+  const date = readString(formData, "date");
+  const content = readString(formData, "content");
+
+  if (!recordId) {
+    redirect(`/${locale}/dashboard/records`);
+  }
+
+  if (!title || !date || !content) {
+    recordEditRedirect(locale, recordId, "error", "Missing required fields.");
+  }
+
+  const showAmount = readString(formData, "show_amount") === "1";
+  const amountRaw = readString(formData, "amount");
+  const currency = readString(formData, "currency");
+  let amountValue: number | null = null;
+
+  if (showAmount && amountRaw) {
+    const parsed = Number.parseFloat(amountRaw);
+    if (Number.isNaN(parsed)) {
+      recordEditRedirect(locale, recordId, "error", "Amount must be a valid number.");
+    }
+    amountValue = parsed;
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: record, error: recordError } = await supabase
+    .from("records")
+    .select("id")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (recordError || !record) {
+    recordEditRedirect(locale, recordId, "error", "Record not found.");
+  }
+
+  const { error: updateError } = await supabase
+    .from("records")
+    .update({
+      title,
+      date,
+      content,
+      show_amount: showAmount,
+      amount: showAmount ? amountValue : null,
+      currency: showAmount ? currency || null : null,
+      is_public: formData.has("is_public"),
+      is_anonymous: formData.has("is_anonymous"),
+    })
+    .eq("id", recordId);
+
+  if (updateError) {
+    recordEditRedirect(locale, recordId, "error", updateError.message);
+  }
+
+  revalidatePath(`/${locale}/dashboard/records`);
+  recordEditRedirect(locale, recordId, "saved");
 }
 
 function redirectWithStatus(locale: Locale, status: "saved" | "error", message?: string): never {

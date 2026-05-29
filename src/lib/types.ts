@@ -64,5 +64,6 @@ export type RecordImage = {
   mimeType: string;
   fileSize?: number | null;
   sortOrder: number;
+  isCover?: boolean | null;
   createdAt: string;
 };
