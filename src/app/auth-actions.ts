@@ -112,8 +112,8 @@ export async function verifyOtpAction(formData: FormData) {
     fail(locale, "register/verify", "Please enter the email address you used to register.");
   }
 
-  if (!/^[0-9]{6}$/.test(token)) {
-    fail(locale, "register/verify", "Please enter the 6-digit verification code.");
+  if (!/^[0-9]{8}$/.test(token)) {
+    fail(locale, "register/verify", "Please enter the 8-digit verification code.");
   }
 
   const supabase = await createClient();
