@@ -2,11 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { locales, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function LocaleSwitcher({ locale, label }: { locale: Locale; label: string }) {
   const pathname = usePathname();
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      const details = detailsRef.current;
+      if (!details || !details.open) {
+        return;
+      }
+
+      if (event.target instanceof Node && !details.contains(event.target)) {
+        details.open = false;
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   function pathFor(targetLocale: Locale) {
     const parts = pathname.split("/");
@@ -21,7 +44,7 @@ export function LocaleSwitcher({ locale, label }: { locale: Locale; label: strin
   }
 
   return (
-    <details className="group relative">
+    <details className="group relative" ref={detailsRef}>
       <summary
         aria-label={label}
         className="flex h-9 cursor-pointer list-none items-center gap-1 rounded-lg border border-transparent px-2 text-sm font-medium text-muted transition-colors hover:border-border-subtle hover:bg-surface-offwhite hover:text-primary [&::-webkit-details-marker]:hidden"
