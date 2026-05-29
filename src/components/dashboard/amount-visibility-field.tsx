@@ -62,14 +62,15 @@ export function AmountVisibilityField({
           ) : null}
         </div>
       </div>
+      <input name="show_amount" type="hidden" value={isHidden ? "0" : "1"} />
       {isHidden ? (
         <div className="rounded-lg border border-border-subtle bg-surface-container-low px-3 py-3 text-sm text-muted">
           {labels.amountHidden}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
-          <Input inputMode="decimal" placeholder={labels.amountPlaceholder} />
-          <Input defaultValue="USD" aria-label={labels.currency} />
+          <Input inputMode="decimal" name="amount" placeholder={labels.amountPlaceholder} />
+          <Input defaultValue="USD" aria-label={labels.currency} name="currency" />
         </div>
       )}
     </div>

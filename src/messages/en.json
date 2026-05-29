@@ -113,6 +113,8 @@
     "fieldTitle": "Title",
     "fieldDate": "Date",
     "fieldDescription": "Description",
+    "fieldImages": "Images",
+    "imagesNote": "Optional. Add images to help describe the record.",
     "titlePlaceholder": "Monthly education support",
     "descriptionPlaceholder": "What happened? Keep it honest and simple.",
     "visibilityPublic": "Public",

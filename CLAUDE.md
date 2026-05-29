@@ -42,3 +42,4 @@ npm run build
 ## Git Habit
 
 After each meaningful implementation conversation, create a focused commit with a clear message. Keep unrelated generated artifacts out of the commit unless they are part of the app state.
+At the end of each session, push the commit to GitHub.

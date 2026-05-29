@@ -54,3 +54,15 @@ export type AnnualSummary = {
   keywords: string[];
   note: string;
 };
+
+export type RecordImage = {
+  id: string;
+  recordId: string;
+  userId: string;
+  r2Key: string;
+  r2Url: string;
+  mimeType: string;
+  fileSize?: number | null;
+  sortOrder: number;
+  createdAt: string;
+};

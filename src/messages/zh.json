@@ -113,6 +113,8 @@
     "fieldTitle": "标题",
     "fieldDate": "日期",
     "fieldDescription": "说明",
+    "fieldImages": "图片",
+    "imagesNote": "可选。上传与记录相关的图片。",
     "titlePlaceholder": "每月教育公益支持",
     "descriptionPlaceholder": "发生了什么？保持真实、简洁地记录即可。",
     "visibilityPublic": "公开",

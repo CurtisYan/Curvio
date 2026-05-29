@@ -17,6 +17,7 @@ export default async function NewRecordPage({
       <div className="mt-8">
         <RecordFormShell
           labels={messages.dashboard}
+          locale={locale}
           note={messages.dashboard.comingSoon}
           title={messages.dashboard.newTitle}
         />

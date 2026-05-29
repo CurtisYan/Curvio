@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
+import { recordTypeToSegment } from "@/lib/record-types";
 import type { GoodwillRecord } from "@/lib/types";
 import { RecordIcon } from "./record-icon";
 import { recordLabel } from "./record-label";
@@ -20,6 +21,10 @@ export function RecordCard({
 }) {
   const author = record.isAnonymous ? anonymousLabel : record.authorDisplayName;
   const typeLabel = typeLabels?.[record.type] ?? recordLabel(record.type);
+  const detailHref = localizePath(
+    locale,
+    `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${record.id}`,
+  );
 
   return (
     <Card className="flex min-h-[260px] flex-col gap-4">
@@ -36,9 +41,18 @@ export function RecordCard({
           }).format(new Date(record.date))}
         </time>
       </div>
-      <h3 className="text-2xl font-medium leading-tight text-foreground">
-        {record.title}
-      </h3>
+      {record.isAnonymous ? (
+        <h3 className="text-2xl font-medium leading-tight text-foreground">
+          {record.title}
+        </h3>
+      ) : (
+        <Link
+          className="text-2xl font-medium leading-tight text-foreground transition-colors hover:text-primary"
+          href={detailHref}
+        >
+          {record.title}
+        </Link>
+      )}
       <p className="text-sm leading-6 text-on-surface-variant">{record.content}</p>
       <div className="mt-auto space-y-3 pt-3">
         {record.isAnonymous ? (

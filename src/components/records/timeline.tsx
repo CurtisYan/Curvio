@@ -1,9 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
+import { localizePath } from "@/lib/i18n";
+import { recordTypeToSegment } from "@/lib/record-types";
 import type { GoodwillRecord } from "@/lib/types";
 import { RecordIcon } from "./record-icon";
 import { recordLabel } from "./record-label";
+import Link from "next/link";
 
 export function Timeline({
   records,
@@ -38,7 +41,19 @@ export function Timeline({
             <Card className="hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-medium">{record.title}</h3>
+                  {record.isAnonymous ? (
+                    <h3 className="text-xl font-medium">{record.title}</h3>
+                  ) : (
+                    <Link
+                      className="text-xl font-medium transition-colors hover:text-primary"
+                      href={localizePath(
+                        locale,
+                        `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${record.id}`,
+                      )}
+                    >
+                      {record.title}
+                    </Link>
+                  )}
                   {showAuthor ? (
                     <p className="mt-2 text-xs text-muted">
                       {byLabel}{" "}
