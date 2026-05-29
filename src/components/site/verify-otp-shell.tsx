@@ -58,7 +58,7 @@ export function VerifyOtpShell({
           </label>
           <label className="space-y-2 text-sm font-medium">
             {labels.verificationCode}
-            <Input autoComplete="one-time-code" inputMode="numeric" maxLength={8} name="token" pattern="[0-9]{8}" placeholder="12345678" required />
+            <Input autoComplete="one-time-code" inputMode="numeric" maxLength={8} name="token" pattern="[0-9]{8}" required />
           </label>
           <Button className="w-full" type="submit">
             {labels.verifyEmail}

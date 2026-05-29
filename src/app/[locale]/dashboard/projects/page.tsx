@@ -21,7 +21,6 @@ export default async function ProjectsPage({
         <h1 className="text-4xl font-semibold tracking-tight">
           {messages.dashboard.projects}
         </h1>
-        <p className="mt-3 text-muted">{messages.dashboard.comingSoon}</p>
       </div>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {projects.map((project) => (

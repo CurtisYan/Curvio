@@ -34,9 +34,6 @@ export default async function DashboardPage({
               <Card className="group min-h-44">
                 <Icon className="h-6 w-6 text-primary" />
                 <h2 className="mt-6 text-2xl font-medium">{item.label}</h2>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  {messages.dashboard.comingSoon}
-                </p>
                 <ArrowRight className="mt-5 h-4 w-4 text-muted transition-transform group-hover:translate-x-1 group-hover:text-primary" />
               </Card>
             </Link>

@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export function AmountVisibilityField({
   labels,
@@ -21,8 +22,19 @@ export function AmountVisibilityField({
   defaultAmount?: string;
   defaultCurrency?: string;
 }) {
+  const currencies = [
+    { code: "USD", symbol: "$" },
+    { code: "CNY", symbol: "¥" },
+    { code: "EUR", symbol: "€" },
+    { code: "JPY", symbol: "¥" },
+    { code: "GBP", symbol: "£" },
+    { code: "HKD", symbol: "HK$" },
+  ];
+  const initialCurrency =
+    currencies.find((item) => item.code === defaultCurrency)?.code ?? "USD";
   const [isOpen, setIsOpen] = useState(false);
   const [isHidden, setIsHidden] = useState(defaultHidden);
+  const [currency, setCurrency] = useState(initialCurrency);
 
   return (
     <div className="rounded-xl border border-border-subtle bg-surface-offwhite p-4">
@@ -81,11 +93,36 @@ export function AmountVisibilityField({
             name="amount"
             placeholder={labels.amountPlaceholder}
           />
-          <Input
+          <select
             aria-label={labels.currency}
-            defaultValue={defaultCurrency}
+            className="h-11 w-full rounded-lg border border-border-subtle bg-surface-offwhite px-3 text-sm text-foreground focus:border-primary focus:ring-0"
             name="currency"
-          />
+            onChange={(event) => setCurrency(event.target.value)}
+            value={currency}
+          >
+            {currencies.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.code}
+              </option>
+            ))}
+          </select>
+          <div className="sm:col-span-2">
+            <div className="grid grid-cols-3 gap-2 text-xs text-muted">
+              {currencies.map((item) => (
+                <div
+                  className={cn(
+                    "flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low px-2 py-1",
+                    currency === item.code &&
+                      "border-primary/30 bg-primary/10 text-primary",
+                  )}
+                  key={item.code}
+                >
+                  <span className="text-sm font-semibold">{item.symbol}</span>
+                  <span className="font-medium">{item.code}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

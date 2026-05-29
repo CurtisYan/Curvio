@@ -1,6 +1,6 @@
 import { RecordFilters } from "@/components/records/record-filters";
-import { records } from "@/lib/mock-data";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function ExplorePage({
   params,
@@ -10,6 +10,36 @@ export default async function ExplorePage({
   const { locale: rawLocale } = await params;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
+  const supabase = await createClient();
+  const { data: records } = await supabase
+    .from("records")
+    .select(
+      "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name)",
+    )
+    .eq("is_public", true)
+    .order("date", { ascending: false });
+
+  const mappedRecords = (records ?? []).map((record) => {
+    const profile = Array.isArray(record.profiles) ? record.profiles[0] : record.profiles;
+    return {
+    id: record.id,
+    type: record.type,
+    title: record.title,
+    content: record.content,
+    reflection: record.reflection ?? undefined,
+    date: record.date,
+    authorUsername: profile?.username ?? "anonymous",
+    authorDisplayName:
+      profile?.display_name ?? profile?.username ?? messages.common.anonymous,
+    isAnonymous: record.is_anonymous,
+    amountHidden: Boolean(record.amount) && !record.show_amount,
+    organizationName: record.organization_name ?? undefined,
+    platformName: record.platform_name ?? undefined,
+    projectUrl: record.project_url ?? undefined,
+    tags: record.tags ?? [],
+    language: record.language ?? "en",
+    };
+  });
 
   return (
     <main className="container-page min-h-screen pt-28 pb-24">
@@ -29,7 +59,7 @@ export default async function ExplorePage({
           anonymous: messages.common.anonymous,
         }}
         locale={locale}
-        records={records}
+        records={mappedRecords}
       />
     </main>
   );

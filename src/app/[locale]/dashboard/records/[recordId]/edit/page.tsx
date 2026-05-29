@@ -8,6 +8,7 @@ import {
 } from "@/app/record-images-actions";
 import { AmountVisibilityField } from "@/components/dashboard/amount-visibility-field";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { RecordImagePicker } from "@/components/dashboard/record-image-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -124,37 +125,40 @@ export default async function EditRecordPage({
           <p className="mt-2 text-sm text-muted">{messages.dashboard.imagesLead}</p>
         </div>
 
-        <form action={uploadRecordImagesAction} encType="multipart/form-data" className="space-y-3">
+        <form action={uploadRecordImagesAction} className="space-y-3">
           <input name="locale" type="hidden" value={locale} />
           <input name="record_id" type="hidden" value={record.id} />
           <input name="record_type" type="hidden" value={record.type} />
-          <Input
-            accept="image/png,image/jpeg,image/webp"
-            multiple
+          <RecordImagePicker
+            existingCount={images?.length ?? 0}
+            labels={{
+              addImages: messages.dashboard.addImages,
+              imagesNote: messages.dashboard.imagesNote,
+              imagesRemaining: messages.dashboard.imagesRemaining,
+              imagesSelected: messages.dashboard.imagesSelected,
+            }}
             name="images"
-            type="file"
           />
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" variant="secondary">
-              {messages.dashboard.addImages}
-            </Button>
-            <span className="text-xs text-muted">{messages.dashboard.imagesNote}</span>
-          </div>
+          <Button type="submit" variant="secondary">
+            {messages.dashboard.addImages}
+          </Button>
         </form>
 
         {images && images.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {images.map((image, index) => (
               <div
-                className="overflow-hidden rounded-xl border border-border-subtle bg-surface-container-low"
+                className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
                 key={image.id}
               >
-                <img
-                  alt={record.title}
-                  className="h-48 w-full object-cover"
-                  loading="lazy"
-                  src={image.r2_url}
-                />
+                <div className="aspect-square">
+                  <img
+                    alt={record.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    src={image.r2_url}
+                  />
+                </div>
                 <div className="space-y-3 p-4">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                     <span>#{image.sort_order}</span>

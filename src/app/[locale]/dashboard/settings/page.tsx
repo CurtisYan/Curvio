@@ -1,4 +1,5 @@
 import { updateProfileSettingsAction } from "@/app/dashboard-actions";
+import { AvatarUploader } from "@/components/dashboard/avatar-uploader";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { ProfileLayoutSorter } from "@/components/dashboard/profile-layout-sorter";
 import { Button } from "@/components/ui/button";
@@ -71,16 +72,13 @@ export default async function SettingsPage({
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
       <DashboardNav locale={locale} labels={messages.dashboard} />
-      <form action={updateProfileSettingsAction} encType="multipart/form-data">
+      <form action={updateProfileSettingsAction}>
         <input name="locale" type="hidden" value={locale} />
         <Card className="mt-8 space-y-6">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">
               {messages.dashboard.settingsTitle}
             </h1>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              {messages.dashboard.comingSoon}
-            </p>
           </div>
           {status === "saved" ? (
             <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
@@ -98,16 +96,13 @@ export default async function SettingsPage({
             {messages.dashboard.profileSettingsTitle}
           </h2>
           <div className="flex flex-col gap-5 md:flex-row">
-            <div
-              className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border border-border-subtle bg-cover bg-center bg-surface-container-high text-xl font-medium text-primary"
-              style={
-                currentProfile?.avatar_url
-                  ? { backgroundImage: `url(${currentProfile.avatar_url})` }
-                  : undefined
-              }
-            >
-              {currentProfile?.avatar_url ? <span className="sr-only">{initials}</span> : initials}
-            </div>
+            <AvatarUploader
+              avatarUrl={currentProfile?.avatar_url}
+              changeLabel={messages.dashboard.avatarChange}
+              helpText={messages.dashboard.avatarHelp}
+              initials={initials}
+              label={messages.dashboard.avatarUpload}
+            />
             <div className="grid flex-1 gap-4 md:grid-cols-2">
               <label className="space-y-2 text-sm font-medium">
                 {messages.dashboard.displayName}
@@ -115,11 +110,6 @@ export default async function SettingsPage({
                   defaultValue={currentProfile?.display_name ?? user?.email?.split("@")[0] ?? ""}
                   name="display_name"
                 />
-              </label>
-              <label className="space-y-2 text-sm font-medium">
-                {messages.dashboard.avatarUpload}
-                <Input accept="image/png,image/jpeg,image/webp" name="avatar" type="file" />
-                <span className="block text-xs leading-5 text-muted">{messages.dashboard.avatarHelp}</span>
               </label>
               <label className="space-y-2 text-sm font-medium md:col-span-2">
                 {messages.dashboard.bio}
@@ -171,6 +161,7 @@ export default async function SettingsPage({
                 name="is_public"
                 type="checkbox"
                 defaultChecked={currentProfile?.is_public ?? true}
+                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
@@ -179,6 +170,7 @@ export default async function SettingsPage({
                 name="allow_follow"
                 type="checkbox"
                 defaultChecked={currentProfile?.allow_follow ?? true}
+                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
@@ -187,6 +179,7 @@ export default async function SettingsPage({
                 name="hide_amounts_by_default"
                 type="checkbox"
                 defaultChecked={currentProfile?.hide_amounts_by_default ?? true}
+                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
@@ -195,6 +188,7 @@ export default async function SettingsPage({
                 name="show_annual_summary"
                 type="checkbox"
                 defaultChecked={currentProfile?.show_annual_summary ?? true}
+                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
               />
             </label>
           </div>

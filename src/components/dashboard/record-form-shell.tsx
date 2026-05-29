@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import { AmountVisibilityField } from "./amount-visibility-field";
+import { RecordImagePicker } from "./record-image-picker";
 
 export function RecordFormShell({
   locale,
@@ -26,6 +27,9 @@ export function RecordFormShell({
     fieldDescription: string;
     fieldImages: string;
     imagesNote: string;
+    imagesSelected: string;
+    imagesRemaining: string;
+    addImages: string;
     titlePlaceholder: string;
     descriptionPlaceholder: string;
     visibilityPublic: string;
@@ -45,11 +49,11 @@ export function RecordFormShell({
 
   return (
     <Card className="space-y-6">
-      <form action={formAction} className="space-y-6" encType="multipart/form-data">
+      <form action={formAction} className="space-y-6">
         <input name="locale" type="hidden" value={locale} />
         <div>
           <h2 className="text-2xl font-medium">{title}</h2>
-          <p className="mt-2 text-sm leading-6 text-muted">{note}</p>
+          {note ? <p className="mt-2 text-sm leading-6 text-muted">{note}</p> : null}
         </div>
         {state?.status === "error" && state.message ? (
           <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-sm text-error">
@@ -91,16 +95,19 @@ export function RecordFormShell({
           <Textarea name="content" placeholder={labels.descriptionPlaceholder} required />
         </label>
         <AmountVisibilityField labels={labels} />
-        <label className="space-y-2 text-sm font-medium">
-          {labels.fieldImages}
-          <Input
-            accept="image/png,image/jpeg,image/webp"
-            multiple
+        <div className="space-y-2">
+          <p className="text-sm font-medium">{labels.fieldImages}</p>
+          <RecordImagePicker
+            existingCount={0}
+            labels={{
+              addImages: labels.addImages,
+              imagesNote: labels.imagesNote,
+              imagesRemaining: labels.imagesRemaining,
+              imagesSelected: labels.imagesSelected,
+            }}
             name="images"
-            type="file"
           />
-          <span className="block text-xs leading-5 text-muted">{labels.imagesNote}</span>
-        </label>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
             <input defaultChecked name="is_public" type="checkbox" />

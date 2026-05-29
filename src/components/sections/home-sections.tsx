@@ -4,27 +4,105 @@ import { ButtonLink } from "@/components/ui/button";
 import { PlatformCard } from "@/components/sections/platform-card";
 import { StatsGrid } from "@/components/sections/stats-grid";
 import { Timeline } from "@/components/records/timeline";
-import { donationPlatforms, records } from "@/lib/mock-data";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
+import { createClient } from "@/utils/supabase/server";
 
-export function HomeSections({
+export async function HomeSections({
   locale,
   messages,
 }: {
   locale: Locale;
   messages: Record<string, string>;
 }) {
+  const supabase = await createClient();
+  const [
+    { count: totalRecords },
+    { count: donationRecords },
+    { count: kindnessRecords },
+    { count: openWorkRecords },
+    { count: memberCount },
+    { data: recentRecords },
+    { data: platformRows },
+  ] = await Promise.all([
+    supabase
+      .from("records")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true),
+    supabase
+      .from("records")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true)
+      .eq("type", "donation"),
+    supabase
+      .from("records")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true)
+      .eq("type", "kindness"),
+    supabase
+      .from("records")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true)
+      .eq("type", "open_source"),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true),
+    supabase
+      .from("records")
+      .select(
+        "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name)",
+      )
+      .eq("is_public", true)
+      .order("date", { ascending: false })
+      .limit(3),
+    supabase
+      .from("donation_platforms")
+      .select("id, name, description, official_url, official_url_zh, region, languages, category")
+      .order("created_at", { ascending: true })
+      .limit(3),
+  ]);
+
   const stats = [
-    { label: messages.statTotalRecords, value: records.length },
-    { label: messages.statDonations, value: records.filter((record) => record.type === "donation").length },
-    { label: messages.statKindnessActs, value: records.filter((record) => record.type === "kindness").length },
-    {
-      label: messages.statOpenWork,
-      value: records.filter((record) => record.type === "open_source").length,
-    },
-    { label: messages.statMembers, value: 1 },
+    { label: messages.statTotalRecords, value: totalRecords ?? 0 },
+    { label: messages.statDonations, value: donationRecords ?? 0 },
+    { label: messages.statKindnessActs, value: kindnessRecords ?? 0 },
+    { label: messages.statOpenWork, value: openWorkRecords ?? 0 },
+    { label: messages.statMembers, value: memberCount ?? 0 },
   ];
+
+  const mappedRecords = (recentRecords ?? []).map((record) => {
+    const profile = Array.isArray(record.profiles) ? record.profiles[0] : record.profiles;
+    return {
+      id: record.id,
+      type: record.type,
+      title: record.title,
+      content: record.content,
+      reflection: record.reflection ?? undefined,
+      date: record.date,
+      authorUsername: profile?.username ?? "anonymous",
+      authorDisplayName:
+        profile?.display_name ?? profile?.username ?? messages.anonymous,
+      isAnonymous: record.is_anonymous,
+      amountHidden: Boolean(record.amount) && !record.show_amount,
+      organizationName: record.organization_name ?? undefined,
+      platformName: record.platform_name ?? undefined,
+      projectUrl: record.project_url ?? undefined,
+      tags: record.tags ?? [],
+      language: record.language ?? "en",
+    };
+  });
+
+  const platforms = (platformRows ?? []).map((platform) => ({
+    id: platform.id,
+    name: platform.name,
+    description: platform.description,
+    officialUrl: platform.official_url,
+    officialUrls: platform.official_url_zh ? { zh: platform.official_url_zh } : undefined,
+    region: platform.region ?? "",
+    languages: platform.languages ?? [],
+    category: platform.category ?? "",
+  }));
 
   return (
     <main className="pt-16">
@@ -67,7 +145,7 @@ export function HomeSections({
         <Timeline
           hiddenAmountLabel={messages.hiddenAmount}
           locale={locale}
-          records={records.slice(0, 3)}
+          records={mappedRecords}
           typeLabels={{
             donation: messages.recordDonation,
             kindness: messages.recordKindness,
@@ -91,7 +169,7 @@ export function HomeSections({
           <p className="mt-3 leading-7 text-muted">{messages.platformLead}</p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {donationPlatforms.slice(0, 3).map((platform) => (
+          {platforms.map((platform) => (
             <PlatformCard
               key={platform.id}
               locale={locale}
