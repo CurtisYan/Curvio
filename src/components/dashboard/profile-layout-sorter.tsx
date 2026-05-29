@@ -149,7 +149,7 @@ function SortableProfileSection({
               ),
             );
           }}
-          className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
+          className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
           type="checkbox"
           value={section.id}
         />

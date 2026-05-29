@@ -8,6 +8,17 @@ import { RecordIcon } from "./record-icon";
 import { recordLabel } from "./record-label";
 import Link from "next/link";
 
+function initialsFor(name: string) {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "U"
+  );
+}
+
 export function Timeline({
   records,
   locale,
@@ -55,10 +66,31 @@ export function Timeline({
                     </Link>
                   )}
                   {showAuthor ? (
-                    <p className="mt-2 text-xs text-muted">
-                      {byLabel}{" "}
-                      {record.isAnonymous ? anonymousLabel : record.authorDisplayName}
-                    </p>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+                      <span>{byLabel}</span>
+                      {record.isAnonymous ? (
+                        <span>{anonymousLabel}</span>
+                      ) : (
+                        <Link
+                          className="inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                          href={localizePath(locale, `/u/${record.authorUsername}`)}
+                        >
+                          <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-md border border-border-subtle bg-surface-container-low text-[10px] font-semibold uppercase text-muted">
+                            {record.authorAvatarUrl ? (
+                              <img
+                                alt={record.authorDisplayName}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                                src={record.authorAvatarUrl}
+                              />
+                            ) : (
+                              initialsFor(record.authorDisplayName)
+                            )}
+                          </span>
+                          <span>{record.authorDisplayName}</span>
+                        </Link>
+                      )}
+                    </div>
                   ) : null}
                 </div>
                 <Badge>

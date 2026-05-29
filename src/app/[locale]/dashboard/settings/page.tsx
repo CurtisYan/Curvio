@@ -161,7 +161,7 @@ export default async function SettingsPage({
                 name="is_public"
                 type="checkbox"
                 defaultChecked={currentProfile?.is_public ?? true}
-                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
+                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
@@ -170,7 +170,7 @@ export default async function SettingsPage({
                 name="allow_follow"
                 type="checkbox"
                 defaultChecked={currentProfile?.allow_follow ?? true}
-                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
+                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
@@ -179,7 +179,7 @@ export default async function SettingsPage({
                 name="hide_amounts_by_default"
                 type="checkbox"
                 defaultChecked={currentProfile?.hide_amounts_by_default ?? true}
-                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
+                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
@@ -188,7 +188,7 @@ export default async function SettingsPage({
                 name="show_annual_summary"
                 type="checkbox"
                 defaultChecked={currentProfile?.show_annual_summary ?? true}
-                className="h-5 w-5 rounded-md border border-border-subtle accent-primary"
+                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
               />
             </label>
           </div>

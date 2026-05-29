@@ -33,7 +33,7 @@ export function AvatarUploader({
   return (
     <div className="flex flex-col gap-3">
       <button
-        className="group relative h-28 w-28 overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-xl font-medium text-primary"
+        className="group relative h-32 w-32 overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-xl font-medium text-primary"
         onClick={() => inputRef.current?.click()}
         type="button"
       >
@@ -55,9 +55,9 @@ export function AvatarUploader({
           {changeLabel}
         </span>
       </button>
-      <div className="space-y-1 text-xs text-muted">
+      <div className="max-w-xs space-y-1 text-xs text-muted">
         <p className="text-sm font-medium text-foreground">{label}</p>
-        <p>{helpText}</p>
+        <p className="leading-5">{helpText}</p>
       </div>
       <input
         accept="image/png,image/jpeg,image/webp"

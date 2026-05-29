@@ -10,6 +10,7 @@ export type GoodwillRecord = {
   date: string;
   authorUsername: string;
   authorDisplayName: string;
+  authorAvatarUrl?: string;
   isAnonymous: boolean;
   amountHidden?: boolean;
   organizationName?: string;

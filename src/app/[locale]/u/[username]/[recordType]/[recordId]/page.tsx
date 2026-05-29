@@ -76,10 +76,12 @@ export default async function RecordDetailPage({
 
       <Card className="space-y-6">
         <div className="flex flex-wrap items-center gap-3">
-          <Badge>
-            <RecordIcon className="h-4 w-4" type={type} />
-            {typeLabels[type]}
-          </Badge>
+          <Link className="inline-flex" href={localizePath(locale, `/explore?type=${type}`)}>
+            <Badge>
+              <RecordIcon className="h-4 w-4" type={type} />
+              {typeLabels[type]}
+            </Badge>
+          </Link>
           <span className="text-sm text-muted">
             {new Intl.DateTimeFormat(locale, {
               month: "long",

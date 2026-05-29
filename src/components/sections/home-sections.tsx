@@ -51,7 +51,7 @@ export async function HomeSections({
     supabase
       .from("records")
       .select(
-        "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name)",
+        "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name, avatar_url)",
       )
       .eq("is_public", true)
       .order("date", { ascending: false })
@@ -83,6 +83,7 @@ export async function HomeSections({
       authorUsername: profile?.username ?? "anonymous",
       authorDisplayName:
         profile?.display_name ?? profile?.username ?? messages.anonymous,
+      authorAvatarUrl: profile?.avatar_url ?? undefined,
       isAnonymous: record.is_anonymous,
       amountHidden: Boolean(record.amount) && !record.show_amount,
       organizationName: record.organization_name ?? undefined,

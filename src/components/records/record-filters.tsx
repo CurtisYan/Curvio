@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RecordCard } from "@/components/records/record-card";
 import { Input } from "@/components/ui/input";
 import type { Locale } from "@/lib/i18n";
@@ -14,6 +14,7 @@ export function RecordFilters({
   records,
   locale,
   labels,
+  initialFilter = "all",
 }: {
   records: GoodwillRecord[];
   locale: Locale;
@@ -25,9 +26,14 @@ export function RecordFilters({
     search: string;
     anonymous: string;
   };
+  initialFilter?: FilterValue;
 }) {
-  const [active, setActive] = useState<FilterValue>("all");
+  const [active, setActive] = useState<FilterValue>(initialFilter);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    setActive(initialFilter);
+  }, [initialFilter]);
 
   const filters: Array<{ value: FilterValue; label: string }> = [
     { value: "all", label: labels.all },
