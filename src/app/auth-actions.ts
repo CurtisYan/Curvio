@@ -19,15 +19,19 @@ function fail(locale: Locale, path: "login" | "register" | "register/verify", me
   redirect(`/${locale}/${path}?error=${encodeURIComponent(message)}`);
 }
 
-async function verifyTurnstile(locale: Locale, token: string) {
+async function verifyTurnstile(
+  locale: Locale,
+  path: "login" | "register" | "register/verify" | "forgot" | "reset",
+  token: string,
+) {
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
-    fail(locale, "register", "Turnstile is not configured. Please try again later.");
+    fail(locale, path, "Turnstile is not configured. Please try again later.");
   }
 
   if (!token) {
-    fail(locale, "register", "Please complete the verification challenge.");
+    fail(locale, path, "Please complete the verification challenge.");
   }
 
   const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
@@ -44,7 +48,7 @@ async function verifyTurnstile(locale: Locale, token: string) {
   const result = (await response.json()) as { success: boolean; "error-codes"?: string[] };
 
   if (!result.success) {
-    fail(locale, "register", "Verification failed. Please try again.");
+    fail(locale, path, "Verification failed. Please try again.");
   }
 }
 
@@ -102,7 +106,7 @@ export async function signUpAction(formData: FormData) {
     fail(locale, "register", "Password must be at least 6 characters.");
   }
 
-  await verifyTurnstile(locale, turnstileToken);
+  await verifyTurnstile(locale, "register", turnstileToken);
 
   const supabase = await createClient();
   const { data: existingProfile } = await supabase
@@ -196,7 +200,7 @@ export async function sendResetAction(formData: FormData) {
     fail(locale, "forgot", "Please enter the email address you used to register.");
   }
 
-  await verifyTurnstile(locale, turnstileToken);
+  await verifyTurnstile(locale, "forgot", turnstileToken);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
