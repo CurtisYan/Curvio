@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
+import { TurnstileWidget } from "@/components/site/turnstile-widget";
 
 type AuthLabels = {
   email: string;
@@ -32,6 +33,8 @@ export function AuthShell({
   action: (formData: FormData) => void | Promise<void>;
   error?: string;
 }) {
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
       <Card className="w-full max-w-md space-y-6">
@@ -44,7 +47,7 @@ export function AuthShell({
             {error}
           </div>
         ) : null}
-        <form action={action} className="space-y-4">
+        <form action={action} className="space-y-6">
           <input name="locale" type="hidden" value={locale} />
           {mode === "register" ? (
             <label className="space-y-2 text-sm font-medium">
@@ -67,15 +70,23 @@ export function AuthShell({
               type="password"
             />
           </label>
+          {mode === "register" && turnstileSiteKey ? (
+            <TurnstileWidget siteKey={turnstileSiteKey} />
+          ) : null}
           <Button className="w-full" type="submit">
             {submit}
           </Button>
         </form>
-        <div className="border-t border-border-subtle pt-4 text-center text-sm text-muted">
+        <div className="border-t border-border-subtle pt-4 text-center text-sm text-muted space-y-2">
           {mode === "login" ? (
-            <Link className="text-primary hover:text-primary-strong" href={localizePath(locale, "/register")}>
-              {labels.createAccount}
-            </Link>
+            <>
+              <Link className="text-primary hover:text-primary-strong block" href={localizePath(locale, "/register")}>
+                {labels.createAccount}
+              </Link>
+              <Link className="text-muted hover:text-muted-foreground block" href={localizePath(locale, "/forgot")}>
+                Forgot password?
+              </Link>
+            </>
           ) : (
             <Link className="text-primary hover:text-primary-strong" href={localizePath(locale, "/login")}>
               {labels.alreadyHaveAccount}

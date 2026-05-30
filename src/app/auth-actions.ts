@@ -19,6 +19,35 @@ function fail(locale: Locale, path: "login" | "register" | "register/verify", me
   redirect(`/${locale}/${path}?error=${encodeURIComponent(message)}`);
 }
 
+async function verifyTurnstile(locale: Locale, token: string) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+
+  if (!secret) {
+    fail(locale, "register", "Turnstile is not configured. Please try again later.");
+  }
+
+  if (!token) {
+    fail(locale, "register", "Please complete the verification challenge.");
+  }
+
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      secret,
+      response: token,
+    }).toString(),
+  });
+
+  const result = (await response.json()) as { success: boolean; "error-codes"?: string[] };
+
+  if (!result.success) {
+    fail(locale, "register", "Verification failed. Please try again.");
+  }
+}
+
 export async function signInAction(formData: FormData) {
   const locale = readLocale(formData);
   const email = readString(formData, "email").toLowerCase();
@@ -55,6 +84,7 @@ export async function signUpAction(formData: FormData) {
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
   const username = readString(formData, "username").toLowerCase();
+  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!email || !email.includes("@")) {
     fail(locale, "register", "Please enter a valid email address.");
@@ -71,6 +101,8 @@ export async function signUpAction(formData: FormData) {
   if (password.length < 6) {
     fail(locale, "register", "Password must be at least 6 characters.");
   }
+
+  await verifyTurnstile(locale, turnstileToken);
 
   const supabase = await createClient();
   const { data: existingProfile } = await supabase
@@ -153,6 +185,50 @@ export async function resendOtpAction(formData: FormData) {
   }
 
   redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}&sent=1`);
+}
+
+export async function sendResetAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const email = readString(formData, "email").toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    fail(locale, "register/verify", "Please enter the email address you used to register.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/reset`,
+  });
+
+  if (error) {
+    fail(locale, "forgot", error.message);
+  }
+
+  redirect(`/${locale}/forgot?sent=1`);
+}
+
+export async function completeResetAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const token = readString(formData, "access_token");
+  const password = readString(formData, "password");
+
+  if (!password || password.length < 6) {
+    fail(locale, "reset", "Password must be at least 6 characters.");
+  }
+
+  if (!token) {
+    fail(locale, "reset", "Missing reset token.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password, accessToken: token } as any);
+
+  if (error) {
+    fail(locale, "reset", error.message);
+  }
+
+  revalidatePath("/", "layout");
+  redirect(`/${locale}/dashboard`);
 }
 
 export async function signOutAction(formData: FormData) {
