@@ -200,35 +200,37 @@ export async function sendResetAction(formData: FormData) {
   const locale = readLocale(formData);
   const email = readString(formData, "email").toLowerCase();
 
-  if (!email || !email.includes("@")) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     fail(locale, "forgot", localized(locale, "Please enter the email address you used to register.", "请输入你注册时使用的邮箱。"));
   }
 
   const adminClient = createAdminClient();
-  if (adminClient) {
-    const pageSize = 1000;
-    let page = 1;
-    let accountExists = false;
+  if (!adminClient) {
+    fail(locale, "forgot", localized(locale, "Password reset is temporarily unavailable. Please contact support.", "密码重置暂时不可用，请联系支持。"));
+  }
 
-    while (!accountExists) {
-      const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: pageSize });
+  const pageSize = 1000;
+  let page = 1;
+  let accountExists = false;
 
-      if (error) {
-        fail(locale, "forgot", error.message);
-      }
+  while (!accountExists) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: pageSize });
 
-      accountExists = data.users.some((user) => user.email?.toLowerCase() === email);
-
-      if (accountExists || data.users.length < pageSize) {
-        break;
-      }
-
-      page += 1;
+    if (error) {
+      fail(locale, "forgot", error.message);
     }
 
-    if (!accountExists) {
-      fail(locale, "forgot", localized(locale, "No account found for that email address.", "没有找到该邮箱对应的账号。"));
+    accountExists = data.users.some((user) => user.email?.toLowerCase() === email);
+
+    if (accountExists || data.users.length < pageSize) {
+      break;
     }
+
+    page += 1;
+  }
+
+  if (!accountExists) {
+    fail(locale, "forgot", localized(locale, "No account found for that email address.", "没有找到该邮箱对应的账号。"));
   }
 
   const supabase = await createClient();

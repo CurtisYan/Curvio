@@ -91,6 +91,7 @@
     "passwordUpdated": "Your password has been updated.",
     "resetLinkSent": "A password reset link has been sent.",
     "noAccountFound": "No account found for that email address.",
+    "resetUnavailable": "Password reset is temporarily unavailable. Please contact support.",
     "email": "Email",
     "password": "Password",
     "username": "Username",

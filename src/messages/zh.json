@@ -91,6 +91,7 @@
     "passwordUpdated": "密码已更新。",
     "resetLinkSent": "密码重置链接已发送。",
     "noAccountFound": "没有找到该邮箱对应的账号。",
+    "resetUnavailable": "密码重置暂时不可用，请联系支持。",
     "email": "邮箱",
     "password": "密码",
     "username": "用户名",
