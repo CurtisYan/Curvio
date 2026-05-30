@@ -26,7 +26,7 @@ export function ForgotPasswordShell({
 }) {
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
-      <Card className="w-full max-w-md space-y-7">
+      <Card className="w-full max-w-md space-y-8">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{labels.forgotTitle}</h1>
           <p className="mt-3 text-sm leading-6 text-muted">{labels.forgotNote}</p>
@@ -39,7 +39,7 @@ export function ForgotPasswordShell({
             {labels.resetLinkSent}
           </div>
         ) : null}
-        <form action={sendAction} className="space-y-5">
+        <form action={sendAction} className="space-y-6">
           <input name="locale" type="hidden" value={locale} />
           <label className="space-y-2 text-sm font-medium">
             {labels.email}

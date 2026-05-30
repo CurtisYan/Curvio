@@ -38,7 +38,7 @@ export function AuthShell({
 
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
-      <Card className="w-full max-w-md space-y-6">
+      <Card className="w-full max-w-md space-y-8">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-3 text-sm leading-6 text-muted">{note}</p>
@@ -48,7 +48,7 @@ export function AuthShell({
             {error}
           </div>
         ) : null}
-        <form action={action} className="space-y-6">
+        <form action={action} className="space-y-7">
           <input name="locale" type="hidden" value={locale} />
           {mode === "register" ? (
             <label className="space-y-2 text-sm font-medium">
@@ -78,7 +78,8 @@ export function AuthShell({
             {submit}
           </Button>
         </form>
-        <div className="border-t border-border-subtle pt-4 text-center text-sm text-muted space-y-2">
+        <div className="border-t border-border-subtle pt-4 text-center text-sm text-muted">
+          <div className="flex flex-col items-center gap-2">
           {mode === "login" ? (
             <>
               <Link className="text-primary hover:text-primary-strong block" href={localizePath(locale, "/register")}>
@@ -93,6 +94,7 @@ export function AuthShell({
               {labels.alreadyHaveAccount}
             </Link>
           )}
+          </div>
         </div>
       </Card>
     </main>

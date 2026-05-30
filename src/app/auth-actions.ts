@@ -205,28 +205,30 @@ export async function sendResetAction(formData: FormData) {
   }
 
   const adminClient = createAdminClient();
-  const pageSize = 1000;
-  let page = 1;
-  let accountExists = false;
+  if (adminClient) {
+    const pageSize = 1000;
+    let page = 1;
+    let accountExists = false;
 
-  while (!accountExists) {
-    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: pageSize });
+    while (!accountExists) {
+      const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: pageSize });
 
-    if (error) {
-      fail(locale, "forgot", error.message);
+      if (error) {
+        fail(locale, "forgot", error.message);
+      }
+
+      accountExists = data.users.some((user) => user.email?.toLowerCase() === email);
+
+      if (accountExists || data.users.length < pageSize) {
+        break;
+      }
+
+      page += 1;
     }
 
-    accountExists = data.users.some((user) => user.email?.toLowerCase() === email);
-
-    if (accountExists || data.users.length < pageSize) {
-      break;
+    if (!accountExists) {
+      fail(locale, "forgot", localized(locale, "No account found for that email address.", "没有找到该邮箱对应的账号。"));
     }
-
-    page += 1;
-  }
-
-  if (!accountExists) {
-    fail(locale, "forgot", localized(locale, "No account found for that email address.", "没有找到该邮箱对应的账号。"));
   }
 
   const supabase = await createClient();
