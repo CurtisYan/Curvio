@@ -16,7 +16,11 @@ function readLocale(formData: FormData): Locale {
   return isLocale(locale) ? locale : "en";
 }
 
-function fail(locale: Locale, path: "login" | "register" | "register/verify", message: string): never {
+function fail(
+  locale: Locale,
+  path: "login" | "register" | "register/verify" | "forgot" | "reset",
+  message: string,
+): never {
   redirect(`/${locale}/${path}?error=${encodeURIComponent(message)}`);
 }
 

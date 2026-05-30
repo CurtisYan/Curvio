@@ -33,6 +33,7 @@ export default async function LocaleLayout({
     email?: string | null;
     displayName?: string | null;
     avatarUrl?: string | null;
+    username?: string | null;
   } | null = null;
 
   if (user) {
