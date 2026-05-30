@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
 function readString(formData: FormData, key: string) {
@@ -17,6 +18,10 @@ function readLocale(formData: FormData): Locale {
 
 function fail(locale: Locale, path: "login" | "register" | "register/verify", message: string): never {
   redirect(`/${locale}/${path}?error=${encodeURIComponent(message)}`);
+}
+
+function localized(locale: Locale, en: string, zh: string) {
+  return locale === "zh" ? zh : en;
 }
 
 async function verifyTurnstile(
@@ -196,7 +201,32 @@ export async function sendResetAction(formData: FormData) {
   const email = readString(formData, "email").toLowerCase();
 
   if (!email || !email.includes("@")) {
-    fail(locale, "forgot", "Please enter the email address you used to register.");
+    fail(locale, "forgot", localized(locale, "Please enter the email address you used to register.", "请输入你注册时使用的邮箱。"));
+  }
+
+  const adminClient = createAdminClient();
+  const pageSize = 1000;
+  let page = 1;
+  let accountExists = false;
+
+  while (!accountExists) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: pageSize });
+
+    if (error) {
+      fail(locale, "forgot", error.message);
+    }
+
+    accountExists = data.users.some((user) => user.email?.toLowerCase() === email);
+
+    if (accountExists || data.users.length < pageSize) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  if (!accountExists) {
+    fail(locale, "forgot", localized(locale, "No account found for that email address.", "没有找到该邮箱对应的账号。"));
   }
 
   const supabase = await createClient();
@@ -216,14 +246,14 @@ export async function completeResetAction(formData: FormData) {
   const password = readString(formData, "password");
 
   if (!password || password.length < 6) {
-    fail(locale, "reset", "Password must be at least 6 characters.");
+    fail(locale, "reset", localized(locale, "Password must be at least 6 characters.", "密码至少需要 6 位。"));
   }
 
   const supabase = await createClient();
   const { data, error: userError } = await supabase.auth.getUser();
 
   if (userError || !data.user) {
-    fail(locale, "reset", "Your reset link is invalid or has expired. Please request a new one.");
+    fail(locale, "reset", localized(locale, "Your reset link is invalid or has expired. Please request a new one.", "重置链接无效或已过期，请重新申请。"));
   }
 
   const { error } = await supabase.auth.updateUser({ password });

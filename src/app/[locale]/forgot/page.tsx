@@ -22,6 +22,7 @@ export default async function ForgotPage({
         forgotNote: messages.auth.forgotNote,
         sendResetLink: messages.auth.sendResetLink,
         backToLogin: messages.auth.backToLogin,
+        resetLinkSent: messages.auth.resetLinkSent,
       }}
       locale={locale}
       sendAction={sendResetAction}

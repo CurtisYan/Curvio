@@ -89,6 +89,8 @@
     "invalidLink": "Your reset link is invalid or has expired. Please request a new one.",
     "passwordTooShort": "Password must be at least 6 characters.",
     "passwordUpdated": "Your password has been updated.",
+    "resetLinkSent": "A password reset link has been sent.",
+    "noAccountFound": "No account found for that email address.",
     "email": "Email",
     "password": "Password",
     "username": "Username",

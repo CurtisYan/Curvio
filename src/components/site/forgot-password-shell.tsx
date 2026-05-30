@@ -18,6 +18,7 @@ export function ForgotPasswordShell({
     forgotNote: string;
     sendResetLink: string;
     backToLogin: string;
+    resetLinkSent: string;
   };
   sendAction: (formData: FormData) => void | Promise<void>;
   error?: string;
@@ -35,7 +36,7 @@ export function ForgotPasswordShell({
         ) : null}
         {sent ? (
           <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
-            A password reset link has been sent.
+            {labels.resetLinkSent}
           </div>
         ) : null}
         <form action={sendAction} className="space-y-5">
