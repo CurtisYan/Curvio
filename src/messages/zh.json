@@ -140,6 +140,7 @@
     "fieldDate": "日期",
     "fieldDescription": "说明",
     "fieldImages": "图片",
+    "fieldCategory": "类别",
     "imagesNote": "可选。上传与记录相关的图片。",
     "imagesSelected": "已选",
     "imagesRemaining": "还可",

@@ -140,6 +140,7 @@
     "fieldDate": "Date",
     "fieldDescription": "Description",
     "fieldImages": "Images",
+    "fieldCategory": "Category",
     "imagesNote": "Optional. Add images to help describe the record.",
     "imagesSelected": "Selected",
     "imagesRemaining": "Remaining",

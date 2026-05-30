@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { createRecordAction } from "@/app/dashboard-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ export function RecordFormShell({
     imagesSelected: string;
     imagesRemaining: string;
     addImages: string;
+    fieldCategory: string;
     titlePlaceholder: string;
     descriptionPlaceholder: string;
     visibilityPublic: string;
@@ -43,7 +44,7 @@ export function RecordFormShell({
     amountHidden: string;
   };
 }) {
-  const [state, formAction] = useFormState(createRecordAction, {
+  const [state, formAction] = useActionState(createRecordAction, {
     status: "idle",
   });
 
@@ -60,25 +61,28 @@ export function RecordFormShell({
             {state.message}
           </div>
         ) : null}
-        <div className="flex flex-wrap gap-2">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">{labels.fieldCategory}</p>
+          <div className="flex flex-wrap gap-3">
           <label className="cursor-pointer">
             <input defaultChecked className="peer sr-only" name="type" type="radio" value="donation" />
-            <Badge className="border border-transparent peer-checked:border-primary/30 peer-checked:bg-primary/10 peer-checked:text-primary">
+            <Badge className="px-4 py-2 text-sm border border-transparent peer-checked:border-primary/30 peer-checked:bg-primary/10 peer-checked:text-primary">
               {labels.typeDonation}
             </Badge>
           </label>
           <label className="cursor-pointer">
             <input className="peer sr-only" name="type" type="radio" value="kindness" />
-            <Badge className="border border-transparent peer-checked:border-primary/30 peer-checked:bg-primary/10 peer-checked:text-primary">
+            <Badge className="px-4 py-2 text-sm border border-transparent peer-checked:border-primary/30 peer-checked:bg-primary/10 peer-checked:text-primary">
               {labels.typeKindness}
             </Badge>
           </label>
           <label className="cursor-pointer">
             <input className="peer sr-only" name="type" type="radio" value="open_source" />
-            <Badge className="border border-transparent peer-checked:border-primary/30 peer-checked:bg-primary/10 peer-checked:text-primary">
+            <Badge className="px-4 py-2 text-sm border border-transparent peer-checked:border-primary/30 peer-checked:bg-primary/10 peer-checked:text-primary">
               {labels.typeOpenSource}
             </Badge>
           </label>
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm font-medium">
@@ -109,13 +113,13 @@ export function RecordFormShell({
           />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
-            <input defaultChecked name="is_public" type="checkbox" />
+          <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
             {labels.visibilityPublic}
+            <input defaultChecked className="h-5 w-5 rounded-lg border border-border-subtle accent-primary" name="is_public" type="checkbox" />
           </label>
-          <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
-            <input name="is_anonymous" type="checkbox" />
+          <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
             {labels.anonymous}
+            <input className="h-5 w-5 rounded-lg border border-border-subtle accent-primary" name="is_anonymous" type="checkbox" />
           </label>
         </div>
         <Button type="submit">{labels.saveDraft}</Button>
