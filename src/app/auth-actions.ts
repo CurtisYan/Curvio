@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
 function readString(formData: FormData, key: string) {
@@ -204,45 +204,28 @@ export async function sendResetAction(formData: FormData) {
     fail(locale, "forgot", localized(locale, "Please enter the email address you used to register.", "请输入你注册时使用的邮箱。"));
   }
 
-  const adminClient = createAdminClient();
-  if (!adminClient) {
-    fail(locale, "forgot", localized(locale, "Password reset is temporarily unavailable. Please contact support.", "密码重置暂时不可用，请联系支持。"));
-  }
-
-  const pageSize = 1000;
-  let page = 1;
-  let accountExists = false;
-
-  while (!accountExists) {
-    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: pageSize });
-
-    if (error) {
-      fail(locale, "forgot", error.message);
-    }
-
-    accountExists = data.users.some((user) => user.email?.toLowerCase() === email);
-
-    if (accountExists || data.users.length < pageSize) {
-      break;
-    }
-
-    page += 1;
-  }
-
-  if (!accountExists) {
-    fail(locale, "forgot", localized(locale, "No account found for that email address.", "没有找到该邮箱对应的账号。"));
-  }
-
+  // Standard privacy-preserving behaviour: always show the same response
+  // regardless of whether the email exists in the system. This avoids
+  // leaking account existence information.
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/reset`,
-  });
-
-  if (error) {
-    fail(locale, "forgot", error.message);
+  try {
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/reset`,
+    });
+  } catch (e) {
+    // Swallow errors to avoid revealing information. Consider logging server-side.
   }
 
-  redirect(`/${locale}/forgot?sent=1`);
+  // Always respond with a generic message to the user.
+  const cookieStore = await cookies();
+  cookieStore.set("curvio_reset_sent", "1", {
+    httpOnly: true,
+    maxAge: 300,
+    path: `/${locale}/forgot`,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  redirect(`/${locale}/forgot`);
 }
 
 export async function completeResetAction(formData: FormData) {

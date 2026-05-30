@@ -1,5 +1,7 @@
 import { ForgotPasswordShell } from "@/components/site/forgot-password-shell";
 import { sendResetAction } from "@/app/auth-actions";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
 export default async function ForgotPage({
@@ -10,9 +12,15 @@ export default async function ForgotPage({
   searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const { error, sent } = await searchParams;
+  const { error, sent: querySent } = await searchParams;
+  const cookieStore = await cookies();
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
+  const cookieSent = cookieStore.get("curvio_reset_sent")?.value === "1";
+
+  if (querySent === "1") {
+    redirect(`/${locale}/forgot`);
+  }
 
   return (
     <ForgotPasswordShell
@@ -27,7 +35,7 @@ export default async function ForgotPage({
       locale={locale}
       sendAction={sendResetAction}
       error={error}
-      sent={sent === "1"}
+      sent={cookieSent}
     />
   );
 }
