@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
-import { TurnstileWidget } from "@/components/site/turnstile-widget";
 
 export function ForgotPasswordShell({
   locale,
@@ -24,8 +23,6 @@ export function ForgotPasswordShell({
   error?: string;
   sent?: boolean;
 }) {
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
-
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
       <Card className="w-full max-w-md space-y-7">
@@ -47,7 +44,6 @@ export function ForgotPasswordShell({
             {labels.email}
             <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
           </label>
-          {turnstileSiteKey ? <TurnstileWidget siteKey={turnstileSiteKey} /> : null}
           <Button className="w-full" type="submit">
             {labels.sendResetLink}
           </Button>

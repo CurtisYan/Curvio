@@ -194,13 +194,10 @@ export async function resendOtpAction(formData: FormData) {
 export async function sendResetAction(formData: FormData) {
   const locale = readLocale(formData);
   const email = readString(formData, "email").toLowerCase();
-  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!email || !email.includes("@")) {
     fail(locale, "forgot", "Please enter the email address you used to register.");
   }
-
-  await verifyTurnstile(locale, "forgot", turnstileToken);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
