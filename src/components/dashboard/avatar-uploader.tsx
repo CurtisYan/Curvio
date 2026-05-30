@@ -55,9 +55,9 @@ export function AvatarUploader({
           {changeLabel}
         </span>
       </button>
-      <div className="max-w-xs space-y-1 text-xs text-muted">
+      <div className="max-w-[220px] space-y-1 text-xs text-muted">
         <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="leading-5">{helpText}</p>
+        <p className="break-words leading-5">{helpText}</p>
       </div>
       <input
         accept="image/png,image/jpeg,image/webp"
