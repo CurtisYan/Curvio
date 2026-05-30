@@ -72,10 +72,10 @@ export function Timeline({
                         <span>{anonymousLabel}</span>
                       ) : (
                         <Link
-                          className="inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                          className="group inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-muted"
                           href={localizePath(locale, `/u/${record.authorUsername}`)}
                         >
-                          <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-md border border-border-subtle bg-surface-container-low text-[10px] font-semibold uppercase text-muted">
+                          <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-md border border-border-subtle bg-surface-container-low text-[10px] font-semibold uppercase text-muted transition-opacity group-hover:opacity-70">
                             {record.authorAvatarUrl ? (
                               <img
                                 alt={record.authorDisplayName}
@@ -87,7 +87,9 @@ export function Timeline({
                               initialsFor(record.authorDisplayName)
                             )}
                           </span>
-                          <span>{record.authorDisplayName}</span>
+                          <span className="transition-opacity group-hover:opacity-70 group-hover:underline group-hover:decoration-muted-foreground">
+                            {record.authorDisplayName}
+                          </span>
                         </Link>
                       )}
                     </div>

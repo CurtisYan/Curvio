@@ -38,17 +38,18 @@ export function ForgotPasswordShell({
           <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
             {labels.resetLinkSent}
           </div>
-        ) : null}
-        <form action={sendAction} className="space-y-6">
-          <input name="locale" type="hidden" value={locale} />
-          <label className="space-y-2 text-sm font-medium">
-            {labels.email}
-            <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
-          </label>
-          <Button className="w-full" type="submit">
-            {labels.sendResetLink}
-          </Button>
-        </form>
+        ) : (
+          <form action={sendAction} className="space-y-6">
+            <input name="locale" type="hidden" value={locale} />
+            <label className="space-y-2 text-sm font-medium">
+              {labels.email}
+              <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
+            </label>
+            <Button className="w-full" type="submit">
+              {labels.sendResetLink}
+            </Button>
+          </form>
+        )}
         <div className="border-t border-border-subtle pt-4 text-center text-sm text-muted">
           <a className="text-primary hover:text-primary-strong" href={localizePath(locale, "/login")}>
             {labels.backToLogin}
