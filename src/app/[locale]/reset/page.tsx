@@ -7,18 +7,22 @@ export default async function ResetPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ access_token?: string; error?: string }>; 
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const { access_token, error } = await searchParams;
+  const { error } = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
 
   return (
     <ResetPasswordShell
       locale={locale}
-      labels={messages.auth}
-      token={access_token}
+      labels={{
+        resetTitle: messages.auth.resetTitle,
+        resetNote: messages.auth.resetNote,
+        setPassword: messages.auth.setPassword,
+        backToLogin: messages.auth.backToLogin,
+      }}
       error={error}
       resetAction={completeResetAction}
     />

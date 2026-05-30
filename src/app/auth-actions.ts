@@ -190,10 +190,13 @@ export async function resendOtpAction(formData: FormData) {
 export async function sendResetAction(formData: FormData) {
   const locale = readLocale(formData);
   const email = readString(formData, "email").toLowerCase();
+  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!email || !email.includes("@")) {
-    fail(locale, "register/verify", "Please enter the email address you used to register.");
+    fail(locale, "forgot", "Please enter the email address you used to register.");
   }
+
+  await verifyTurnstile(locale, turnstileToken);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -209,19 +212,20 @@ export async function sendResetAction(formData: FormData) {
 
 export async function completeResetAction(formData: FormData) {
   const locale = readLocale(formData);
-  const token = readString(formData, "access_token");
   const password = readString(formData, "password");
 
   if (!password || password.length < 6) {
     fail(locale, "reset", "Password must be at least 6 characters.");
   }
 
-  if (!token) {
-    fail(locale, "reset", "Missing reset token.");
+  const supabase = await createClient();
+  const { data, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !data.user) {
+    fail(locale, "reset", "Your reset link is invalid or has expired. Please request a new one.");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password, accessToken: token } as any);
+  const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
     fail(locale, "reset", error.message);

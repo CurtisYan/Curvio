@@ -16,7 +16,13 @@ export default async function ForgotPage({
 
   return (
     <ForgotPasswordShell
-      labels={messages.auth}
+      labels={{
+        email: messages.auth.email,
+        forgotTitle: messages.auth.forgotTitle,
+        forgotNote: messages.auth.forgotNote,
+        sendResetLink: messages.auth.sendResetLink,
+        backToLogin: messages.auth.backToLogin,
+      }}
       locale={locale}
       sendAction={sendResetAction}
       error={error}

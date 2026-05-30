@@ -12,6 +12,7 @@ type AuthLabels = {
   username: string;
   createAccount: string;
   alreadyHaveAccount: string;
+  forgotPassword: string;
 };
 
 export function AuthShell({
@@ -84,7 +85,7 @@ export function AuthShell({
                 {labels.createAccount}
               </Link>
               <Link className="text-muted hover:text-muted-foreground block" href={localizePath(locale, "/forgot")}>
-                Forgot password?
+                {labels.forgotPassword}
               </Link>
             </>
           ) : (
