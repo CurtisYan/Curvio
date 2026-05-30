@@ -29,9 +29,29 @@ export default async function LocaleLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let headerUser: {
+    email?: string | null;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+  } | null = null;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    headerUser = {
+      email: user.email,
+      displayName: profile?.display_name ?? null,
+      avatarUrl: profile?.avatar_url ?? null,
+    };
+  }
+
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <SiteHeader locale={locale} messages={messages.nav} userEmail={user?.email} />
+      <SiteHeader locale={locale} messages={messages.nav} user={headerUser} />
       {children}
       <SiteFooter locale={locale} messages={messages.common} />
     </NextIntlClientProvider>

@@ -11,17 +11,34 @@ type NavMessages = {
   signIn: string;
   signOut: string;
   dashboard: string;
+  new: string;
+  settings: string;
   language: string;
 };
+
+function initialsFrom(name: string) {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "U"
+  );
+}
 
 export function SiteHeader({
   locale,
   messages,
-  userEmail,
+  user,
 }: {
   locale: Locale;
   messages: NavMessages;
-  userEmail?: string | null;
+  user?: {
+    email?: string | null;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+  } | null;
 }) {
   const nav = [
     { href: "/explore", label: messages.explore },
@@ -53,27 +70,48 @@ export function SiteHeader({
         </div>
         <div className="flex items-center gap-4">
           <LocaleSwitcher label={messages.language} locale={locale} />
-          {userEmail ? (
-            <>
-              <Link
-                className="hidden text-sm font-medium text-primary transition-opacity hover:opacity-75 sm:inline-flex"
-                href={localizePath(locale, "/dashboard")}
-              >
-                {messages.dashboard}
-              </Link>
-              <form action={signOutAction} className="hidden sm:block">
-                <input name="locale" type="hidden" value={locale} />
-                <button
-                  className="text-sm text-muted transition-colors hover:text-primary"
-                  type="submit"
+          {user ? (
+            <details className="group relative">
+              <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-container-low text-xs font-semibold uppercase text-primary transition-colors hover:border-primary/50">
+                {user.avatarUrl ? (
+                  <img
+                    alt={user.displayName ?? user.email ?? "User"}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    src={user.avatarUrl}
+                  />
+                ) : (
+                  initialsFrom(user.displayName ?? user.email ?? "User")
+                )}
+              </summary>
+              <div className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+                <Link
+                  className="block px-4 py-2.5 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
+                  href={localizePath(locale, "/dashboard/new")}
                 >
-                  {messages.signOut}
-                </button>
-              </form>
-            </>
+                  {messages.new}
+                </Link>
+                <Link
+                  className="block px-4 py-2.5 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
+                  href={localizePath(locale, "/dashboard/settings")}
+                >
+                  {messages.settings}
+                </Link>
+                <div className="border-t border-border-subtle" />
+                <form action={signOutAction}>
+                  <input name="locale" type="hidden" value={locale} />
+                  <button
+                    className="block w-full px-4 py-2.5 text-left text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
+                    type="submit"
+                  >
+                    {messages.signOut}
+                  </button>
+                </form>
+              </div>
+            </details>
           ) : (
             <Link
-              className="hidden text-sm font-medium text-primary transition-opacity hover:opacity-75 sm:inline-flex"
+              className="text-sm font-medium text-primary transition-opacity hover:opacity-75"
               href={localizePath(locale, "/login")}
             >
               {messages.signIn}

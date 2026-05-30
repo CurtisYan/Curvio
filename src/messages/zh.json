@@ -6,6 +6,8 @@
     "signIn": "登录",
     "signOut": "退出",
     "dashboard": "控制台",
+    "new": "新增",
+    "settings": "设置",
     "language": "English / 中文"
   },
   "common": {
