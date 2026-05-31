@@ -22,6 +22,7 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
           container: string | HTMLElement,
           options: {
             sitekey: string;
+            theme?: "auto" | "light" | "dark";
             callback?: (value?: string) => void;
             "expired-callback"?: () => void;
             "error-callback"?: () => void;
@@ -68,6 +69,7 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
           container: string | HTMLElement,
           options: {
             sitekey: string;
+            theme?: "auto" | "light" | "dark";
             callback?: (value?: string) => void;
             "expired-callback"?: () => void;
             "error-callback"?: () => void;
@@ -82,6 +84,7 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
 
     widgetIdRef.current = win.turnstile.render(containerRef.current, {
       sitekey: siteKey,
+      theme: "light",
       callback: win[callbackName],
       "expired-callback": win[expiredCallbackName],
       "error-callback": win[errorCallbackName],
@@ -100,7 +103,9 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         onLoad={() => setScriptReady(true)}
       />
-      <div ref={containerRef} />
+      <div className="flex justify-center">
+        <div ref={containerRef} />
+      </div>
       <input name="turnstileToken" type="hidden" value={token} />
     </div>
   );
