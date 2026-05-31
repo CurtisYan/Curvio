@@ -9,7 +9,6 @@ export default async function ResetPage({
   const { locale: rawLocale } = await params;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   return (
     <ResetPasswordClient
@@ -23,9 +22,7 @@ export default async function ResetPage({
         invalidLink: messages.auth.invalidLink,
         passwordTooShort: messages.auth.passwordTooShort,
         passwordUpdated: messages.auth.passwordUpdated,
-        turnstileMissing: messages.auth.turnstileMissing,
       }}
-      turnstileSiteKey={turnstileSiteKey}
     />
   );
 }

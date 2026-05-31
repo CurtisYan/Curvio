@@ -10,7 +10,6 @@ import { ResetPasswordShell } from "./reset-password-shell";
 export function ResetPasswordClient({
   locale,
   labels,
-  turnstileSiteKey,
 }: {
   locale: Locale;
   labels: {
@@ -22,9 +21,7 @@ export function ResetPasswordClient({
     invalidLink: string;
     passwordTooShort: string;
     passwordUpdated: string;
-    turnstileMissing: string;
   };
-  turnstileSiteKey: string;
 }) {
   const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
@@ -89,7 +86,6 @@ export function ResetPasswordClient({
         labels={labels}
         error={error}
         resetAction={completeResetAction}
-        turnstileSiteKey={turnstileSiteKey}
         mode="error"
       />
     );
@@ -102,7 +98,6 @@ export function ResetPasswordClient({
         labels={labels}
         error={undefined}
         resetAction={completeResetAction}
-        turnstileSiteKey={turnstileSiteKey}
         mode="loading"
       />
     );
@@ -114,7 +109,6 @@ export function ResetPasswordClient({
       labels={labels}
       error={undefined}
       resetAction={completeResetAction}
-      turnstileSiteKey={turnstileSiteKey}
       mode="ready"
     />
   );

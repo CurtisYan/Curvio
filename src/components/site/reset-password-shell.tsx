@@ -1,13 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { TurnstileWidget } from "@/components/site/turnstile-widget";
 import type { Locale } from "@/lib/i18n";
 
 export function ResetPasswordShell({
   locale,
   labels,
-  turnstileSiteKey,
   error,
   resetAction,
   mode = "ready",
@@ -21,9 +19,7 @@ export function ResetPasswordShell({
     linkingAccount: string;
     invalidLink: string;
     passwordUpdated: string;
-    turnstileMissing?: string;
   };
-  turnstileSiteKey: string;
   error?: string;
   resetAction: (formData: FormData) => void | Promise<void>;
   mode?: "ready" | "loading" | "error";
@@ -50,13 +46,6 @@ export function ResetPasswordShell({
               {labels.setPassword}
               <Input autoComplete="new-password" minLength={6} name="password" placeholder={labels.setPassword} required type="password" />
             </label>
-            {turnstileSiteKey ? (
-              <TurnstileWidget siteKey={turnstileSiteKey} />
-            ) : labels.turnstileMissing ? (
-              <p className="rounded-lg border border-dashed border-border-subtle px-3 py-2 text-xs leading-5 text-muted">
-                {labels.turnstileMissing}
-              </p>
-            ) : null}
             <Button className="mt-2 w-full" type="submit">
               {labels.setPassword}
             </Button>

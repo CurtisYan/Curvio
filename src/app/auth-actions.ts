@@ -265,13 +265,10 @@ export async function sendResetAction(formData: FormData) {
 export async function completeResetAction(formData: FormData) {
   const locale = readLocale(formData);
   const password = readString(formData, "password");
-  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!password || password.length < 6) {
     fail(locale, "reset", localized(locale, "Password must be at least 6 characters.", "密码至少需要 6 位。"));
   }
-
-  await verifyTurnstile(locale, "reset", turnstileToken);
 
   const supabase = await createClient();
   const { data, error: userError } = await supabase.auth.getUser();
