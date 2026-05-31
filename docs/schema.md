@@ -30,6 +30,12 @@
 - `hide_amounts_by_default`：默认隐藏金额。
 - `created_at` / `updated_at`：创建/更新时间。
 
+关键约束：
+
+- `username` 仅允许字母、数字、下划线（内部统一转小写存储）。
+- `username` 长度限制为 3-24。
+- `display_name` 长度限制为 2-40。
+
 ## 2. follows（关注关系）
 
 用途：保存用户间关注关系。
@@ -147,7 +153,26 @@
 - `is_verified`：是否已验证。
 - `created_at` / `updated_at`：创建/更新时间。
 
-## 8. 当前已使用 RPC
+## 8. deletion_requests（删除请求）
+
+用途：记录用户发起的数据删除/账号清理请求，形成可追踪处理流程。
+
+字段：
+
+- `id`：删除请求 ID。
+- `user_id`：请求发起用户。
+- `request_content`：按模板提交的请求正文。
+- `status`：处理状态（`pending` / `processing` / `completed` / `rejected`）。
+- `processed_note`：处理备注（可选）。
+- `created_at` / `updated_at`：创建/更新时间。
+- `processed_at`：处理完成时间（可选）。
+
+权限策略（RLS）：
+
+- 用户只能提交自己的删除请求。
+- 用户只能读取自己的删除请求。
+
+## 9. 当前已使用 RPC
 
 ### `get_profile_with_follow_status(viewer_uuid uuid, username_text text)`
 

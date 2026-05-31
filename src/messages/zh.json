@@ -79,7 +79,14 @@
     "scopeTitle": "公开范围",
     "scopeBody": "公开页面会展示你选择公开的资料与记录。金额默认可隐藏，匿名开关保留。location、website_url、github_url、blog_url、bio、principle 均为可选填写，不会强制要求。",
     "deleteTitle": "删除机制",
-    "deleteBody": "你可以在账号层面修改或清空个人资料字段，也可以删除记录内容。若需整账号删除与彻底清理，请通过仓库 Issue 或支持渠道提交请求，我们会按流程处理并同步结果。"
+    "deleteBody": "你可以在账号层面修改或清空个人资料字段，也可以删除记录内容。若需整账号删除与彻底清理，请通过下方删除请求模板提交。",
+    "requestTitle": "删除请求",
+    "requestLead": "为减少误操作，请按模板填写。模板内容默认折叠，展开后可直接复制或编辑。",
+    "templateToggle": "展开删除请求模板",
+    "requestFormLabel": "删除请求内容（请保留模板标题）",
+    "requestSubmit": "提交删除请求",
+    "requestSuccess": "删除请求已提交，我们会按流程处理并反馈。",
+    "requestLoginHint": "请先登录后提交删除请求。"
   },
   "profile": {
     "follow": "关注",
@@ -112,6 +119,7 @@
     "email": "邮箱",
     "password": "密码",
     "username": "用户名",
+    "displayName": "展示名",
     "submitLogin": "登录",
     "submitRegister": "创建账号",
     "sendResetLink": "发送重置链接",

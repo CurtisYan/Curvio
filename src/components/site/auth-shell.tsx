@@ -10,6 +10,7 @@ type AuthLabels = {
   email: string;
   password: string;
   username: string;
+  displayName: string;
   createAccount: string;
   alreadyHaveAccount: string;
   forgotPassword: string;
@@ -51,10 +52,17 @@ export function AuthShell({
         <form action={action} className="space-y-7">
           <input name="locale" type="hidden" value={locale} />
           {mode === "register" ? (
-            <label className="space-y-2 text-sm font-medium">
-              {labels.username}
-              <Input autoComplete="username" name="username" placeholder="elara_writes" required />
-            </label>
+            <>
+              <label className="space-y-2 text-sm font-medium">
+                {labels.username}
+                <Input autoComplete="username" maxLength={24} minLength={3} name="username" pattern="[A-Za-z0-9_]+" placeholder="elara_writes" required />
+                <p className="text-xs font-normal text-muted">3-24 chars, letters/numbers/underscore only.</p>
+              </label>
+              <label className="space-y-2 text-sm font-medium">
+                {labels.displayName}
+                <Input autoComplete="nickname" maxLength={40} minLength={2} name="display_name" placeholder="Elara" required />
+              </label>
+            </>
           ) : null}
           <label className="space-y-2 text-sm font-medium">
             {labels.email}

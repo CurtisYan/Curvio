@@ -119,6 +119,7 @@ export async function signUpAction(formData: FormData) {
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
   const username = readString(formData, "username").toLowerCase();
+  const displayName = readString(formData, "display_name");
   const turnstileToken = readString(formData, "turnstileToken");
 
   if (!email || !email.includes("@")) {
@@ -129,8 +130,12 @@ export async function signUpAction(formData: FormData) {
     fail(
       locale,
       "register",
-      "Username must be 3-24 characters and only use lowercase letters, numbers, or underscores.",
+      "Username must be 3-24 characters and only use letters, numbers, or underscores.",
     );
+  }
+
+  if (displayName.length < 2 || displayName.length > 40) {
+    fail(locale, "register", "Display name must be 2-40 characters.");
   }
 
   if (password.length < 6) {
@@ -157,7 +162,7 @@ export async function signUpAction(formData: FormData) {
       data: {
         lang: locale,
         username,
-        display_name: username,
+        display_name: displayName,
         preferred_language: locale,
       },
     },

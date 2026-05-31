@@ -79,7 +79,14 @@
     "scopeTitle": "Public Scope",
     "scopeBody": "Public pages display only information and records that you choose to make public. Amount visibility remains hidden by default and anonymous posting remains available. location, website_url, github_url, blog_url, bio, and principle are optional and never mandatory.",
     "deleteTitle": "Deletion Mechanism",
-    "deleteBody": "You can edit or clear profile fields and remove record content in your account. For full account deletion and data cleanup, submit a request via repository Issue or support channel and we will process it through the deletion workflow."
+    "deleteBody": "You can edit or clear profile fields and remove record content in your account. For full account deletion and data cleanup, submit a deletion request using the template below.",
+    "requestTitle": "Deletion Request",
+    "requestLead": "To reduce accidental requests, please submit in template format. The template is folded by default to save screen space.",
+    "templateToggle": "Expand deletion request template",
+    "requestFormLabel": "Request content (keep template headings)",
+    "requestSubmit": "Submit deletion request",
+    "requestSuccess": "Deletion request submitted. We will process it through the workflow.",
+    "requestLoginHint": "Please sign in before submitting a deletion request."
   },
   "profile": {
     "follow": "Follow",
@@ -112,6 +119,7 @@
     "email": "Email",
     "password": "Password",
     "username": "Username",
+    "displayName": "Display name",
     "submitLogin": "Sign In",
     "submitRegister": "Create Account",
     "sendResetLink": "Send reset link",
