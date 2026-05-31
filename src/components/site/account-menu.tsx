@@ -24,7 +24,7 @@ export function AccountMenu({
   locale: Locale;
   labels: {
     signOut: string;
-    new: string;
+    dashboard: string;
     settings: string;
     profile: string;
   };
@@ -93,17 +93,17 @@ export function AccountMenu({
         <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-xl border border-border-subtle bg-surface shadow-[0_10px_30px_rgba(0,0,0,0.08)] sm:w-52">
           <Link
             className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
+            href={localizePath(locale, "/dashboard")}
+            onClick={() => setOpen(false)}
+          >
+            {labels.dashboard}
+          </Link>
+          <Link
+            className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
             href={profileHref}
             onClick={() => setOpen(false)}
           >
             {labels.profile}
-          </Link>
-          <Link
-            className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
-            href={localizePath(locale, "/new")}
-            onClick={() => setOpen(false)}
-          >
-            {labels.new}
           </Link>
           <Link
             className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"

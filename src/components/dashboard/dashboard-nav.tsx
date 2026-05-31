@@ -8,17 +8,15 @@ export function DashboardNav({
 }: {
   locale: Locale;
   labels: {
-    newRecord: string;
+    all: string;
     records: string;
-    settings: string;
-    projects?: string;
+    projects: string;
   };
 }) {
   const items = [
-    { href: "/new", label: labels.newRecord },
-    { href: "/records", label: labels.records },
-    { href: "/projects", label: labels.projects ?? "Projects" },
-    { href: "/settings", label: labels.settings },
+    { href: "/dashboard", label: labels.all },
+    { href: "/dashboard/records", label: labels.records },
+    { href: "/dashboard/projects", label: labels.projects },
   ];
 
   return (

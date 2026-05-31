@@ -61,12 +61,18 @@ export function SiteHeader({
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            className="text-sm font-medium text-primary transition-opacity hover:opacity-75"
+            href={localizePath(locale, "/new")}
+          >
+            {messages.new}
+          </Link>
           <LocaleSwitcher label={messages.language} locale={locale} />
           {user ? (
             <AccountMenu
               labels={{
                 signOut: messages.signOut,
-                new: messages.new,
+                dashboard: messages.dashboard,
                 profile: messages.profile,
                 settings: messages.settings,
               }}

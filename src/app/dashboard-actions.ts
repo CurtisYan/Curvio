@@ -48,7 +48,7 @@ function recordEditRedirect(
   if (message) {
     params.set("message", message);
   }
-  redirect(`/${locale}/records/${recordId}/edit?${params.toString()}`);
+  redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
 }
 
 function recordFormMessage(locale: Locale, key: string) {
@@ -192,7 +192,9 @@ export async function createRecordAction(
     }
   }
 
-  revalidatePath(`/${locale}/records`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/projects`);
   revalidatePath(`/${locale}/u/${profile.username}`);
 
   redirect(
@@ -208,7 +210,7 @@ export async function updateRecordAction(formData: FormData) {
   const content = readString(formData, "content");
 
   if (!recordId) {
-    redirect(`/${locale}/records`);
+    redirect(`/${locale}/dashboard/records`);
   }
 
   if (!title || !date || !content) {
@@ -269,7 +271,9 @@ export async function updateRecordAction(formData: FormData) {
     recordEditRedirect(locale, recordId, "error", updateError.message);
   }
 
-  revalidatePath(`/${locale}/records`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/projects`);
   recordEditRedirect(locale, publicRecordId, "saved");
 }
 

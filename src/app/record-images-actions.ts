@@ -31,7 +31,7 @@ function redirectToEdit(locale: Locale, recordId: string, status: "saved" | "err
   if (message) {
     params.set("message", message);
   }
-  redirect(`/${locale}/records/${recordId}/edit?${params.toString()}`);
+  redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
 }
 
 function imageActionMessage(locale: Locale, key: string) {
@@ -78,7 +78,7 @@ export async function uploadRecordImagesAction(formData: FormData) {
   const files = readFiles(formData, "images");
 
   if (!recordId) {
-    redirect(`/${locale}/records`);
+    redirect(`/${locale}/dashboard/records`);
   }
 
   if (!isRecordType(recordTypeValue)) {
@@ -166,7 +166,9 @@ export async function uploadRecordImagesAction(formData: FormData) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
   }
 
-  revalidatePath(`/${locale}/records`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/projects`);
   revalidatePath(`/${locale}/explore`);
 
   redirectToEdit(locale, publicRecordId, "saved");
@@ -178,7 +180,7 @@ export async function deleteRecordImageAction(formData: FormData) {
   const imageId = readString(formData, "image_id");
 
   if (!recordId || !imageId) {
-    redirect(`/${locale}/records`);
+    redirect(`/${locale}/dashboard/records`);
   }
 
   const supabase = await createClient();
@@ -245,7 +247,8 @@ export async function deleteRecordImageAction(formData: FormData) {
     }
   }
 
-  revalidatePath(`/${locale}/records`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved");
 }
 
@@ -255,7 +258,7 @@ export async function setCoverImageAction(formData: FormData) {
   const imageId = readString(formData, "image_id");
 
   if (!recordId || !imageId) {
-    redirect(`/${locale}/records`);
+    redirect(`/${locale}/dashboard/records`);
   }
 
   const supabase = await createClient();
@@ -303,7 +306,8 @@ export async function setCoverImageAction(formData: FormData) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
   }
 
-  revalidatePath(`/${locale}/records`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "cover"));
 }
 
@@ -314,7 +318,7 @@ export async function moveRecordImageAction(formData: FormData) {
   const direction = readString(formData, "direction");
 
   if (!recordId || !imageId || !direction) {
-    redirect(`/${locale}/records`);
+    redirect(`/${locale}/dashboard/records`);
   }
 
   const supabase = await createClient();
@@ -370,6 +374,7 @@ export async function moveRecordImageAction(formData: FormData) {
     .eq("id", target.id)
     .eq("user_id", user.id);
 
-  revalidatePath(`/${locale}/records`);
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "order"));
 }

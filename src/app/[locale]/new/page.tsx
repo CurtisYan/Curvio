@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { RecordFormShell } from "@/components/dashboard/record-form-shell";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { createClient } from "@/utils/supabase/server";
@@ -23,15 +22,12 @@ export default async function NewRecordPage({
 
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
-      <DashboardNav locale={locale} labels={messages.dashboard} />
-      <div className="mt-8">
-        <RecordFormShell
-          labels={messages.dashboard}
-          locale={locale}
-          note=""
-          title={messages.dashboard.newTitle}
-        />
-      </div>
+      <RecordFormShell
+        labels={messages.dashboard}
+        locale={locale}
+        note=""
+        title={messages.dashboard.newTitle}
+      />
     </main>
   );
 }
