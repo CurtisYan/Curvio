@@ -59,7 +59,7 @@
     "title": "官方公益平台入口",
     "notice": "Curvio 不接收捐款。以下链接均指向公益组织或平台的官方网站。",
     "transparencyTitle": "透明度说明",
-    "transparencyBody": "我们优先整理报告清晰、机构可信的平台。大额捐赠前，请始终自行核验公益组织信息。"
+    "transparencyBody": "我们优先整理报告清晰、机构可信的平台。大额捐赠前，请始终自行核验公益组织信息。如需建议新增捐赠地址或报告问题，请在 GitHub 仓库提出 Issue：https://github.com/CurtisYan/Curvio/issues"
   },
   "about": {
     "title": "一个长期记录善意的安静空间",

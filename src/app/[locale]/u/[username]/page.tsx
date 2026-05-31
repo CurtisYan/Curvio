@@ -5,6 +5,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProfileContentSwitcher } from "@/components/site/profile-content-switcher";
 import { getDictionary, isLocale, localizePath, type Locale } from "@/lib/i18n";
+import { followProfileAction, unfollowProfileAction } from "@/app/dashboard-actions";
 import type { GoodwillRecord } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -63,6 +64,18 @@ export default async function UserProfilePage({
   }
 
   const isOwnProfile = viewerProfile?.username === profile.username;
+
+  let isFollowing = false;
+  if (user && !isOwnProfile) {
+    const { data: followRow } = await supabase
+      .from("follows")
+      .select("id")
+      .eq("follower_id", user.id)
+      .eq("following_id", profile.id)
+      .maybeSingle();
+
+    isFollowing = Boolean(followRow);
+  }
 
   const recordsQuery = supabase
     .from("records")
@@ -158,10 +171,18 @@ export default async function UserProfilePage({
               <ButtonLink href={localizePath(locale, "/settings")} variant="secondary">
                 {messages.dashboard.settings}
               </ButtonLink>
+            ) : isFollowing ? (
+              <form action={unfollowProfileAction} className="m-0">
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="username" value={profile.username} />
+                <Button type="submit" variant="secondary">{messages.profile.following || "Following"}</Button>
+              </form>
             ) : (
-              <Button variant="secondary" type="button">
-                {messages.profile.follow}
-              </Button>
+              <form action={followProfileAction} className="m-0">
+                <input type="hidden" name="locale" value={locale} />
+                <input type="hidden" name="username" value={profile.username} />
+                <Button type="submit" variant="primary">{messages.profile.follow}</Button>
+              </form>
             )}
           </div>
           {profile.principle ? (
