@@ -71,6 +71,16 @@
     "boundaryTitle": "Curvio 不会做什么",
     "boundaryBody": "不提供私人收款入口，不做金额排行榜，不做点赞、排名，也不把用户导向个人募捐。"
   },
+  "privacy": {
+    "title": "隐私说明",
+    "lead": "Curvio 只收集支撑账号、公开记录与基础社交关系所需的数据，并尽量保持最小化。",
+    "purposeTitle": "收集目的",
+    "purposeBody": "我们收集账号标识、主页信息、记录内容、关注关系与展示偏好，用于提供登录、发布、展示和筛选等基础功能。Curvio 不提供募捐收款，因此不采集支付卡或交易扣款信息。",
+    "scopeTitle": "公开范围",
+    "scopeBody": "公开页面会展示你选择公开的资料与记录。金额默认可隐藏，匿名开关保留。location、website_url、github_url、blog_url、bio、principle 均为可选填写，不会强制要求。",
+    "deleteTitle": "删除机制",
+    "deleteBody": "你可以在账号层面修改或清空个人资料字段，也可以删除记录内容。若需整账号删除与彻底清理，请通过仓库 Issue 或支持渠道提交请求，我们会按流程处理并同步结果。"
+  },
   "profile": {
     "follow": "关注",
     "following": "已关注",

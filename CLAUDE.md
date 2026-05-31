@@ -1,85 +1,58 @@
 
+# Curvio Development Notes (Compact)
 
-# Curvio Development Notes
+Curvio is a restrained public-welfare archive, not a fundraising product.
 
-Curvio is a restrained public-welfare archive, not a donation collection or fundraising platform. Keep the product quiet, sincere, bilingual, and non-competitive.
+## Non-Negotiable Product Rules
 
-## Current Phase
-
-- This repository implements the phase-one front-end shell plus the first real Supabase account flow.
-- Public browsing data is still mostly mock-driven in `src/lib/mock-data.ts`.
-- Supabase Auth uses email OTP verification: register with `signUp()`, enter the mailed token, then complete with `verifyOtp({ type: "signup" })`.
-- Dashboard settings read/write the authenticated user's profile and profile section order.
-- Avatar uploads are designed for Cloudflare R2 using a stable object key: `avatars/{userId}/avatar`.
-
-## Product Boundaries
-
-- Do not add private payment links or personal collection flows.
-- Do not add likes, comments, leaderboards, amount rankings, top-donor lists, or popularity sorting.
+- No private collection links, payment processing, likes, comments, rankings, or gamified competition.
 - Donation links must point to official organization/platform websites.
-- Donation amounts should be hidden by default and never used for ranking.
-- Anonymous public records should not link to a user profile.
+- Amounts are hidden by default and cannot be used for ranking.
+- Anonymous records must not expose profile links.
 
-## Frontend Constraints
+## Data & Privacy Defaults
 
-- Keep a single visual language across public pages, profile pages, and record flows; avoid making dashboard-like pages feel like separate products.
-- Public record URLs must use a date-prefixed format, `YYYYMMDD-{uuid}`, so links are human-readable while still remaining stable and unique.
-- Treat that public record ID as part of the product contract: Supabase should store it, and every detail/edit/link surface should resolve it the same way.
-- Record type badges such as Donation, Kindness, and Open Work should be clickable and route to the matching filtered Explore view.
-- Public profile pages should reuse the same type badge and section styling patterns as the record detail pages and record lists.
-- Profile tabs for Donations, Kindness, Open Work, Annual Summary, Following, and Followers should all feel like one coherent navigation system, not separate widgets.
-- Do not introduce a second theme variant for dashboard or profile flows unless the product requirements explicitly change.
+- Keep optional profile fields optional: `location`, `website_url`, `github_url`, `blog_url`, `bio`, `principle`.
+- Keep anonymous toggle available.
+- Keep amount visibility hidden by default.
+- Avoid collecting unrelated personal data.
 
-## Hover / Interaction
+## Frontend Contracts
 
-- Surface hover style should prioritize subtle background deepening over heavy shadow. Canonical utilities are defined in `src/components/ui/interactive.ts`:
+- Keep one coherent visual language across public/profile/dashboard flows.
+- Public record URL format is fixed: `YYYYMMDD-{uuid}`.
+- Type badges (Donation/Kindness/Open Work) must be clickable and route to filtered Explore.
+- Canonical hover utilities live in `src/components/ui/interactive.ts`:
+  - `surfaceHover`
+  - `surfaceHoverLow`
 
-	- `surfaceHover`: `transition-colors hover:bg-surface-container hover:text-primary`
-	- `surfaceHoverLow`: `transition-colors hover:bg-surface-container-low hover:text-primary`
+## Schema Sync Rule (Required)
 
-	Use these exported constants wherever possible instead of inlining hover color classes repeatedly.
+Any Supabase schema change must be synchronized in the same commit:
 
-Canonical implementation (code):
+- migration SQL in `supabase/migrations/`
+- schema notes in `docs/schema.md`
 
-- The project keeps a single code-level source of truth for surface hover utilities in `src/components/ui/interactive.ts`.
-- Example import and usage in a component:
+Applies to table/column add-remove-rename, constraints, indexes, triggers, RPC/functions, and defaults.
 
-	- `import { surfaceHover } from "src/components/ui/interactive";`
-	- `className={`inline-flex px-2 py-0.5 rounded-full ${surfaceHover}`}`
+## Implementation Notes
 
-Keep `CLAUDE.md` as the human-readable guideline and the `interactive.ts` file as the canonical code reference. If you later prefer a Tailwind plugin or a global CSS class (for design-system distribution), we can migrate the constants into `globals.css` and update `interactive.ts` to export the class name instead.
-
-## Schema Sync Rule
-
-- Any change to Supabase schema must be synchronized in two places within the same commit:
-
-	- SQL migration under `supabase/migrations/`
-	- Human-readable schema notes in `docs/schema.md`
-
-- This includes table/column add-remove-rename, constraints, indexes, triggers, functions (RPC), and important default value changes.
-
-## Technical Notes
-
-- Framework: Next.js App Router, TypeScript, Tailwind CSS 4.
-- Internationalization uses locale routes: `/en` and `/zh`.
-- User-facing strings should live in `src/messages/en.json` and `src/messages/zh.json`.
-- Reusable UI should stay in `src/components`.
-- Mock types live in `src/lib/types.ts`; keep these close to the future Supabase schema.
-- Supabase env vars are documented in `.env.example`; local values belong in `.env.local`.
-- R2 server-side env vars are also documented in `.env.example`; never expose R2 secret keys to the browser.
-- Next.js 16 session refresh should use `src/proxy.ts`, not the deprecated `middleware.ts` route entry.
-- `next/font` is intentionally not used so production builds do not depend on fetching Google Fonts.
+- Framework: Next.js App Router + TypeScript + Tailwind CSS 4.
+- Locale routes: `/en`, `/zh`.
+- User-facing copy: `src/messages/en.json`, `src/messages/zh.json`.
+- Reusable components: `src/components`.
+- Supabase/R2 env vars: `.env.example` and `.env.local`.
 
 ## Verification
 
-Run these before committing:
+Run before commit:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-## Git Habit
+## Git Rule
 
-After each meaningful implementation conversation, create a focused commit with a clear message. Keep unrelated generated artifacts out of the commit unless they are part of the app state.
-At the end of each session, push the commit to GitHub.
+- Keep commits focused and readable.
+- Push to GitHub after each meaningful change.

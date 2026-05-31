@@ -1,14 +1,14 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
-          <a
-            href="https://github.com/CurtisYan/Curvio"
-            target="_blank"
-            rel="noreferrer"
-            className="text-muted hover:text-primary"
-          >
-            GitHub
-          </a>
+
+type FooterMessages = {
+  brand: string;
+  tagline: string;
+  github: string;
+  privacy: string;
+  terms: string;
+};
 
 export function SiteFooter({
   locale,

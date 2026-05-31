@@ -71,6 +71,16 @@
     "boundaryTitle": "What Curvio will not do",
     "boundaryBody": "No private payment links, no donation amount leaderboards, no likes, no rankings, and no personal fundraising funnel."
   },
+  "privacy": {
+    "title": "Privacy",
+    "lead": "Curvio only collects data required for account access, public records, and basic social relations, with a minimum-data approach.",
+    "purposeTitle": "Collection Purpose",
+    "purposeBody": "We collect account identity, profile fields, record content, follow relations, and display preferences to provide sign-in, publishing, profile display, and filtering features. Curvio does not process fundraising payments, so payment-card or charge data is not collected.",
+    "scopeTitle": "Public Scope",
+    "scopeBody": "Public pages display only information and records that you choose to make public. Amount visibility remains hidden by default and anonymous posting remains available. location, website_url, github_url, blog_url, bio, and principle are optional and never mandatory.",
+    "deleteTitle": "Deletion Mechanism",
+    "deleteBody": "You can edit or clear profile fields and remove record content in your account. For full account deletion and data cleanup, submit a request via repository Issue or support channel and we will process it through the deletion workflow."
+  },
   "profile": {
     "follow": "Follow",
     "following": "Following",
