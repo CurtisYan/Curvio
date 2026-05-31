@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ProfileContentSwitcher } from "@/components/site/profile-content-switcher";
 import { getDictionary, isLocale, localizePath, type Locale } from "@/lib/i18n";
 import FollowButton from "@/components/site/follow-button";
+import { surfaceHover } from "@/components/ui/interactive";
 import type { GoodwillRecord } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -153,7 +154,7 @@ export default async function UserProfilePage({
                 <span className="mx-2">•</span>
                 <a
                   href="#following"
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container hover:text-primary"
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${surfaceHover}`}
                   title={locale === "zh" ? "点击查看已关注列表" : "Click to view following list"}
                 >
                   {followingCount ?? 0} {messages.profile.following}
@@ -161,7 +162,7 @@ export default async function UserProfilePage({
                 <span className="mx-2">•</span>
                 <a
                   href="#followers"
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container hover:text-primary"
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${surfaceHover}`}
                   title={locale === "zh" ? "点击查看粉丝列表" : "Click to view followers list"}
                 >
                   {(followerCount ?? 0).toLocaleString()} {messages.profile.followers}

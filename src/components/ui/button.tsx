@@ -1,13 +1,14 @@
 import Link from "next/link";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { surfaceHoverLow } from "./interactive";
 
 const variants = {
   primary: "bg-primary text-white hover:bg-primary-strong border-primary",
   secondary:
-    "bg-surface-offwhite text-primary hover:bg-surface-container-low border-border-subtle",
+    `bg-surface-offwhite text-primary ${surfaceHoverLow} border-border-subtle`,
   ghost:
-    "bg-transparent text-muted hover:text-primary hover:bg-surface-container-low border-transparent",
+    `bg-transparent text-muted hover:text-primary ${surfaceHoverLow} border-transparent`,
 };
 
 type BaseProps = {
