@@ -86,7 +86,14 @@
     "requestFormLabel": "Request content (keep template headings)",
     "requestSubmit": "Submit deletion request",
     "requestSuccess": "Deletion request submitted. We will process it through the workflow.",
-    "requestLoginHint": "Please sign in before submitting a deletion request."
+    "requestLoginHint": "Please sign in before submitting a deletion request.",
+    "historyTitle": "My Deletion Requests",
+    "historyEmpty": "No deletion requests yet.",
+    "historyWarming": "Deletion request history is still warming up. Please refresh in 1-2 minutes.",
+    "statusPending": "Pending",
+    "statusProcessing": "Processing",
+    "statusCompleted": "Completed",
+    "statusRejected": "Rejected"
   },
   "profile": {
     "follow": "Follow",

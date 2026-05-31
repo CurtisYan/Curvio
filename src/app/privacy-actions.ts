@@ -47,6 +47,9 @@ export async function submitDeletionRequestAction(formData: FormData) {
   });
 
   if (error) {
+    if (error.message.includes("deletion_requests") && error.message.toLowerCase().includes("schema cache")) {
+      redirect(`/${locale}/privacy?error=${encodeURIComponent("Deletion request feature is still warming up. Please retry in 1-2 minutes.")}`);
+    }
     redirect(`/${locale}/privacy?error=${encodeURIComponent(error.message)}`);
   }
 

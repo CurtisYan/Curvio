@@ -86,7 +86,14 @@
     "requestFormLabel": "删除请求内容（请保留模板标题）",
     "requestSubmit": "提交删除请求",
     "requestSuccess": "删除请求已提交，我们会按流程处理并反馈。",
-    "requestLoginHint": "请先登录后提交删除请求。"
+    "requestLoginHint": "请先登录后提交删除请求。",
+    "historyTitle": "我的删除请求",
+    "historyEmpty": "还没有删除请求记录。",
+    "historyWarming": "删除请求历史功能正在就绪，请 1-2 分钟后刷新。",
+    "statusPending": "待处理",
+    "statusProcessing": "处理中",
+    "statusCompleted": "已完成",
+    "statusRejected": "已拒绝"
   },
   "profile": {
     "follow": "关注",

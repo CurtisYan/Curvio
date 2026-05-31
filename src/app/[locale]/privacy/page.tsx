@@ -21,6 +21,28 @@ export default async function PrivacyPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let historyRows: Array<{ id: string; status: "pending" | "processing" | "completed" | "rejected"; created_at: string }> = [];
+  let historyError: string | null = null;
+
+  if (user) {
+    const { data, error: historyQueryError } = await supabase
+      .from("deletion_requests")
+      .select("id, status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (historyQueryError) {
+      if (historyQueryError.message.includes("deletion_requests") && historyQueryError.message.toLowerCase().includes("schema cache")) {
+        historyError = messages.privacy.historyWarming;
+      } else {
+        historyError = historyQueryError.message;
+      }
+    } else {
+      historyRows = (data ?? []) as Array<{ id: string; status: "pending" | "processing" | "completed" | "rejected"; created_at: string }>;
+    }
+  }
+
   const requestTemplate = `Request Type: account|records\nData Scope: <what to delete>\nReason: <brief reason>\nConfirmation: I understand this request may be irreversible.`;
 
   return (
@@ -121,6 +143,41 @@ export default async function PrivacyPage({
             </div>
           </div>
         </Card>
+
+        {user ? (
+          <Card>
+            <div>
+              <h2 className="text-2xl font-medium">{messages.privacy.historyTitle}</h2>
+              {historyError ? (
+                <p className="mt-4 rounded-lg border border-border-subtle bg-surface-container-low px-3 py-2 text-sm text-muted">
+                  {historyError}
+                </p>
+              ) : historyRows.length === 0 ? (
+                <p className="mt-4 text-sm text-muted">{messages.privacy.historyEmpty}</p>
+              ) : (
+                <ul className="mt-4 space-y-2">
+                  {historyRows.map((row) => (
+                    <li className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-offwhite px-3 py-2" key={row.id}>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">#{row.id.slice(0, 8)}</p>
+                        <p className="text-xs text-muted">{new Date(row.created_at).toLocaleString(locale)}</p>
+                      </div>
+                      <span className="rounded-full bg-surface-container px-2 py-1 text-xs font-medium text-primary">
+                        {row.status === "pending"
+                          ? messages.privacy.statusPending
+                          : row.status === "processing"
+                            ? messages.privacy.statusProcessing
+                            : row.status === "completed"
+                              ? messages.privacy.statusCompleted
+                              : messages.privacy.statusRejected}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
+        ) : null}
       </section>
     </main>
   );
