@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { formatRecordPublicId } from "@/lib/record-public-id";
 import { recordTypeToSegment } from "@/lib/record-types";
 import type { RecordType } from "@/lib/types";
 import { uploadAvatarToR2, uploadRecordImageToR2 } from "@/utils/r2";
@@ -47,7 +48,7 @@ function recordEditRedirect(
   if (message) {
     params.set("message", message);
   }
-  redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
+  redirect(`/${locale}/records/${recordId}/edit?${params.toString()}`);
 }
 
 function recordFormMessage(locale: Locale, key: string) {
@@ -148,12 +149,14 @@ export async function createRecordAction(
       amount: amountValue,
       currency: showAmount ? currency || null : null,
     })
-    .select("id")
+    .select("id, date")
     .single();
 
   if (recordError || !record) {
     return { status: "error", message: recordFormMessage(locale, "createFailed") };
   }
+
+  const publicRecordId = formatRecordPublicId(record.date, record.id);
 
   if (files.length > 0) {
     try {
@@ -189,11 +192,11 @@ export async function createRecordAction(
     }
   }
 
-  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/records`);
   revalidatePath(`/${locale}/u/${profile.username}`);
 
   redirect(
-    `/${locale}/u/${profile.username}/${recordTypeToSegment(typeValue)}/${record.id}`,
+    `/${locale}/u/${profile.username}/${recordTypeToSegment(typeValue)}/${publicRecordId}`,
   );
 }
 
@@ -205,7 +208,7 @@ export async function updateRecordAction(formData: FormData) {
   const content = readString(formData, "content");
 
   if (!recordId) {
-    redirect(`/${locale}/dashboard/records`);
+    redirect(`/${locale}/records`);
   }
 
   if (!title || !date || !content) {
@@ -237,7 +240,7 @@ export async function updateRecordAction(formData: FormData) {
 
   const { data: record, error: recordError } = await supabase
     .from("records")
-    .select("id")
+    .select("id, date")
     .eq("id", recordId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -245,6 +248,8 @@ export async function updateRecordAction(formData: FormData) {
   if (recordError || !record) {
     recordEditRedirect(locale, recordId, "error", "Record not found.");
   }
+
+  const publicRecordId = formatRecordPublicId(record.date, record.id);
 
   const { error: updateError } = await supabase
     .from("records")
@@ -264,8 +269,8 @@ export async function updateRecordAction(formData: FormData) {
     recordEditRedirect(locale, recordId, "error", updateError.message);
   }
 
-  revalidatePath(`/${locale}/dashboard/records`);
-  recordEditRedirect(locale, recordId, "saved");
+  revalidatePath(`/${locale}/records`);
+  recordEditRedirect(locale, publicRecordId, "saved");
 }
 
 function redirectWithStatus(locale: Locale, status: "saved" | "error", message?: string): never {
@@ -273,7 +278,7 @@ function redirectWithStatus(locale: Locale, status: "saved" | "error", message?:
   if (message) {
     params.set("message", message);
   }
-  redirect(`/${locale}/dashboard/settings?${params.toString()}`);
+  redirect(`/${locale}/settings?${params.toString()}`);
 }
 
 function normalizeOptionalUrl(value: string) {
@@ -357,7 +362,76 @@ export async function updateProfileSettingsAction(formData: FormData) {
     ),
   );
 
-  revalidatePath(`/${locale}/dashboard/settings`);
+  revalidatePath(`/${locale}/settings`);
   revalidatePath(`/${locale}/u/${user.user_metadata?.username ?? ""}`);
   redirectWithStatus(locale, "saved");
+}
+
+export async function followProfileAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const username = readString(formData, "username");
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("id, username, allow_follow")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (!targetProfile || targetProfile.id === user.id || !targetProfile.allow_follow) {
+    redirect(`/${locale}/u/${username}`);
+  }
+
+  const { error } = await supabase.from("follows").insert({
+    follower_id: user.id,
+    following_id: targetProfile.id,
+  });
+
+  if (error) {
+    redirect(`/${locale}/u/${username}`);
+  }
+
+  revalidatePath(`/${locale}/u/${username}`);
+  redirect(`/${locale}/u/${username}`);
+}
+
+export async function unfollowProfileAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const username = readString(formData, "username");
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("id, username")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (!targetProfile || targetProfile.id === user.id) {
+    redirect(`/${locale}/u/${username}`);
+  }
+
+  await supabase
+    .from("follows")
+    .delete()
+    .eq("follower_id", user.id)
+    .eq("following_id", targetProfile.id);
+
+  revalidatePath(`/${locale}/u/${username}`);
+  redirect(`/${locale}/u/${username}`);
 }

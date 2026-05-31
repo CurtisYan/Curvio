@@ -28,6 +28,28 @@ function localized(locale: Locale, en: string, zh: string) {
   return locale === "zh" ? zh : en;
 }
 
+async function redirectToProfileOrNew(locale: Locale, supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/${locale}/new`);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.username) {
+    redirect(`/${locale}/u/${profile.username}`);
+  }
+
+  redirect(`/${locale}/new`);
+}
+
 async function verifyTurnstile(
   locale: Locale,
   path: "login" | "register" | "register/verify" | "forgot" | "reset",
@@ -89,7 +111,7 @@ export async function signInAction(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect(`/${locale}/dashboard`);
+  await redirectToProfileOrNew(locale, supabase);
 }
 
 export async function signUpAction(formData: FormData) {
@@ -173,7 +195,7 @@ export async function verifyOtpAction(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect(`/${locale}/dashboard`);
+  await redirectToProfileOrNew(locale, supabase);
 }
 
 export async function resendOtpAction(formData: FormData) {
@@ -189,7 +211,7 @@ export async function resendOtpAction(formData: FormData) {
     type: "signup",
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/new`,
     },
   });
 
@@ -254,7 +276,7 @@ export async function completeResetAction(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect(`/${locale}/dashboard`);
+  await redirectToProfileOrNew(locale, supabase);
 }
 
 export async function signOutAction(formData: FormData) {

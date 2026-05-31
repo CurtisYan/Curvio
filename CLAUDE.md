@@ -1,3 +1,5 @@
+
+
 # Curvio Development Notes
 
 Curvio is a restrained public-welfare archive, not a donation collection or fundraising platform. Keep the product quiet, sincere, bilingual, and non-competitive.
@@ -17,6 +19,16 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 - Donation links must point to official organization/platform websites.
 - Donation amounts should be hidden by default and never used for ranking.
 - Anonymous public records should not link to a user profile.
+
+## Frontend Constraints
+
+- Keep a single visual language across public pages, profile pages, and record flows; avoid making dashboard-like pages feel like separate products.
+- Public record URLs must use a date-prefixed format, `YYYYMMDD-{uuid}`, so links are human-readable while still remaining stable and unique.
+- Treat that public record ID as part of the product contract: Supabase should store it, and every detail/edit/link surface should resolve it the same way.
+- Record type badges such as Donation, Kindness, and Open Work should be clickable and route to the matching filtered Explore view.
+- Public profile pages should reuse the same type badge and section styling patterns as the record detail pages and record lists.
+- Profile tabs for Donations, Kindness, Open Work, Annual Summary, Following, and Followers should all feel like one coherent navigation system, not separate widgets.
+- Do not introduce a second theme variant for dashboard or profile flows unless the product requirements explicitly change.
 
 ## Technical Notes
 

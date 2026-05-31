@@ -66,7 +66,7 @@ export function AccountMenu({
 
   const profileHref = user.username
     ? localizePath(locale, `/u/${user.username}`)
-    : localizePath(locale, "/dashboard");
+    : localizePath(locale, "/new");
 
   return (
     <div className="relative" ref={wrapperRef}>
@@ -100,14 +100,14 @@ export function AccountMenu({
           </Link>
           <Link
             className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
-            href={localizePath(locale, "/dashboard/new")}
+            href={localizePath(locale, "/new")}
             onClick={() => setOpen(false)}
           >
             {labels.new}
           </Link>
           <Link
             className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
-            href={localizePath(locale, "/dashboard/settings")}
+            href={localizePath(locale, "/settings")}
             onClick={() => setOpen(false)}
           >
             {labels.settings}

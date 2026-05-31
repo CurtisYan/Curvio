@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { RecordType } from "@/lib/types";
 import { deleteRecordImageFromR2, uploadRecordImageToR2 } from "@/utils/r2";
 import { createClient } from "@/utils/supabase/server";
@@ -30,7 +31,7 @@ function redirectToEdit(locale: Locale, recordId: string, status: "saved" | "err
   if (message) {
     params.set("message", message);
   }
-  redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
+  redirect(`/${locale}/records/${recordId}/edit?${params.toString()}`);
 }
 
 function imageActionMessage(locale: Locale, key: string) {
@@ -77,7 +78,7 @@ export async function uploadRecordImagesAction(formData: FormData) {
   const files = readFiles(formData, "images");
 
   if (!recordId) {
-    redirect(`/${locale}/dashboard/records`);
+    redirect(`/${locale}/records`);
   }
 
   if (!isRecordType(recordTypeValue)) {
@@ -100,7 +101,7 @@ export async function uploadRecordImagesAction(formData: FormData) {
 
   const { data: record, error: recordError } = await supabase
     .from("records")
-    .select("id, user_id, type")
+    .select("id, date, user_id, type")
     .eq("id", recordId)
     .maybeSingle();
 
@@ -111,6 +112,8 @@ export async function uploadRecordImagesAction(formData: FormData) {
   if (record.type !== recordTypeValue) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "type"));
   }
+
+  const publicRecordId = formatRecordPublicId(record.date, record.id);
 
   const { count, error: countError } = await supabase
     .from("record_images")
@@ -163,10 +166,10 @@ export async function uploadRecordImagesAction(formData: FormData) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
   }
 
-  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/records`);
   revalidatePath(`/${locale}/explore`);
 
-  redirectToEdit(locale, recordId, "saved");
+  redirectToEdit(locale, publicRecordId, "saved");
 }
 
 export async function deleteRecordImageAction(formData: FormData) {
@@ -175,7 +178,7 @@ export async function deleteRecordImageAction(formData: FormData) {
   const imageId = readString(formData, "image_id");
 
   if (!recordId || !imageId) {
-    redirect(`/${locale}/dashboard/records`);
+    redirect(`/${locale}/records`);
   }
 
   const supabase = await createClient();
@@ -199,6 +202,13 @@ export async function deleteRecordImageAction(formData: FormData) {
   if (imageError || !image) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "delete"));
   }
+
+  const { data: record } = await supabase
+    .from("records")
+    .select("id, date")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   try {
     await deleteRecordImageFromR2(image.r2_key);
@@ -235,8 +245,8 @@ export async function deleteRecordImageAction(formData: FormData) {
     }
   }
 
-  revalidatePath(`/${locale}/dashboard/records`);
-  redirectToEdit(locale, recordId, "saved");
+  revalidatePath(`/${locale}/records`);
+  redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved");
 }
 
 export async function setCoverImageAction(formData: FormData) {
@@ -245,7 +255,7 @@ export async function setCoverImageAction(formData: FormData) {
   const imageId = readString(formData, "image_id");
 
   if (!recordId || !imageId) {
-    redirect(`/${locale}/dashboard/records`);
+    redirect(`/${locale}/records`);
   }
 
   const supabase = await createClient();
@@ -270,6 +280,13 @@ export async function setCoverImageAction(formData: FormData) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
   }
 
+  const { data: record } = await supabase
+    .from("records")
+    .select("id, date")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   await supabase
     .from("record_images")
     .update({ is_cover: false })
@@ -286,8 +303,8 @@ export async function setCoverImageAction(formData: FormData) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
   }
 
-  revalidatePath(`/${locale}/dashboard/records`);
-  redirectToEdit(locale, recordId, "saved", imageActionMessage(locale, "cover"));
+  revalidatePath(`/${locale}/records`);
+  redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "cover"));
 }
 
 export async function moveRecordImageAction(formData: FormData) {
@@ -297,7 +314,7 @@ export async function moveRecordImageAction(formData: FormData) {
   const direction = readString(formData, "direction");
 
   if (!recordId || !imageId || !direction) {
-    redirect(`/${locale}/dashboard/records`);
+    redirect(`/${locale}/records`);
   }
 
   const supabase = await createClient();
@@ -321,6 +338,13 @@ export async function moveRecordImageAction(formData: FormData) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
   }
 
+  const { data: record } = await supabase
+    .from("records")
+    .select("id, date")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const index = images.findIndex((image) => image.id === imageId);
   if (index < 0) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
@@ -328,7 +352,7 @@ export async function moveRecordImageAction(formData: FormData) {
 
   const swapWith = direction === "up" ? index - 1 : index + 1;
   if (swapWith < 0 || swapWith >= images.length) {
-    redirectToEdit(locale, recordId, "saved");
+    redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved");
   }
 
   const current = images[index];
@@ -346,6 +370,6 @@ export async function moveRecordImageAction(formData: FormData) {
     .eq("id", target.id)
     .eq("user_id", user.id);
 
-  revalidatePath(`/${locale}/dashboard/records`);
-  redirectToEdit(locale, recordId, "saved", imageActionMessage(locale, "order"));
+  revalidatePath(`/${locale}/records`);
+  redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "order"));
 }

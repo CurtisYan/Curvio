@@ -115,7 +115,7 @@ export async function HomeSections({
           {messages.heroLead}
         </p>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <ButtonLink href={localizePath(locale, "/dashboard/new")}>
+          <ButtonLink href={localizePath(locale, "/new")}>
             {messages.start}
           </ButtonLink>
           <ButtonLink href={localizePath(locale, "/explore")} variant="secondary">
