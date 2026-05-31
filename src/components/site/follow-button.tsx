@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +14,7 @@ type Props = {
 export default function FollowButton({ initialIsFollowing, locale, username, labels }: Props) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [pending, setPending] = useState(false);
+  const router = useRouter();
 
   async function toggleFollow() {
     if (pending) return;
@@ -36,6 +38,8 @@ export default function FollowButton({ initialIsFollowing, locale, username, lab
         // eslint-disable-next-line no-console
         console.error("Follow API error", json?.error);
         alert(json?.error ?? "Failed to update follow status");
+      } else {
+        router.refresh();
       }
     } catch (err) {
       setIsFollowing(!next);

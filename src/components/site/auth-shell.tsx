@@ -54,26 +54,26 @@ export function AuthShell({
             {error}
           </div>
         ) : null}
-        <form action={action} className="space-y-7">
+        <form action={action} className="space-y-8">
           <input name="locale" type="hidden" value={locale} />
           {mode === "register" ? (
             <>
-              <label className="space-y-2 text-sm font-medium">
+              <label className="space-y-3 text-sm font-medium">
                 {labels.username}
                 <Input autoComplete="username" maxLength={20} minLength={4} name="username" pattern="[a-z0-9_]+" placeholder="elara_writes" required />
                 <p className="text-xs font-normal text-muted">{labels.usernameHelp}</p>
               </label>
-              <label className="space-y-2 text-sm font-medium">
+              <label className="space-y-3 text-sm font-medium">
                 {labels.displayName}
                 <Input autoComplete="nickname" maxLength={40} minLength={2} name="display_name" placeholder="Elara" required />
               </label>
             </>
           ) : null}
-          <label className="space-y-2 text-sm font-medium">
+          <label className="space-y-3 text-sm font-medium">
             {labels.email}
             <Input autoComplete="email" name="email" placeholder={labels.emailPlaceholder} required type="email" />
           </label>
-          <label className="space-y-2 text-sm font-medium">
+          <label className="space-y-3 text-sm font-medium">
             {labels.password}
             <Input
               autoComplete={mode === "register" ? "new-password" : "current-password"}
@@ -91,7 +91,7 @@ export function AuthShell({
               {labels.turnstileMissing}
             </p>
           ) : null}
-          <Button className="w-full" type="submit">
+          <Button className="mt-2 w-full" type="submit">
             {submit}
           </Button>
         </form>
