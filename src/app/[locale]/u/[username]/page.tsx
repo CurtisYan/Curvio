@@ -48,22 +48,17 @@ export default async function UserProfilePage({
   } = await supabase.auth.getUser();
 
   // fetch profile and whether current viewer follows in one RPC
-  const { data: profileRpc, error: profileRpcError } = await supabase.rpc(
+  const { data: profileRpc } = await supabase.rpc(
     "get_profile_with_follow_status",
     { viewer_uuid: user ? user.id : null, username_text: username },
   );
 
   const profile = Array.isArray(profileRpc) && profileRpc.length > 0 ? profileRpc[0] : null;
-  const viewerProfileResult = user
-    ? await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle()
-    : { data: null as { username: string } | null };
-  const viewerProfile = viewerProfileResult.data;
+  const isOwnProfile = user?.id === profile?.id;
 
-  if (!profile || (!profile.is_public && viewerProfile?.username !== profile.username)) {
+  if (!profile || (!profile.is_public && !isOwnProfile)) {
     notFound();
   }
-
-  const isOwnProfile = viewerProfile?.username === profile.username;
 
   const recordsQuery = supabase
     .from("records")
