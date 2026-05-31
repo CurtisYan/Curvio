@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { Timeline } from "@/components/records/timeline";
 import { RecordCard } from "@/components/records/record-card";
@@ -72,6 +72,42 @@ export function ProfileContentSwitcher({
   };
 }) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("annual_summary");
+
+  useEffect(() => {
+    const setFromHash = () => {
+      try {
+        const hash = (window.location.hash || "").replace("#", "");
+        if (
+          hash === "following" ||
+          hash === "followers" ||
+          hash === "donations" ||
+          hash === "kindness" ||
+          hash === "open_source" ||
+          hash === "annual_summary"
+        ) {
+          setActiveTab(hash as ActiveTab);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    setFromHash();
+    window.addEventListener("hashchange", setFromHash);
+    return () => window.removeEventListener("hashchange", setFromHash);
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (activeTab === "following" || activeTab === "followers") {
+        window.history.replaceState(null, "", `#${activeTab}`);
+      } else {
+        window.history.replaceState(null, "", `#`);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [activeTab]);
 
   const activeRecords = useMemo(() => {
     if (activeTab === "donations") return records.donations;

@@ -162,9 +162,13 @@ export default async function UserProfilePage({
               <p className="mt-2 text-muted">
                 {(profile.bio ?? "").trim() ? profile.bio : profile.principle}
                 <span className="mx-2">•</span>
-                {followingCount ?? 0} Following
+                <a href="#following" className="hover:text-primary">
+                  {followingCount ?? 0} {messages.profile.following}
+                </a>
                 <span className="mx-2">•</span>
-                {(followerCount ?? 0).toLocaleString()} Followers
+                <a href="#followers" className="hover:text-primary">
+                  {(followerCount ?? 0).toLocaleString()} {messages.profile.followers}
+                </a>
               </p>
             </div>
             {isOwnProfile ? (
