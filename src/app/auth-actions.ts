@@ -230,10 +230,13 @@ export async function resendOtpAction(formData: FormData) {
 export async function sendResetAction(formData: FormData) {
   const locale = readLocale(formData);
   const email = readString(formData, "email").toLowerCase();
+  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     fail(locale, "forgot", localized(locale, "Please enter the email address you used to register.", "请输入你注册时使用的邮箱。"));
   }
+
+  await verifyTurnstile(locale, "forgot", turnstileToken);
 
   // Standard privacy-preserving behaviour: always show the same response
   // regardless of whether the email exists in the system. This avoids
@@ -262,10 +265,13 @@ export async function sendResetAction(formData: FormData) {
 export async function completeResetAction(formData: FormData) {
   const locale = readLocale(formData);
   const password = readString(formData, "password");
+  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!password || password.length < 6) {
     fail(locale, "reset", localized(locale, "Password must be at least 6 characters.", "密码至少需要 6 位。"));
   }
+
+  await verifyTurnstile(locale, "reset", turnstileToken);
 
   const supabase = await createClient();
   const { data, error: userError } = await supabase.auth.getUser();

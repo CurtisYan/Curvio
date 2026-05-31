@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { completeResetAction } from "@/app/auth-actions";
 import { createClient } from "@/utils/supabase/client";
 import type { Locale } from "@/lib/i18n";
 import { ResetPasswordShell } from "./reset-password-shell";
@@ -9,6 +10,7 @@ import { ResetPasswordShell } from "./reset-password-shell";
 export function ResetPasswordClient({
   locale,
   labels,
+  turnstileSiteKey,
 }: {
   locale: Locale;
   labels: {
@@ -20,12 +22,13 @@ export function ResetPasswordClient({
     invalidLink: string;
     passwordTooShort: string;
     passwordUpdated: string;
+    turnstileMissing: string;
   };
+  turnstileSiteKey: string;
 }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>(searchParams.get("error") ?? undefined);
 
   useEffect(() => {
     let mounted = true;
@@ -75,13 +78,18 @@ export function ResetPasswordClient({
     };
   }, [labels.invalidLink, searchParams]);
 
+  useEffect(() => {
+    setError(searchParams.get("error") ?? undefined);
+  }, [searchParams]);
+
   if (error) {
     return (
       <ResetPasswordShell
         locale={locale}
         labels={labels}
         error={error}
-        resetAction={async () => {}}
+        resetAction={completeResetAction}
+        turnstileSiteKey={turnstileSiteKey}
         mode="error"
       />
     );
@@ -93,7 +101,8 @@ export function ResetPasswordClient({
         locale={locale}
         labels={labels}
         error={undefined}
-        resetAction={async () => {}}
+        resetAction={completeResetAction}
+        turnstileSiteKey={turnstileSiteKey}
         mode="loading"
       />
     );
@@ -104,38 +113,8 @@ export function ResetPasswordClient({
       locale={locale}
       labels={labels}
       error={undefined}
-      resetAction={async (formData) => {
-        const password = String(formData.get("password") ?? "").trim();
-        if (password.length < 6) {
-          setError(labels.passwordTooShort);
-          return;
-        }
-
-        const supabase = createClient();
-        const { error: updateError } = await supabase.auth.updateUser({ password });
-        if (updateError) {
-          setError(updateError.message);
-          return;
-        }
-
-        const { data } = await supabase.auth.getUser();
-        const userId = data.user?.id;
-
-        if (userId) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("username")
-            .eq("id", userId)
-            .maybeSingle();
-
-          if (profile?.username) {
-            router.push(`/${locale}/u/${profile.username}`);
-            return;
-          }
-        }
-
-        router.push(`/${locale}/new`);
-      }}
+      resetAction={completeResetAction}
+      turnstileSiteKey={turnstileSiteKey}
       mode="ready"
     />
   );

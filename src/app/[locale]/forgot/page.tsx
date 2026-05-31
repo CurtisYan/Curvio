@@ -16,6 +16,7 @@ export default async function ForgotPage({
   const cookieStore = await cookies();
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const cookieSent = cookieStore.get("curvio_reset_sent")?.value === "1";
 
   if (querySent === "1") {
@@ -31,8 +32,10 @@ export default async function ForgotPage({
         sendResetLink: messages.auth.sendResetLink,
         backToLogin: messages.auth.backToLogin,
         resetLinkSent: messages.auth.resetLinkSent,
+        turnstileMissing: messages.auth.turnstileMissing,
       }}
       locale={locale}
+      turnstileSiteKey={turnstileSiteKey}
       sendAction={sendResetAction}
       error={error}
       sent={cookieSent}

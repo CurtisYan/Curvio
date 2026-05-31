@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { TurnstileWidget } from "@/components/site/turnstile-widget";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 
@@ -8,6 +9,7 @@ export function ForgotPasswordShell({
   locale,
   labels,
   sendAction,
+  turnstileSiteKey,
   error,
   sent,
 }: {
@@ -19,7 +21,9 @@ export function ForgotPasswordShell({
     sendResetLink: string;
     backToLogin: string;
     resetLinkSent: string;
+    turnstileMissing?: string;
   };
+  turnstileSiteKey: string;
   sendAction: (formData: FormData) => void | Promise<void>;
   error?: string;
   sent?: boolean;
@@ -39,13 +43,20 @@ export function ForgotPasswordShell({
             {labels.resetLinkSent}
           </div>
         ) : (
-          <form action={sendAction} className="space-y-6">
+          <form action={sendAction} className="space-y-8">
             <input name="locale" type="hidden" value={locale} />
-            <label className="space-y-2 text-sm font-medium">
+            <label className="space-y-3 text-sm font-medium">
               {labels.email}
               <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
             </label>
-            <Button className="w-full" type="submit">
+            {turnstileSiteKey ? (
+              <TurnstileWidget siteKey={turnstileSiteKey} />
+            ) : labels.turnstileMissing ? (
+              <p className="rounded-lg border border-dashed border-border-subtle px-3 py-2 text-xs leading-5 text-muted">
+                {labels.turnstileMissing}
+              </p>
+            ) : null}
+            <Button className="mt-2 w-full" type="submit">
               {labels.sendResetLink}
             </Button>
           </form>
