@@ -32,11 +32,12 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 
 ## Hover / Interaction
 
-- Maintain a slightly stronger, still-subtle hover shadow across interactive surfaces (cards, buttons with surface background). Use the following Tailwind utility as canonical:
+- Surface hover style should prioritize subtle background deepening over heavy shadow. Canonical utilities are defined in `src/components/ui/interactive.ts`:
 
-	- `transition-shadow hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]`
+	- `surfaceHover`: `transition-colors hover:bg-surface-container hover:text-primary`
+	- `surfaceHoverLow`: `transition-colors hover:bg-surface-container-low hover:text-primary`
 
-	This replaces lighter hover shadows and ensures hover state remains noticeable while keeping the overall UI restrained. Apply it to `Card` defaults and any surface elements that currently use weaker shadows.
+	Use these exported constants wherever possible instead of inlining hover color classes repeatedly.
 
 Canonical implementation (code):
 
@@ -47,6 +48,15 @@ Canonical implementation (code):
 	- `className={`inline-flex px-2 py-0.5 rounded-full ${surfaceHover}`}`
 
 Keep `CLAUDE.md` as the human-readable guideline and the `interactive.ts` file as the canonical code reference. If you later prefer a Tailwind plugin or a global CSS class (for design-system distribution), we can migrate the constants into `globals.css` and update `interactive.ts` to export the class name instead.
+
+## Schema Sync Rule
+
+- Any change to Supabase schema must be synchronized in two places within the same commit:
+
+	- SQL migration under `supabase/migrations/`
+	- Human-readable schema notes in `docs/schema.md`
+
+- This includes table/column add-remove-rename, constraints, indexes, triggers, functions (RPC), and important default value changes.
 
 ## Technical Notes
 
