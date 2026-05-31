@@ -53,9 +53,10 @@ export default async function UserProfilePage({
   );
 
   const profile = Array.isArray(profileRpc) && profileRpc.length > 0 ? profileRpc[0] : null;
-  const viewerProfile = user
+  const viewerProfileResult = user
     ? await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle()
-    : Promise.resolve({ data: null as { username: string } | null });
+    : { data: null as { username: string } | null };
+  const viewerProfile = viewerProfileResult.data;
 
   if (!profile || (!profile.is_public && viewerProfile?.username !== profile.username)) {
     notFound();
@@ -152,7 +153,7 @@ export default async function UserProfilePage({
                 <span className="mx-2">•</span>
                 <a
                   href="#following"
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
                   title={locale === "zh" ? "点击查看已关注列表" : "Click to view following list"}
                 >
                   {followingCount ?? 0} {messages.profile.following}
@@ -160,7 +161,7 @@ export default async function UserProfilePage({
                 <span className="mx-2">•</span>
                 <a
                   href="#followers"
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
                   title={locale === "zh" ? "点击查看粉丝列表" : "Click to view followers list"}
                 >
                   {(followerCount ?? 0).toLocaleString()} {messages.profile.followers}
