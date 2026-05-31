@@ -172,7 +172,24 @@
 - 用户只能提交自己的删除请求。
 - 用户只能读取自己的删除请求。
 
-## 9. 当前已使用 RPC
+## 9. reset_requests（重置请求限流记录）
+
+用途：记录忘记密码页的重置请求，用于按 IP + email 组合做滑窗限流，避免同一来源短时间内反复刷重置邮件。
+
+字段：
+
+- `id`：请求记录 ID。
+- `ip_address`：请求来源 IP。
+- `email_hash`：邮箱哈希值（用于分组计数，不直接存明文邮箱）。
+- `created_at`：请求时间。
+
+关键机制：
+
+- 通过 `consume_reset_request_limit(p_ip_address, p_email_hash, p_window_minutes, p_limit)` 原子检查并写入。
+- 默认策略是 15 分钟窗口内同一 IP + email 最多 3 次。
+- 超限后返回统一的“请稍后再试”提示，不影响登录流程本身。
+
+## 10. 当前已使用 RPC
 
 ### `get_profile_with_follow_status(viewer_uuid uuid, username_text text)`
 
@@ -192,6 +209,16 @@
 - `allow_follow`
 - `is_public`
 - `is_following`
+
+### `consume_reset_request_limit(p_ip_address text, p_email_hash text, p_window_minutes integer, p_limit integer)`
+
+用途：在服务端检查某个 IP + email 组合在滑动窗口内的重置请求次数，并在未超限时顺手记一条记录。
+
+返回列：
+
+- `allowed`：是否允许继续发送重置邮件。
+- `attempts`：窗口内当前次数。
+- `retry_after`：如果超限，建议下次重试时间。
 
 ## 数据收集边界（摘要）
 

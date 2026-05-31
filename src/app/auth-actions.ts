@@ -1,9 +1,12 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
 function readString(formData: FormData, key: string) {
@@ -26,6 +29,21 @@ function fail(
 
 function localized(locale: Locale, en: string, zh: string) {
   return locale === "zh" ? zh : en;
+}
+
+function readClientIp() {
+  const headerStore = headers();
+  const forwardedFor = headerStore.get("cf-connecting-ip") ?? headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip");
+
+  if (!forwardedFor) {
+    return "127.0.0.1";
+  }
+
+  return forwardedFor.split(",")[0]?.trim() || "127.0.0.1";
+}
+
+function hashRateLimitKey(email: string) {
+  return createHash("sha256").update(email).digest("hex");
 }
 
 async function redirectToProfileOrNew(locale: Locale, supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -237,6 +255,43 @@ export async function sendResetAction(formData: FormData) {
   }
 
   await verifyTurnstile(locale, "forgot", turnstileToken);
+
+  const adminClient = createAdminClient();
+  if (adminClient) {
+    const ipAddress = readClientIp();
+    const emailHash = hashRateLimitKey(email);
+    const { data: rateLimitResult, error: rateLimitError } = await adminClient.rpc("consume_reset_request_limit", {
+      p_ip_address: ipAddress,
+      p_email_hash: emailHash,
+      p_window_minutes: 15,
+      p_limit: 3,
+    });
+
+    if (rateLimitError) {
+      fail(
+        locale,
+        "forgot",
+        localized(
+          locale,
+          "Too many reset requests. Please try again later.",
+          "重置请求过于频繁，请稍后再试。",
+        ),
+      );
+    }
+
+    const rateLimitRow = Array.isArray(rateLimitResult) ? rateLimitResult[0] : rateLimitResult;
+    if (rateLimitRow && typeof rateLimitRow === "object" && "allowed" in rateLimitRow && rateLimitRow.allowed === false) {
+      fail(
+        locale,
+        "forgot",
+        localized(
+          locale,
+          "Too many reset requests. Please try again later.",
+          "重置请求过于频繁，请稍后再试。",
+        ),
+      );
+    }
+  }
 
   // Standard privacy-preserving behaviour: always show the same response
   // regardless of whether the email exists in the system. This avoids
