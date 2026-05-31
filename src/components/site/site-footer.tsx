@@ -24,7 +24,7 @@ export function SiteFooter({
           © 2026 {messages.brand}. {messages.tagline}
         </div>
         <div className="flex flex-wrap gap-6 text-sm text-muted">
-          <a className="transition-colors hover:text-primary" href="https://github.com" rel="noreferrer" target="_blank">
+          <a className="transition-colors hover:text-primary" href="https://github.com/CurtisYan/Curvio" rel="noreferrer" target="_blank">
             {messages.github}
           </a>
           <Link className="transition-colors hover:text-primary" href={localizePath(locale, "/privacy")}>
