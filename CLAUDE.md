@@ -38,6 +38,16 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 
 	This replaces lighter hover shadows and ensures hover state remains noticeable while keeping the overall UI restrained. Apply it to `Card` defaults and any surface elements that currently use weaker shadows.
 
+Canonical implementation (code):
+
+- The project keeps a single code-level source of truth for surface hover utilities in `src/components/ui/interactive.ts`.
+- Example import and usage in a component:
+
+	- `import { surfaceHover } from "src/components/ui/interactive";`
+	- `className={`inline-flex px-2 py-0.5 rounded-full ${surfaceHover}`}`
+
+Keep `CLAUDE.md` as the human-readable guideline and the `interactive.ts` file as the canonical code reference. If you later prefer a Tailwind plugin or a global CSS class (for design-system distribution), we can migrate the constants into `globals.css` and update `interactive.ts` to export the class name instead.
+
 ## Technical Notes
 
 - Framework: Next.js App Router, TypeScript, Tailwind CSS 4.
