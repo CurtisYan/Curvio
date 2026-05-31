@@ -153,7 +153,7 @@ export default async function UserProfilePage({
                 <span className="mx-2">•</span>
                 <a
                   href="#following"
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container hover:text-primary"
                   title={locale === "zh" ? "点击查看已关注列表" : "Click to view following list"}
                 >
                   {followingCount ?? 0} {messages.profile.following}
@@ -161,7 +161,7 @@ export default async function UserProfilePage({
                 <span className="mx-2">•</span>
                 <a
                   href="#followers"
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container hover:text-primary"
                   title={locale === "zh" ? "点击查看粉丝列表" : "Click to view followers list"}
                 >
                   {(followerCount ?? 0).toLocaleString()} {messages.profile.followers}
@@ -170,7 +170,7 @@ export default async function UserProfilePage({
             </div>
             {isOwnProfile ? (
               <ButtonLink href={localizePath(locale, "/settings")} variant="secondary">
-                {messages.dashboard.settings}
+                {messages.profile.edit}
               </ButtonLink>
             ) : (
               <FollowButton
