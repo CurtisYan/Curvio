@@ -139,6 +139,7 @@
     "createAccount": "创建账号",
     "alreadyHaveAccount": "已有账号",
     "forgotPassword": "忘记密码？",
+    "loginChallenge": "检测到多次登录失败，请先完成验证。",
     "backToLogin": "返回登录",
     "verificationTitle": "验证你的邮箱",
     "verificationNote": "输入邮件里的 6 位验证码。验证成功后会自动登录。",

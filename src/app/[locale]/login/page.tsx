@@ -7,10 +7,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; challenge?: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const { error } = await searchParams;
+  const { error, challenge } = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
 
@@ -18,6 +18,7 @@ export default async function LoginPage({
     <AuthShell
       action={signInAction}
       error={error}
+      challenge={challenge === "1"}
       labels={messages.auth}
       locale={locale}
       mode="login"

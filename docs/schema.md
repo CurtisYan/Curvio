@@ -189,7 +189,24 @@
 - 默认策略是 15 分钟窗口内同一 IP + email 最多 3 次。
 - 超限后返回统一的“请稍后再试”提示，不影响登录流程本身。
 
-## 10. 当前已使用 RPC
+## 10. login_failures（登录失败记录）
+
+用途：记录登录失败事件，用于按账号最近失败次数触发临时 Turnstile 挑战。
+
+字段：
+
+- `id`：失败记录 ID。
+- `email_hash`：邮箱哈希值（用于按账号统计，不直接存明文邮箱）。
+- `ip_address`：请求来源 IP。
+- `created_at`：失败时间。
+
+关键机制：
+
+- 统计最近 15 分钟内同一 `email_hash` 的失败次数。
+- 同一账号在 15 分钟内失败达到 5 次后，下一次登录需要先完成 Turnstile。
+- 登录成功后会清空该账号的失败记录。
+
+## 11. 当前已使用 RPC
 
 ### `get_profile_with_follow_status(viewer_uuid uuid, username_text text)`
 

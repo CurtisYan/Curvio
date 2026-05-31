@@ -2,8 +2,7 @@
 
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -27,6 +26,20 @@ function fail(
   redirect(`/${locale}/${path}?error=${encodeURIComponent(message)}`);
 }
 
+function failWithParams(
+  locale: Locale,
+  path: "login" | "register" | "register/verify" | "forgot" | "reset",
+  message: string,
+  params: Record<string, string>,
+): never {
+  const searchParams = new URLSearchParams({
+    error: message,
+    ...params,
+  });
+
+  redirect(`/${locale}/${path}?${searchParams.toString()}`);
+}
+
 function localized(locale: Locale, en: string, zh: string) {
   return locale === "zh" ? zh : en;
 }
@@ -44,6 +57,50 @@ function readClientIp() {
 
 function hashRateLimitKey(email: string) {
   return createHash("sha256").update(email).digest("hex");
+}
+
+async function countRecentLoginFailures(emailHash: string) {
+  const adminClient = createAdminClient();
+
+  if (!adminClient) {
+    return 0;
+  }
+
+  const windowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const { count, error } = await adminClient
+    .from("login_failures")
+    .select("id", { count: "exact", head: true })
+    .eq("email_hash", emailHash)
+    .gte("created_at", windowStart);
+
+  if (error) {
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+async function recordLoginFailure(emailHash: string, ipAddress: string) {
+  const adminClient = createAdminClient();
+
+  if (!adminClient) {
+    return;
+  }
+
+  await adminClient.from("login_failures").insert({
+    email_hash: emailHash,
+    ip_address: ipAddress,
+  });
+}
+
+async function clearLoginFailures(emailHash: string) {
+  const adminClient = createAdminClient();
+
+  if (!adminClient) {
+    return;
+  }
+
+  await adminClient.from("login_failures").delete().eq("email_hash", emailHash);
 }
 
 async function redirectToProfileOrNew(locale: Locale, supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -72,14 +129,23 @@ async function verifyTurnstile(
   locale: Locale,
   path: "login" | "register" | "register/verify" | "forgot" | "reset",
   token: string,
+  options?: { challenge?: boolean },
 ) {
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
+    if (options?.challenge && path === "login") {
+      failWithParams(locale, path, "Turnstile is not configured. Please try again later.", { challenge: "1" });
+    }
+
     fail(locale, path, "Turnstile is not configured. Please try again later.");
   }
 
   if (!token) {
+    if (options?.challenge && path === "login") {
+      failWithParams(locale, path, "Please complete the verification challenge.", { challenge: "1" });
+    }
+
     fail(locale, path, "Please complete the verification challenge.");
   }
 
@@ -97,6 +163,10 @@ async function verifyTurnstile(
   const result = (await response.json()) as { success: boolean; "error-codes"?: string[] };
 
   if (!result.success) {
+    if (options?.challenge && path === "login") {
+      failWithParams(locale, path, "Verification failed. Please try again.", { challenge: "1" });
+    }
+
     fail(locale, path, "Verification failed. Please try again.");
   }
 }
@@ -105,6 +175,7 @@ export async function signInAction(formData: FormData) {
   const locale = readLocale(formData);
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
+  const turnstileToken = readString(formData, "turnstileToken");
 
   if (!email || !email.includes("@")) {
     fail(locale, "login", "Please enter a valid email address.");
@@ -112,6 +183,24 @@ export async function signInAction(formData: FormData) {
 
   if (password.length < 6) {
     fail(locale, "login", "Password must be at least 6 characters.");
+  }
+
+  const emailHash = hashRateLimitKey(email);
+  const ipAddress = readClientIp();
+  const recentFailures = await countRecentLoginFailures(emailHash);
+  const challengeRequired = recentFailures >= 5;
+
+  if (challengeRequired) {
+    if (!turnstileToken) {
+      failWithParams(
+        locale,
+        "login",
+        localized(locale, "Too many failed sign-in attempts. Please complete the verification challenge.", "登录失败次数过多，请先完成验证。"),
+        { challenge: "1" },
+      );
+    }
+
+    await verifyTurnstile(locale, "login", turnstileToken, { challenge: true });
   }
 
   const supabase = await createClient();
@@ -125,9 +214,23 @@ export async function signInAction(formData: FormData) {
       redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}`);
     }
 
+    await recordLoginFailure(emailHash, ipAddress);
+    const updatedFailures = await countRecentLoginFailures(emailHash);
+    const shouldChallenge = challengeRequired || updatedFailures >= 5;
+
+    if (shouldChallenge) {
+      failWithParams(
+        locale,
+        "login",
+        localized(locale, "Too many failed sign-in attempts. Please complete the verification challenge.", "登录失败次数过多，请先完成验证。"),
+        { challenge: "1" },
+      );
+    }
+
     fail(locale, "login", error.message);
   }
 
+  await clearLoginFailures(emailHash);
   revalidatePath("/", "layout");
   await redirectToProfileOrNew(locale, supabase);
 }

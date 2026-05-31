@@ -17,6 +17,7 @@ type AuthLabels = {
   alreadyHaveAccount: string;
   forgotPassword: string;
   usernameHelp: string;
+  loginChallenge: string;
   turnstileMissing?: string;
 };
 
@@ -29,6 +30,7 @@ export function AuthShell({
   mode,
   action,
   error,
+  challenge = false,
 }: {
   locale: Locale;
   title: string;
@@ -38,9 +40,10 @@ export function AuthShell({
   mode: "login" | "register";
   action: (formData: FormData) => void | Promise<void>;
   error?: string;
+  challenge?: boolean;
 }) {
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
-  const showTurnstile = mode === "register" && Boolean(turnstileSiteKey);
+  const showTurnstile = Boolean(turnstileSiteKey) && (mode === "register" || (mode === "login" && challenge));
 
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
@@ -85,8 +88,17 @@ export function AuthShell({
             />
           </label>
           {showTurnstile ? (
-            <TurnstileWidget siteKey={turnstileSiteKey} />
+            <div className="space-y-3">
+              {mode === "login" ? (
+                <p className="text-xs leading-5 text-muted">{labels.loginChallenge}</p>
+              ) : null}
+              <TurnstileWidget siteKey={turnstileSiteKey} />
+            </div>
           ) : mode === "register" && labels.turnstileMissing ? (
+            <p className="rounded-lg border border-dashed border-border-subtle px-3 py-2 text-xs leading-5 text-muted">
+              {labels.turnstileMissing}
+            </p>
+          ) : mode === "login" && challenge && labels.turnstileMissing ? (
             <p className="rounded-lg border border-dashed border-border-subtle px-3 py-2 text-xs leading-5 text-muted">
               {labels.turnstileMissing}
             </p>

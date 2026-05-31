@@ -139,6 +139,7 @@
     "createAccount": "Create an account",
     "alreadyHaveAccount": "Already have an account",
     "forgotPassword": "Forgot password?",
+    "loginChallenge": "Multiple failed sign-in attempts were detected. Please complete verification first.",
     "backToLogin": "Back to login",
     "verificationTitle": "Verify your email",
     "verificationNote": "Enter the 6-digit code we sent to your email. After verification, you will be signed in automatically.",
