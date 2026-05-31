@@ -65,18 +65,6 @@ export default async function UserProfilePage({
 
   const isOwnProfile = viewerProfile?.username === profile.username;
 
-  let isFollowing = false;
-  if (user && !isOwnProfile) {
-    const { data: followRow } = await supabase
-      .from("follows")
-      .select("id")
-      .eq("follower_id", user.id)
-      .eq("following_id", profile.id)
-      .maybeSingle();
-
-    isFollowing = Boolean(followRow);
-  }
-
   const recordsQuery = supabase
     .from("records")
     .select(
@@ -89,13 +77,25 @@ export default async function UserProfilePage({
     recordsQuery.eq("is_public", true);
   }
 
-  const [{ count: followingCount }, { count: followerCount }, { data: followingRows }, { data: followerRows }, { data: recordRows }] = await Promise.all([
+  const followingStatusPromise = user && !isOwnProfile
+    ? supabase
+        .from("follows")
+        .select("id")
+        .eq("follower_id", user.id)
+        .eq("following_id", profile.id)
+        .maybeSingle()
+    : Promise.resolve({ data: null as { id: string } | null });
+
+  const [{ data: followingStatus }, { count: followingCount }, { count: followerCount }, { data: followingRows }, { data: followerRows }, { data: recordRows }] = await Promise.all([
+    followingStatusPromise,
     supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", profile.id),
     supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", profile.id),
     supabase.from("follows").select("following_id").eq("follower_id", profile.id),
     supabase.from("follows").select("follower_id").eq("following_id", profile.id),
     recordsQuery,
   ]);
+
+  const isFollowing = Boolean(followingStatus);
 
   const followingIds = (followingRows ?? []).map((row) => row.following_id);
   const followerIds = (followerRows ?? []).map((row) => row.follower_id);
@@ -162,11 +162,19 @@ export default async function UserProfilePage({
               <p className="mt-2 text-muted">
                 {(profile.bio ?? "").trim() ? profile.bio : profile.principle}
                 <span className="mx-2">•</span>
-                <a href="#following" className="hover:text-primary">
+                <a
+                  href="#following"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary"
+                  title={locale === "zh" ? "点击查看已关注列表" : "Click to view following list"}
+                >
                   {followingCount ?? 0} {messages.profile.following}
                 </a>
                 <span className="mx-2">•</span>
-                <a href="#followers" className="hover:text-primary">
+                <a
+                  href="#followers"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-surface-container-low hover:text-primary"
+                  title={locale === "zh" ? "点击查看粉丝列表" : "Click to view followers list"}
+                >
                   {(followerCount ?? 0).toLocaleString()} {messages.profile.followers}
                 </a>
               </p>
@@ -179,13 +187,17 @@ export default async function UserProfilePage({
               <form action={unfollowProfileAction} className="m-0">
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="username" value={profile.username} />
-                <Button type="submit" variant="secondary">{messages.profile.following || "Following"}</Button>
+                <Button type="submit" variant="secondary" title={locale === "zh" ? "取消关注" : "Unfollow this profile"}>
+                  {messages.profile.following}
+                </Button>
               </form>
             ) : (
               <form action={followProfileAction} className="m-0">
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="username" value={profile.username} />
-                <Button type="submit" variant="primary">{messages.profile.follow}</Button>
+                <Button type="submit" variant="primary" title={locale === "zh" ? "关注此用户" : "Follow this profile"}>
+                  {messages.profile.follow}
+                </Button>
               </form>
             )}
           </div>

@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Timeline } from "@/components/records/timeline";
 import { RecordCard } from "@/components/records/record-card";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import type { GoodwillRecord } from "@/lib/types";
@@ -27,6 +25,14 @@ function initialsFrom(name: string) {
       .map((part) => part[0]?.toUpperCase())
       .join("") || "U"
   );
+}
+
+function SocialAvatar({ name, url }: { name: string; url?: string | null }) {
+  if (url) {
+    return <img alt={name} className="h-full w-full object-cover" loading="lazy" src={url} />;
+  }
+
+  return <span>{initialsFrom(name)}</span>;
 }
 
 export function ProfileContentSwitcher({
@@ -109,61 +115,48 @@ export function ProfileContentSwitcher({
     }
   }, [activeTab]);
 
-  const activeRecords = useMemo(() => {
-    if (activeTab === "donations") return records.donations;
-    if (activeTab === "kindness") return records.kindness;
-    if (activeTab === "open_source") return records.open_source;
-    return [] as GoodwillRecord[];
-  }, [activeTab, records]);
-
-  const typeLabels = {
-    donation: labels.recordDonation,
-    kindness: labels.recordKindness,
-    open_source: labels.recordOpenWork,
-  };
-
   return (
     <section className="mt-12 space-y-8">
-          <div className="flex flex-wrap gap-3">
-            {[
-              { key: "donations", label: labels.donations },
-              { key: "kindness", label: labels.kindness },
-              { key: "open_source", label: labels.openWork },
-              { key: "annual_summary", label: labels.annualSummary },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key as ActiveTab)}
-                className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                  activeTab === tab.key
-                    ? "border-surface-container-high bg-surface-container-high text-foreground"
-                    : "border-border-subtle bg-surface-offwhite text-muted hover:bg-surface-container-low hover:text-primary"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      <div className="flex flex-wrap gap-3">
+        {[
+          { key: "donations", label: labels.donations },
+          { key: "kindness", label: labels.kindness },
+          { key: "open_source", label: labels.openWork },
+          { key: "annual_summary", label: labels.annualSummary },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key as ActiveTab)}
+            className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
+              activeTab === tab.key
+                ? "border-surface-container-high bg-surface-container-high text-foreground"
+                : "border-border-subtle bg-surface-offwhite text-muted hover:bg-surface-container-low hover:text-primary"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => setActiveTab("following")}
-              className="text-sm text-muted hover:text-primary transition-opacity hover:opacity-90"
-              title="View people this user is following"
-            >
-              {labels.following} ({following.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("followers")}
-              className="text-sm text-muted hover:text-primary transition-opacity hover:opacity-90"
-              title="View this user's followers"
-            >
-              {labels.followers} ({followers.length})
-            </button>
-          </div>
+      <div className="flex gap-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab("following")}
+          className="text-sm text-muted transition-opacity hover:text-primary hover:opacity-90"
+          title={locale === "zh" ? "点击查看已关注列表" : "Click to view following list"}
+        >
+          {labels.following} ({following.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("followers")}
+          className="text-sm text-muted transition-opacity hover:text-primary hover:opacity-90"
+          title={locale === "zh" ? "点击查看粉丝列表" : "Click to view followers list"}
+        >
+          {labels.followers} ({followers.length})
+        </button>
+      </div>
 
           {activeTab === "donations" && (
             <div className="space-y-6">
@@ -214,7 +207,7 @@ export function ProfileContentSwitcher({
             </div>
           )}
           {activeTab === "following" && (
-            <div className="space-y-4">
+            <div id="following" className="space-y-4 scroll-mt-24">
               {following.length === 0 ? (
                 <div className="text-muted">{labels.emptyFollowing}</div>
               ) : (
@@ -224,7 +217,9 @@ export function ProfileContentSwitcher({
                     href={`/${locale}/u/${p.username}`}
                     className="flex items-center gap-3"
                   >
-                    <Avatar size="sm" url={p.avatar_url} />
+                    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-sm font-medium text-primary">
+                      <SocialAvatar name={p.display_name || p.username} url={p.avatar_url} />
+                    </span>
                     <div>
                       <div className="font-medium">{p.display_name || p.username}</div>
                       <div className="text-muted text-sm">@{p.username}</div>
@@ -235,7 +230,7 @@ export function ProfileContentSwitcher({
             </div>
           )}
           {activeTab === "followers" && (
-            <div className="space-y-4">
+            <div id="followers" className="space-y-4 scroll-mt-24">
               {followers.length === 0 ? (
                 <div className="text-muted">{labels.emptyFollowers}</div>
               ) : (
@@ -245,7 +240,9 @@ export function ProfileContentSwitcher({
                     href={`/${locale}/u/${p.username}`}
                     className="flex items-center gap-3"
                   >
-                    <Avatar size="sm" url={p.avatar_url} />
+                    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-sm font-medium text-primary">
+                      <SocialAvatar name={p.display_name || p.username} url={p.avatar_url} />
+                    </span>
                     <div>
                       <div className="font-medium">{p.display_name || p.username}</div>
                       <div className="text-muted text-sm">@{p.username}</div>
