@@ -52,7 +52,7 @@ export function Timeline({
                 year: "numeric",
               }).format(new Date(record.date))}
             </time>
-            <Card className="hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+            <Card className="hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   {(() => {

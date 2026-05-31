@@ -30,6 +30,14 @@ Curvio is a restrained public-welfare archive, not a donation collection or fund
 - Profile tabs for Donations, Kindness, Open Work, Annual Summary, Following, and Followers should all feel like one coherent navigation system, not separate widgets.
 - Do not introduce a second theme variant for dashboard or profile flows unless the product requirements explicitly change.
 
+## Hover / Interaction
+
+- Maintain a slightly stronger, still-subtle hover shadow across interactive surfaces (cards, buttons with surface background). Use the following Tailwind utility as canonical:
+
+	- `transition-shadow hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]`
+
+	This replaces lighter hover shadows and ensures hover state remains noticeable while keeping the overall UI restrained. Apply it to `Card` defaults and any surface elements that currently use weaker shadows.
+
 ## Technical Notes
 
 - Framework: Next.js App Router, TypeScript, Tailwind CSS 4.

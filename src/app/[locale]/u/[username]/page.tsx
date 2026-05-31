@@ -5,7 +5,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProfileContentSwitcher } from "@/components/site/profile-content-switcher";
 import { getDictionary, isLocale, localizePath, type Locale } from "@/lib/i18n";
-import { followProfileAction, unfollowProfileAction } from "@/app/dashboard-actions";
+import FollowButton from "@/components/site/follow-button";
 import type { GoodwillRecord } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -46,18 +46,16 @@ export default async function UserProfilePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: profile }, { data: viewerProfile }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select(
-        "id, username, display_name, avatar_url, bio, principle, location, website_url, github_url, allow_follow, is_public",
-      )
-      .eq("username", username)
-      .maybeSingle(),
-    user
-      ? supabase.from("profiles").select("username").eq("id", user.id).maybeSingle()
-      : Promise.resolve({ data: null as { username: string } | null }),
-  ]);
+  // fetch profile and whether current viewer follows in one RPC
+  const { data: profileRpc, error: profileRpcError } = await supabase.rpc(
+    "get_profile_with_follow_status",
+    { viewer_uuid: user ? user.id : null, username_text: username },
+  );
+
+  const profile = Array.isArray(profileRpc) && profileRpc.length > 0 ? profileRpc[0] : null;
+  const viewerProfile = user
+    ? await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle()
+    : Promise.resolve({ data: null as { username: string } | null });
 
   if (!profile || (!profile.is_public && viewerProfile?.username !== profile.username)) {
     notFound();
@@ -77,25 +75,15 @@ export default async function UserProfilePage({
     recordsQuery.eq("is_public", true);
   }
 
-  const followingStatusPromise = user && !isOwnProfile
-    ? supabase
-        .from("follows")
-        .select("id")
-        .eq("follower_id", user.id)
-        .eq("following_id", profile.id)
-        .maybeSingle()
-    : Promise.resolve({ data: null as { id: string } | null });
-
-  const [{ data: followingStatus }, { count: followingCount }, { count: followerCount }, { data: followingRows }, { data: followerRows }, { data: recordRows }] = await Promise.all([
-    followingStatusPromise,
-    supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", profile.id),
-    supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", profile.id),
-    supabase.from("follows").select("following_id").eq("follower_id", profile.id),
-    supabase.from("follows").select("follower_id").eq("following_id", profile.id),
+  const [{ count: followingCount }, { count: followerCount }, { data: followingRows }, { data: followerRows }, { data: recordRows }] = await Promise.all([
+    supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", profile?.id),
+    supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", profile?.id),
+    supabase.from("follows").select("following_id").eq("follower_id", profile?.id),
+    supabase.from("follows").select("follower_id").eq("following_id", profile?.id),
     recordsQuery,
   ]);
 
-  const isFollowing = Boolean(followingStatus);
+  const isFollowing = Boolean(profile?.is_following);
 
   const followingIds = (followingRows ?? []).map((row) => row.following_id);
   const followerIds = (followerRows ?? []).map((row) => row.follower_id);
@@ -183,22 +171,13 @@ export default async function UserProfilePage({
               <ButtonLink href={localizePath(locale, "/settings")} variant="secondary">
                 {messages.dashboard.settings}
               </ButtonLink>
-            ) : isFollowing ? (
-              <form action={unfollowProfileAction} className="m-0">
-                <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="username" value={profile.username} />
-                <Button type="submit" variant="secondary" title={locale === "zh" ? "取消关注" : "Unfollow this profile"}>
-                  {messages.profile.following}
-                </Button>
-              </form>
             ) : (
-              <form action={followProfileAction} className="m-0">
-                <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="username" value={profile.username} />
-                <Button type="submit" variant="primary" title={locale === "zh" ? "关注此用户" : "Follow this profile"}>
-                  {messages.profile.follow}
-                </Button>
-              </form>
+              <FollowButton
+                initialIsFollowing={isFollowing}
+                locale={locale}
+                username={profile.username}
+                labels={{ follow: messages.profile.follow, following: messages.profile.following }}
+              />
             )}
           </div>
           {profile.principle ? (
