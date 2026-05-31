@@ -35,6 +35,19 @@ Any Supabase schema change must be synchronized in the same commit:
 
 Applies to table/column add-remove-rename, constraints, indexes, triggers, RPC/functions, and defaults.
 
+## Linked Change Rule (Required)
+
+If a change affects multiple related surfaces, update every impacted file in the same change set.
+
+Examples:
+
+- schema + docs + i18n copy
+- server action validation + form constraints + helper text
+- shared component behavior + every consumer that depends on it
+- database constraints + front-end validation + profile rendering
+
+Do not leave a known dependency half-updated when the behavior or contract has changed.
+
 ## Implementation Notes
 
 - Framework: Next.js App Router + TypeScript + Tailwind CSS 4.

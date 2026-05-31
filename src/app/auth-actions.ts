@@ -126,11 +126,11 @@ export async function signUpAction(formData: FormData) {
     fail(locale, "register", "Please enter a valid email address.");
   }
 
-  if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+  if (!/^[a-z0-9_]{4,20}$/.test(username)) {
     fail(
       locale,
       "register",
-      "Username must be 3-24 characters and only use letters, numbers, or underscores.",
+      "Username must be 4-20 characters and only use lowercase letters, numbers, or underscores.",
     );
   }
 

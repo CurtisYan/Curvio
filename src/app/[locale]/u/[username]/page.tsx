@@ -144,6 +144,7 @@ export default async function UserProfilePage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-4xl font-semibold tracking-tight">{profile.display_name}</h1>
+              <p className="mt-1 text-sm text-muted">@{profile.username}</p>
               <p className="mt-2 text-muted">
                 {(profile.bio ?? "").trim() ? profile.bio : profile.principle}
                 <span className="mx-2">•</span>

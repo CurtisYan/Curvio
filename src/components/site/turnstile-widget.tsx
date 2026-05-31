@@ -35,6 +35,10 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
     };
   }, [callbackName, expiredCallbackName, errorCallbackName]);
 
+  if (!siteKey) {
+    return null;
+  }
+
   return (
     <div className="space-y-3">
       <Script

@@ -11,9 +11,13 @@ type AuthLabels = {
   password: string;
   username: string;
   displayName: string;
+  emailPlaceholder: string;
+  passwordPlaceholder: string;
   createAccount: string;
   alreadyHaveAccount: string;
   forgotPassword: string;
+  usernameHelp: string;
+  turnstileMissing?: string;
 };
 
 export function AuthShell({
@@ -36,6 +40,7 @@ export function AuthShell({
   error?: string;
 }) {
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+  const showTurnstile = mode === "register" && Boolean(turnstileSiteKey);
 
   return (
     <main className="container-narrow flex min-h-screen items-center justify-center pt-24 pb-20">
@@ -55,8 +60,8 @@ export function AuthShell({
             <>
               <label className="space-y-2 text-sm font-medium">
                 {labels.username}
-                <Input autoComplete="username" maxLength={24} minLength={3} name="username" pattern="[A-Za-z0-9_]+" placeholder="elara_writes" required />
-                <p className="text-xs font-normal text-muted">3-24 chars, letters/numbers/underscore only.</p>
+                <Input autoComplete="username" maxLength={20} minLength={4} name="username" pattern="[a-z0-9_]+" placeholder="elara_writes" required />
+                <p className="text-xs font-normal text-muted">{labels.usernameHelp}</p>
               </label>
               <label className="space-y-2 text-sm font-medium">
                 {labels.displayName}
@@ -66,7 +71,7 @@ export function AuthShell({
           ) : null}
           <label className="space-y-2 text-sm font-medium">
             {labels.email}
-            <Input autoComplete="email" name="email" placeholder="you@example.com" required type="email" />
+            <Input autoComplete="email" name="email" placeholder={labels.emailPlaceholder} required type="email" />
           </label>
           <label className="space-y-2 text-sm font-medium">
             {labels.password}
@@ -74,13 +79,17 @@ export function AuthShell({
               autoComplete={mode === "register" ? "new-password" : "current-password"}
               minLength={6}
               name="password"
-              placeholder="password"
+              placeholder={labels.passwordPlaceholder}
               required
               type="password"
             />
           </label>
-          {mode === "register" && turnstileSiteKey ? (
+          {showTurnstile ? (
             <TurnstileWidget siteKey={turnstileSiteKey} />
+          ) : mode === "register" && labels.turnstileMissing ? (
+            <p className="rounded-lg border border-dashed border-border-subtle px-3 py-2 text-xs leading-5 text-muted">
+              {labels.turnstileMissing}
+            </p>
           ) : null}
           <Button className="w-full" type="submit">
             {submit}
