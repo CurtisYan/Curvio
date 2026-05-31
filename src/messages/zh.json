@@ -74,12 +74,15 @@
   "profile": {
     "follow": "关注",
     "following": "已关注",
+    "followers": "粉丝",
     "annualSummary": "年度总结",
     "publicLedger": "公开记录",
     "recordedActs": "次善意行动",
     "donations": "捐赠",
     "kindness": "善事",
-    "openWork": "开源项目"
+    "openWork": "开源项目",
+    "emptyFollowing": "还没有关注任何人。",
+    "emptyFollowers": "还没有粉丝。"
   },
   "auth": {
     "loginTitle": "登录 Curvio",

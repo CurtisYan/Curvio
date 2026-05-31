@@ -118,7 +118,23 @@ export function ResetPasswordClient({
           return;
         }
 
-        router.push(`/${locale}/dashboard`);
+        const { data } = await supabase.auth.getUser();
+        const userId = data.user?.id;
+
+        if (userId) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", userId)
+            .maybeSingle();
+
+          if (profile?.username) {
+            router.push(`/${locale}/u/${profile.username}`);
+            return;
+          }
+        }
+
+        router.push(`/${locale}/new`);
       }}
       mode="ready"
     />

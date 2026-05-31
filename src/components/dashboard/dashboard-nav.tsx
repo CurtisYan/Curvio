@@ -15,10 +15,10 @@ export function DashboardNav({
   };
 }) {
   const items = [
-    { href: "/dashboard/new", label: labels.newRecord },
-    { href: "/dashboard/records", label: labels.records },
-    { href: "/dashboard/projects", label: labels.projects ?? "Projects" },
-    { href: "/dashboard/settings", label: labels.settings },
+    { href: "/new", label: labels.newRecord },
+    { href: "/records", label: labels.records },
+    { href: "/projects", label: labels.projects ?? "Projects" },
+    { href: "/settings", label: labels.settings },
   ];
 
   return (

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { recordTypeToSegment } from "@/lib/record-types";
+import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
 import { RecordIcon } from "./record-icon";
 import { recordLabel } from "./record-label";
@@ -21,17 +22,21 @@ export function RecordCard({
 }) {
   const author = record.isAnonymous ? anonymousLabel : record.authorDisplayName;
   const typeLabel = typeLabels?.[record.type] ?? recordLabel(record.type);
+  const publicRecordId = formatRecordPublicId(record.date, record.id);
   const detailHref = localizePath(
     locale,
-    `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${record.id}`,
+    `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${publicRecordId}`,
   );
+  const typeHref = localizePath(locale, `/explore?type=${record.type}`);
 
   return (
     <Card className="flex min-h-[260px] flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted">
           <RecordIcon className="h-4 w-4 text-primary" type={record.type} />
-          <span>{typeLabel}</span>
+          <Link className="transition-colors hover:text-primary" href={typeHref}>
+            {typeLabel}
+          </Link>
         </div>
         <time className="text-sm text-muted">
           {new Intl.DateTimeFormat(locale, {

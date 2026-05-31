@@ -1,8 +1,11 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { recordTypeToSegment } from "@/lib/record-types";
+import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
 import { RecordIcon } from "./record-icon";
 import { recordLabel } from "./record-label";
@@ -52,19 +55,25 @@ export function Timeline({
             <Card className="hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  {record.isAnonymous ? (
-                    <h3 className="text-xl font-medium">{record.title}</h3>
-                  ) : (
-                    <Link
-                      className="text-xl font-medium transition-colors hover:text-primary"
-                      href={localizePath(
-                        locale,
-                        `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${record.id}`,
-                      )}
-                    >
-                      {record.title}
-                    </Link>
-                  )}
+                  {(() => {
+                    const publicRecordId = formatRecordPublicId(record.date, record.id);
+                    const detailHref = localizePath(
+                      locale,
+                      `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${publicRecordId}`,
+                    );
+                    const typeHref = localizePath(locale, `/explore?type=${record.type}`);
+
+                    return record.isAnonymous ? (
+                      <h3 className="text-xl font-medium">{record.title}</h3>
+                    ) : (
+                      <Link
+                        className="text-xl font-medium transition-colors hover:text-primary"
+                        href={detailHref}
+                      >
+                        {record.title}
+                      </Link>
+                    );
+                  })()}
                   {showAuthor ? (
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted">
                       <span>{byLabel}</span>
@@ -95,10 +104,12 @@ export function Timeline({
                     </div>
                   ) : null}
                 </div>
-                <Badge>
-                  <RecordIcon className="h-3.5 w-3.5" type={record.type} />
-                  {typeLabels?.[record.type] ?? recordLabel(record.type)}
-                </Badge>
+                <Link className="inline-flex" href={localizePath(locale, `/explore?type=${record.type}`)}>
+                  <Badge className="transition-colors hover:bg-surface-container-high hover:text-primary">
+                    <RecordIcon className="h-3.5 w-3.5" type={record.type} />
+                    {typeLabels?.[record.type] ?? recordLabel(record.type)}
+                  </Badge>
+                </Link>
               </div>
               <p className="text-sm leading-6 text-on-surface-variant">
                 {record.content}

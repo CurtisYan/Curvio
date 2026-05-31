@@ -74,12 +74,15 @@
   "profile": {
     "follow": "Follow",
     "following": "Following",
+    "followers": "Followers",
     "annualSummary": "Annual Summary",
     "publicLedger": "Public Ledger",
     "recordedActs": "recorded acts of goodwill",
     "donations": "Donations",
     "kindness": "Kindness",
-    "openWork": "Open Work"
+    "openWork": "Open Work",
+    "emptyFollowing": "No following yet.",
+    "emptyFollowers": "No followers yet."
   },
   "auth": {
     "loginTitle": "Sign in to Curvio",

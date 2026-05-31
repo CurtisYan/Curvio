@@ -4,6 +4,7 @@ import { RecordIcon } from "@/components/records/record-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getDictionary, isLocale, localizePath, type Locale } from "@/lib/i18n";
+import { resolveRecordId } from "@/lib/record-public-id";
 import { segmentToRecordType } from "@/lib/record-types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -13,6 +14,8 @@ export default async function RecordDetailPage({
   params: Promise<{ locale: string; username: string; recordType: string; recordId: string }>;
 }) {
   const { locale: rawLocale, username, recordType, recordId } = await params;
+
+  const dbRecordId = resolveRecordId(recordId);
 
   if (!isLocale(rawLocale)) {
     notFound();
@@ -30,7 +33,7 @@ export default async function RecordDetailPage({
   const { data: record } = await supabase
     .from("records")
     .select("*")
-    .eq("id", recordId)
+    .eq("id", dbRecordId)
     .maybeSingle();
 
   if (!record || record.type !== type) {
