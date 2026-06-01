@@ -4,6 +4,7 @@ import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { AccountMenu } from "./account-menu";
 import { LocaleSwitcher } from "./locale-switcher";
+import { SearchTrigger } from "./search-trigger";
 
 type NavMessages = {
   explore: string;
@@ -16,6 +17,7 @@ type NavMessages = {
   profile: string;
   settings: string;
   language: string;
+  search: string;
 };
 
 export function SiteHeader({
@@ -60,9 +62,10 @@ export function SiteHeader({
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-1 items-center justify-end gap-4 md:justify-center md:px-6">
+          <SearchTrigger label={messages.search} locale={locale} />
           <Link
-            className="text-sm font-medium text-primary transition-opacity hover:opacity-75"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-primary/25 bg-primary/10 px-4 text-sm font-semibold text-primary shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/15"
             href={localizePath(locale, "/new")}
           >
             {messages.new}
