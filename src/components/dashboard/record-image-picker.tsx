@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export function RecordImagePicker({
   name,
-  maxCount = 20,
+  maxCount = 15,
   existingCount = 0,
   labels,
 }: {
@@ -21,18 +21,26 @@ export function RecordImagePicker({
   };
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const previewUrlsRef = useRef<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
   const remaining = Math.max(maxCount - existingCount - files.length, 0);
 
   useEffect(() => {
-    const urls = files.map((file) => URL.createObjectURL(file));
-    setPreviews(urls);
     return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [files]);
+  }, []);
+
+  function updateFiles(nextFiles: File[]) {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+
+    const nextPreviews = nextFiles.map((file) => URL.createObjectURL(file));
+    previewUrlsRef.current = nextPreviews;
+    setFiles(nextFiles);
+    setPreviews(nextPreviews);
+  }
 
   return (
     <div className="space-y-3">
@@ -79,11 +87,11 @@ export function RecordImagePicker({
         onChange={(event) => {
           const selected = Array.from(event.target.files ?? []);
           if (selected.length === 0) {
-            setFiles([]);
+            updateFiles([]);
             return;
           }
           const next = remaining > 0 ? selected.slice(0, remaining) : [];
-          setFiles(next);
+          updateFiles(next);
         }}
         ref={inputRef}
         type="file"
