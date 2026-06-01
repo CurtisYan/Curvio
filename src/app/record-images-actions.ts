@@ -8,7 +8,7 @@ import type { RecordType } from "@/lib/types";
 import { deleteRecordImageFromR2, uploadRecordImageToR2 } from "@/utils/r2";
 import { createClient } from "@/utils/supabase/server";
 
-const MAX_RECORD_IMAGES = 20;
+const MAX_RECORD_IMAGES = 15;
 
 const recordTypeValues: RecordType[] = ["donation", "kindness", "open_source"];
 

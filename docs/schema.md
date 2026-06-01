@@ -1,248 +1,219 @@
-# Curvio Schema Notes (中文字段注释)
-
-本文档是 Curvio 当前 Supabase 业务结构的中文注释版说明，便于产品、前端、后端共同理解字段含义与数据边界。
+# Curvio Schema Notes
+
+This document records the current Supabase business schema based on the latest schema SQL export provided on 2026-06-01.
+
+## Sync Rule
+
+- Any Supabase schema change must be synchronized in the same change set with migration SQL under `supabase/migrations/` and this document.
+- This document is a readable schema note for the team. It does not replace executable migration SQL.
+- The current source of truth for this update is the provided SQL export. It contains table definitions, columns, primary keys, foreign keys, defaults, and check constraints.
+
+## 1. profiles
+
+Purpose: stores user profile, public page settings, and privacy/display preferences.
+
+Columns:
 
-## 使用规则
+- `id`: user ID. Primary key. References `auth.users(id)`.
+- `username`: unique public username. Required. Must match `^[a-z0-9_]+$`.
+- `display_name`: required display name. Length must be 2-40 characters.
+- `avatar_url`: optional avatar URL.
+- `bio`: optional profile bio.
+- `location`: optional location text.
+- `principle`: optional personal principle.
+- `website_url`: optional personal website URL.
+- `github_url`: optional GitHub URL.
+- `blog_url`: optional blog URL.
+- `preferred_language`: required preferred language. Defaults to `en`. Allowed values: `en`, `zh`.
+- `is_public`: whether the profile is public. Defaults to `true`.
+- `allow_follow`: whether other users can follow this profile. Defaults to `true`.
+- `show_annual_summary`: whether to show the annual summary. Defaults to `true`.
+- `hide_amounts_by_default`: whether amounts are hidden by default. Defaults to `true`.
+- `created_at`: creation time. Defaults to `now()`.
+- `updated_at`: update time. Defaults to `now()`.
 
-- 任何 Supabase 结构变更（新增/删除/重命名表、字段、约束、函数、触发器、索引）都必须在同一次 PR/提交中同步更新本文档。
-- 本文档是“面向团队阅读”的 schema 注释，不替代迁移 SQL（`supabase/migrations/*.sql`）。
+Constraints:
 
-## 1. profiles（用户档案）
+- Primary key: `profiles_pkey` on `id`.
+- Foreign key: `profiles_id_fkey`, `id` references `auth.users(id)`.
+- Unique: `username`.
+- Checks: username format, display name length, preferred language.
 
-用途：保存用户公开主页信息、展示偏好和隐私开关。
+## 2. follows
 
-字段：
+Purpose: stores follow relationships between profiles.
 
-- `id`：用户 ID，主键，外键到 `auth.users(id)`。
-- `username`：唯一用户名（公开 URL 标识）。
-- `display_name`：展示名称。
-- `avatar_url`：头像 URL（当前头像文件实际存储在 R2）。
-- `bio`：个人简介。
-- `location`：地理位置文本。
-- `principle`：个人理念。
-- `website_url`：个人网站。
-- `github_url`：GitHub 链接。
-- `blog_url`：博客链接。
-- `preferred_language`：偏好语言（`en` / `zh`）。
-- `is_public`：是否公开主页。
-- `allow_follow`：是否允许被关注。
-- `show_annual_summary`：是否展示年度总结。
-- `hide_amounts_by_default`：默认隐藏金额。
-- `created_at` / `updated_at`：创建/更新时间。
+Columns:
 
-关键约束：
-
-- `username` 仅允许字母、数字、下划线（内部统一转小写存储）。
-- `username` 长度限制为 4-20。
-- `display_name` 长度限制为 2-40。
-
-## 2. follows（关注关系）
-
-用途：保存用户间关注关系。
-
-字段：
+- `id`: follow relationship ID. Primary key. Defaults to `gen_random_uuid()`.
+- `follower_id`: user who follows. Required. References `public.profiles(id)`.
+- `following_id`: user being followed. Required. References `public.profiles(id)`.
+- `created_at`: follow creation time. Defaults to `now()`.
+
+Constraints:
+
+- Primary key: `follows_pkey` on `id`.
+- Foreign keys: `follower_id` and `following_id` reference `public.profiles(id)`.
+
+## 3. records
+
+Purpose: stores donation, kindness, and open-source public-good records.
+
+Columns:
+
+- `id`: record ID. Primary key. Defaults to `gen_random_uuid()`.
+- `user_id`: owner profile ID. Required. References `public.profiles(id)`.
+- `type`: record type. Required. Allowed values: `donation`, `kindness`, `open_source`.
+- `title`: record title. Required.
+- `organization_name`: optional organization name.
+- `platform_name`: optional platform name.
+- `project_url`: optional project or source URL.
+- `amount`: optional amount.
+- `currency`: optional currency.
+- `show_amount`: whether to show the amount. Defaults to `false`.
+- `content`: main record content. Required.
+- `reflection`: optional reflection text.
+- `date`: record date. Required.
+- `tags`: tag array. Defaults to an empty text array.
+- `language`: content language. Defaults to `en`. Allowed values: `en`, `zh`.
+- `is_public`: whether the record is public. Defaults to `true`.
+- `is_anonymous`: whether the record is published anonymously. Defaults to `false`.
+- `created_at`: creation time. Defaults to `now()`.
+- `updated_at`: update time. Defaults to `now()`.
+- `public_record_id`: public record identifier. Required.
+
+Constraints:
+
+- Primary key: `records_pkey` on `id`.
+- Foreign key: `records_user_id_fkey`, `user_id` references `public.profiles(id)`.
+- Checks: record type and language.
 
-- `id`：关注关系 ID。
-- `follower_id`：关注发起者（谁关注）。
-- `following_id`：被关注者（关注谁）。
-- `created_at`：关注时间。
+## 4. record_images
 
-关键约束：
-
-- `follows_no_self_follow`：禁止自关注。
-- `follows_unique_pair`：同一对用户只能有一条关注关系。
-
-## 3. records（公益记录主表）
-
-用途：保存捐赠、善事、开源等记录内容。
-
-字段：
+Purpose: stores metadata for images attached to records. Image files are stored outside the database.
 
-- `id`：记录 ID。
-- `user_id`：所属用户 ID。
-- `type`：记录类型（`donation` / `kindness` / `open_source`）。
-- `title`：标题。
-- `organization_name`：机构名（可选）。
-- `platform_name`：平台名（可选）。
-- `project_url`：项目或来源链接（可选）。
-- `amount`：金额（可选）。
-- `currency`：币种（可选）。
-- `show_amount`：是否显示金额。
-- `content`：正文描述。
-- `reflection`：补充反思（可选）。
-- `date`：发生日期。
-- `tags`：标签数组。
-- `language`：内容语言（`en` / `zh`）。
-- `is_public`：是否公开。
-- `is_anonymous`：是否匿名发布。
-- `public_record_id`：公开记录 ID（格式：`YYYYMMDD-{uuid}`）。
-- `created_at` / `updated_at`：创建/更新时间。
+Columns:
 
-相关机制：
+- `id`: image record ID. Primary key. Defaults to `gen_random_uuid()`.
+- `record_id`: owner record ID. Required. References `public.records(id)`.
+- `user_id`: owner profile ID. Required. References `public.profiles(id)`.
+- `r2_key`: R2 object key. Required.
+- `r2_url`: R2 object URL. Required.
+- `mime_type`: file MIME type. Required.
+- `file_size`: optional file size in bytes.
+- `sort_order`: image ordering value. Defaults to `0`.
+- `created_at`: creation time. Defaults to `now()`.
+- `is_cover`: whether this image is the cover image. Defaults to `false`.
 
-- `public_record_id` 有唯一索引。
-- 通过触发器 `records_set_public_record_id` + 函数 `set_record_public_id()` 在插入/日期更新时自动生成或更新。
+Constraints:
 
-## 4. record_images（记录图片）
+- Primary key: `record_images_pkey` on `id`.
+- Foreign keys: `record_id` references `public.records(id)`, `user_id` references `public.profiles(id)`.
 
-用途：保存记录关联图片元数据（文件存储在 R2）。
+## 5. profile_sections
+
+Purpose: controls which sections appear on a public profile and their order.
+
+Columns:
+
+- `id`: section config ID. Primary key. Defaults to `gen_random_uuid()`.
+- `user_id`: owner profile ID. Required. References `public.profiles(id)`.
+- `section_type`: section type. Required. Allowed values: `donations`, `kindness`, `open_source`, `annual_summary`, `about`, `timeline`, `favorite_platforms`.
+- `sort_order`: section sort order. Defaults to `0`.
+- `is_visible`: whether the section is visible. Defaults to `true`.
+- `created_at`: creation time. Defaults to `now()`.
+- `updated_at`: update time. Defaults to `now()`.
 
-字段：
+Constraints:
 
-- `id`：图片记录 ID。
-- `record_id`：所属记录 ID。
-- `user_id`：所属用户 ID。
-- `r2_key`：R2 对象键。
-- `r2_url`：可访问 URL。
-- `mime_type`：文件 MIME 类型。
-- `file_size`：文件大小（字节）。
-- `sort_order`：图片排序。
-- `is_cover`：是否封面图。
-- `created_at`：创建时间。
+- Primary key: `profile_sections_pkey` on `id`.
+- Foreign key: `profile_sections_user_id_fkey`, `user_id` references `public.profiles(id)`.
+- Check: section type.
 
-## 5. profile_sections（主页栏目配置）
+## 6. open_source_projects
 
-用途：控制公开主页中各栏目显示与顺序。
+Purpose: stores user open-source project profiles.
 
-字段：
+Columns:
 
-- `id`：配置 ID。
-- `user_id`：所属用户 ID。
-- `section_type`：栏目类型（donations/kindness/open_source/annual_summary/about/timeline/favorite_platforms）。
-- `sort_order`：排序值。
-- `is_visible`：是否显示。
-- `created_at` / `updated_at`：创建/更新时间。
+- `id`: project ID. Primary key. Defaults to `gen_random_uuid()`.
+- `user_id`: owner profile ID. Required. References `public.profiles(id)`.
+- `name`: project name. Required.
+- `description`: project description. Required.
+- `repo_url`: repository URL. Required.
+- `demo_url`: optional demo URL.
+- `screenshot_url`: optional screenshot URL.
+- `license`: optional license.
+- `tech_stack`: technology stack array. Defaults to an empty text array.
+- `status`: project status. Defaults to `Building`. Allowed values: `Planning`, `Building`, `Active`, `Maintained`, `Paused`, `Archived`.
+- `is_free`: whether the project is free. Defaults to `true`.
+- `is_open_source`: whether the project is open source. Defaults to `true`.
+- `is_public`: whether the project is public. Defaults to `true`.
+- `language`: project language. Defaults to `en`. Allowed values: `en`, `zh`.
+- `tags`: tag array. Defaults to an empty text array.
+- `created_at`: creation time. Defaults to `now()`.
+- `updated_at`: update time. Defaults to `now()`.
 
-## 6. open_source_projects（开源项目）
+Constraints:
 
-用途：保存用户开源项目资料。
+- Primary key: `open_source_projects_pkey` on `id`.
+- Foreign key: `open_source_projects_user_id_fkey`, `user_id` references `public.profiles(id)`.
+- Checks: project status and language.
 
-字段：
+## 7. donation_platforms
 
-- `id`：项目 ID。
-- `user_id`：所属用户 ID。
-- `name`：项目名。
-- `description`：项目描述。
-- `repo_url`：仓库地址。
-- `demo_url`：演示地址（可选）。
-- `screenshot_url`：截图地址（可选）。
-- `license`：许可证（可选）。
-- `tech_stack`：技术栈数组。
-- `status`：状态（Planning/Building/Active/Maintained/Paused/Archived）。
-- `is_free`：是否免费。
-- `is_open_source`：是否开源。
-- `is_public`：是否公开。
-- `language`：语言（`en` / `zh`）。
-- `tags`：标签数组。
-- `created_at` / `updated_at`：创建/更新时间。
+Purpose: stores the official donation platform directory shown by the product.
 
-## 7. donation_platforms（公益平台目录）
+Columns:
 
-用途：维护官方公益平台目录信息（站点内容数据，不是用户隐私数据）。
+- `id`: platform ID. Primary key. Defaults to `gen_random_uuid()`.
+- `name`: platform name. Required.
+- `description`: platform description. Required.
+- `official_url`: official URL. Required.
+- `official_url_zh`: optional Chinese official URL.
+- `region`: optional region.
+- `languages`: supported language array. Defaults to an empty text array.
+- `category`: optional category.
+- `is_verified`: whether the platform is verified. Defaults to `true`.
+- `created_at`: creation time. Defaults to `now()`.
+- `updated_at`: update time. Defaults to `now()`.
 
-字段：
+Constraints:
 
-- `id`：平台 ID。
-- `name`：平台名。
-- `description`：描述。
-- `official_url`：官方链接。
-- `official_url_zh`：中文官方链接（可选）。
-- `region`：地区（可选）。
-- `languages`：支持语言数组。
-- `category`：分类（可选）。
-- `is_verified`：是否已验证。
-- `created_at` / `updated_at`：创建/更新时间。
+- Primary key: `donation_platforms_pkey` on `id`.
 
-## 8. deletion_requests（删除请求）
+## 8. deletion_requests
 
-用途：记录用户发起的数据删除/账号清理请求，形成可追踪处理流程。
+Purpose: records user requests for data deletion or account cleanup.
 
-字段：
+Columns:
 
-- `id`：删除请求 ID。
-- `user_id`：请求发起用户。
-- `request_content`：按模板提交的请求正文。
-- `status`：处理状态（`pending` / `processing` / `completed` / `rejected`）。
-- `processed_note`：处理备注（可选）。
-- `created_at` / `updated_at`：创建/更新时间。
-- `processed_at`：处理完成时间（可选）。
+- `id`: deletion request ID. Primary key. Defaults to `gen_random_uuid()`.
+- `user_id`: requesting profile ID. Required. References `public.profiles(id)`.
+- `request_content`: request body. Required.
+- `status`: processing status. Defaults to `pending`. Allowed values: `pending`, `processing`, `completed`, `rejected`.
+- `processed_note`: optional processing note.
+- `created_at`: creation time. Defaults to `now()`.
+- `updated_at`: update time. Defaults to `now()`.
+- `processed_at`: optional processed time.
 
-权限策略（RLS）：
+Constraints:
 
-- 用户只能提交自己的删除请求。
-- 用户只能读取自己的删除请求。
+- Primary key: `deletion_requests_pkey` on `id`.
+- Foreign key: `deletion_requests_user_id_fkey`, `user_id` references `public.profiles(id)`.
+- Check: deletion request status.
 
-## 9. reset_requests（重置请求限流记录）
+## Current Table List
 
-用途：记录忘记密码页的重置请求，用于按 IP + email 组合做滑窗限流，避免同一来源短时间内反复刷重置邮件。
+- `deletion_requests`
+- `donation_platforms`
+- `follows`
+- `open_source_projects`
+- `profile_sections`
+- `profiles`
+- `record_images`
+- `records`
 
-字段：
+## Notes Removed From Previous Local Record
 
-- `id`：请求记录 ID。
-- `ip_address`：请求来源 IP。
-- `email_hash`：邮箱哈希值（用于分组计数，不直接存明文邮箱）。
-- `created_at`：请求时间。
-
-关键机制：
-
-- 通过 `consume_reset_request_limit(p_ip_address, p_email_hash, p_window_minutes, p_limit)` 原子检查并写入。
-- 默认策略是 15 分钟窗口内同一 IP + email 最多 3 次。
-- 超限后返回统一的“请稍后再试”提示，不影响登录流程本身。
-
-## 10. login_failures（登录失败记录）
-
-用途：记录登录失败事件，用于按账号最近失败次数触发临时 Turnstile 挑战。
-
-字段：
-
-- `id`：失败记录 ID。
-- `email_hash`：邮箱哈希值（用于按账号统计，不直接存明文邮箱）。
-- `ip_address`：请求来源 IP。
-- `created_at`：失败时间。
-
-关键机制：
-
-- 统计最近 15 分钟内同一 `email_hash` 的失败次数。
-- 同一账号在 15 分钟内失败达到 5 次后，下一次登录需要先完成 Turnstile。
-- 登录成功后会清空该账号的失败记录。
-
-## 11. 当前已使用 RPC
-
-### `get_profile_with_follow_status(viewer_uuid uuid, username_text text)`
-
-用途：一次调用返回目标用户公开档案 + 当前访问者是否关注该用户（`is_following`）。
-
-返回列：
-
-- `id`
-- `username`
-- `display_name`
-- `avatar_url`
-- `bio`
-- `principle`
-- `location`
-- `website_url`
-- `github_url`
-- `allow_follow`
-- `is_public`
-- `is_following`
-
-### `consume_reset_request_limit(p_ip_address text, p_email_hash text, p_window_minutes integer, p_limit integer)`
-
-用途：在服务端检查某个 IP + email 组合在滑动窗口内的重置请求次数，并在未超限时顺手记一条记录。
-
-返回列：
-
-- `allowed`：是否允许继续发送重置邮件。
-- `attempts`：窗口内当前次数。
-- `retry_after`：如果超限，建议下次重试时间。
-
-## 数据收集边界（摘要）
-
-Curvio 当前收集的是“账号 + 公开档案 + 公益记录 + 关注关系 + 展示偏好”这类产品运行必需信息。默认不收集支付信息、身份证件、生物特征等高敏数据。
-
-建议：
-
-- 对 `location`、`website_url`、`github_url`、`blog_url`、`bio`、`principle` 保持可选，避免强制采集。
-- 对金额相关字段坚持“默认隐藏”。
-- 在隐私页面清晰说明：收集目的、公开范围、删除流程。
+The latest provided SQL does not include `reset_requests`, `login_failures`, or the `consume_reset_request_limit` RPC, so they are not listed in this schema note.

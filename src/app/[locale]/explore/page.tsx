@@ -60,6 +60,7 @@ export default async function ExplorePage({
         <p className="mt-3 text-lg leading-8 text-muted">{messages.explore.lead}</p>
       </div>
       <RecordFilters
+        key={initialFilter}
         initialFilter={initialFilter}
         labels={{
           all: messages.explore.all,

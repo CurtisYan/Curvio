@@ -56,6 +56,17 @@
     "openWork": "Open Work",
     "search": "Filter tags or orgs..."
   },
+  "search": {
+    "title": "Search the archive",
+    "placeholder": "Search users,records",
+    "loading": "Loading public archive...",
+    "users": "Users",
+    "records": "Records",
+    "usersEmpty": "No matching users.",
+    "recordsEmpty": "No matching records.",
+    "empty": "No matches yet.",
+    "hint": "Type a username, title, tag, or organization to search the public archive."
+  },
   "donate": {
     "title": "Official Giving Platforms",
     "notice": "Curvio does not collect donations. All links below lead to official organization websites.",

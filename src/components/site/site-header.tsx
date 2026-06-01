@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { signOutAction } from "@/app/auth-actions";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { AccountMenu } from "./account-menu";
@@ -20,13 +19,35 @@ type NavMessages = {
   search: string;
 };
 
+type SiteHeaderMessages = {
+  nav: NavMessages;
+  common: {
+    anonymous: string;
+    by: string;
+    recordDonation: string;
+    recordKindness: string;
+    recordOpenWork: string;
+  };
+  search: {
+    title: string;
+    placeholder: string;
+    loading: string;
+    users: string;
+    records: string;
+    usersEmpty: string;
+    recordsEmpty: string;
+    empty: string;
+    hint: string;
+  };
+};
+
 export function SiteHeader({
   locale,
   messages,
   user,
 }: {
   locale: Locale;
-  messages: NavMessages;
+  messages: SiteHeaderMessages;
   user?: {
     email?: string | null;
     displayName?: string | null;
@@ -35,15 +56,15 @@ export function SiteHeader({
   } | null;
 }) {
   const nav = [
-    { href: "/explore", label: messages.explore },
-    { href: "/donate", label: messages.donate },
-    { href: "/about", label: messages.about },
+    { href: "/explore", label: messages.nav.explore },
+    { href: "/donate", label: messages.nav.donate },
+    { href: "/about", label: messages.nav.about },
   ];
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border-subtle bg-surface/85 backdrop-blur-md">
-      <div className="container-page flex h-16 items-center justify-between">
-        <div className="flex items-center gap-8">
+      <div className="container-page flex h-16 items-center gap-6">
+        <div className="flex shrink-0 items-center gap-8">
           <Link
             className="font-sans text-2xl font-medium text-primary"
             href={localizePath(locale)}
@@ -62,22 +83,29 @@ export function SiteHeader({
             ))}
           </nav>
         </div>
-        <div className="flex flex-1 items-center justify-end gap-4 md:justify-center md:px-6">
-          <SearchTrigger label={messages.search} locale={locale} />
+        <div className="flex min-w-0 flex-1 items-center justify-end px-2 md:px-4">
+          <SearchTrigger
+            common={messages.common}
+            label={messages.nav.search}
+            locale={locale}
+            search={messages.search}
+          />
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
           <Link
-            className="inline-flex h-11 items-center justify-center rounded-full border border-primary/25 bg-primary/10 px-4 text-sm font-semibold text-primary shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/15"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-transparent font-sans text-sm font-medium text-muted transition-colors hover:border-border-subtle hover:bg-surface-offwhite hover:text-primary"
             href={localizePath(locale, "/new")}
           >
-            {messages.new}
+            {messages.nav.new}
           </Link>
-          <LocaleSwitcher label={messages.language} locale={locale} />
+          <LocaleSwitcher label={messages.nav.language} locale={locale} />
           {user ? (
             <AccountMenu
               labels={{
-                signOut: messages.signOut,
-                dashboard: messages.dashboard,
-                profile: messages.profile,
-                settings: messages.settings,
+                signOut: messages.nav.signOut,
+                dashboard: messages.nav.dashboard,
+                profile: messages.nav.profile,
+                settings: messages.nav.settings,
               }}
               locale={locale}
               user={user}
@@ -87,7 +115,7 @@ export function SiteHeader({
               className="text-sm font-medium text-primary transition-opacity hover:opacity-75"
               href={localizePath(locale, "/login")}
             >
-              {messages.signIn}
+              {messages.nav.signIn}
             </Link>
           )}
         </div>

@@ -31,7 +31,7 @@ function isRecordType(value: string): value is RecordType {
   return recordTypeValues.includes(value as RecordType);
 }
 
-const MAX_RECORD_IMAGES = 20;
+const MAX_RECORD_IMAGES = 15;
 
 type RecordFormState = {
   status: "idle" | "error";

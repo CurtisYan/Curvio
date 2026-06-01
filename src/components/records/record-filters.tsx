@@ -1,10 +1,11 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { RecordCard } from "@/components/records/record-card";
 import { Input } from "@/components/ui/input";
 import type { Locale } from "@/lib/i18n";
+import { matchesSearchQuery } from "@/lib/search";
 import type { GoodwillRecord, RecordType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -31,10 +32,6 @@ export function RecordFilters({
   const [active, setActive] = useState<FilterValue>(initialFilter);
   const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    setActive(initialFilter);
-  }, [initialFilter]);
-
   const filters: Array<{ value: FilterValue; label: string }> = [
     { value: "all", label: labels.all },
     { value: "donation", label: labels.donations },
@@ -43,16 +40,21 @@ export function RecordFilters({
   ];
 
   const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
     return records.filter((record) => {
       const typeMatch = active === "all" || record.type === active;
-      const queryMatch =
-        !normalizedQuery ||
-        [record.title, record.content, record.organizationName, ...record.tags]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedQuery);
+      const queryMatch = matchesSearchQuery(
+        [
+          record.title,
+          record.content,
+          record.reflection,
+          record.organizationName,
+          record.platformName,
+          record.authorUsername,
+          record.authorDisplayName,
+          ...record.tags,
+        ],
+        query,
+      );
 
       return typeMatch && queryMatch;
     });
