@@ -24,10 +24,16 @@ export function ResetPasswordClient({
   };
 }) {
   const searchParams = useSearchParams();
+  const queryError = searchParams.get("error") ?? undefined;
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | undefined>(searchParams.get("error") ?? undefined);
+  const [sessionError, setSessionError] = useState<string | undefined>();
+  const error = queryError ?? sessionError;
 
   useEffect(() => {
+    if (queryError) {
+      return;
+    }
+
     let mounted = true;
 
     async function recoverSession() {
@@ -63,7 +69,7 @@ export function ResetPasswordClient({
         }
       } catch (caughtError) {
         if (mounted) {
-          setError(caughtError instanceof Error ? caughtError.message : labels.invalidLink);
+          setSessionError(caughtError instanceof Error ? caughtError.message : labels.invalidLink);
         }
       }
     }
@@ -73,11 +79,7 @@ export function ResetPasswordClient({
     return () => {
       mounted = false;
     };
-  }, [labels.invalidLink, searchParams]);
-
-  useEffect(() => {
-    setError(searchParams.get("error") ?? undefined);
-  }, [searchParams]);
+  }, [labels.invalidLink, queryError, searchParams]);
 
   if (error) {
     return (

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { buildSearchSnippet, matchesSearchQuery, splitHighlightedText } from "@/lib/search";
@@ -206,18 +207,18 @@ export function SearchPalette({
     return null;
   }
 
-  return (
+  const palette = (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-[60] bg-black/45 px-4 pt-20 backdrop-blur-xl"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-foreground/20 px-4 pt-[min(14vh,7rem)] backdrop-blur-sm"
       role="dialog"
       onClick={onClose}
     >
       <div
-        className="mx-auto w-full max-w-3xl overflow-hidden rounded-[28px] border border-border-subtle/80 bg-surface shadow-[0_10px_32px_rgba(31,35,40,0.12)]"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-[0_24px_80px_rgba(31,35,40,0.18)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center gap-3 border-b border-border-subtle/70 px-5 py-4">
+        <div className="flex items-center gap-3 border-b border-border-subtle/70 px-4 py-3 sm:px-5">
           <Search className="h-4 w-4 shrink-0 text-muted" />
           <div className="relative flex min-w-0 flex-1 items-center">
             <Input
@@ -240,7 +241,7 @@ export function SearchPalette({
           </div>
           <button
             aria-label={labels.title}
-            className="inline-flex h-8 items-center rounded-full border border-border-subtle/80 bg-surface-offwhite px-2.5 text-xs text-muted transition-colors hover:border-primary/30 hover:text-primary"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border-subtle/80 bg-surface-offwhite text-muted transition-colors hover:border-primary/30 hover:text-primary"
             onClick={onClose}
             type="button"
           >
@@ -248,7 +249,7 @@ export function SearchPalette({
           </button>
         </div>
 
-        <div className="max-h-[72vh] space-y-5 overflow-y-auto p-5">
+        <div className="max-h-[68vh] space-y-5 overflow-y-auto p-4 sm:p-5">
           {loading && hasQuery ? (
             <p className="rounded-2xl border border-border-subtle/70 bg-surface-offwhite px-4 py-5 text-sm text-muted shadow-[0_1px_0_rgba(255,255,255,0.45)_inset]">
               {labels.loading}
@@ -358,9 +359,17 @@ export function SearchPalette({
                 </p>
               ) : null}
             </div>
-          ) : null}
+          ) : (
+            <p className="text-sm text-muted">{labels.hint}</p>
+          )}
         </div>
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(palette, document.body);
 }

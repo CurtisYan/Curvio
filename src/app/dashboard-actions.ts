@@ -25,6 +25,12 @@ function readFiles(formData: FormData, key: string) {
     .filter((value): value is File => value instanceof File && value.size > 0);
 }
 
+function readImageVisibilities(formData: FormData) {
+  return formData
+    .getAll("image_visibility")
+    .map((value) => (value === "private" ? "private" : "public"));
+}
+
 const recordTypeValues: RecordType[] = ["donation", "kindness", "open_source"];
 
 function isRecordType(value: string): value is RecordType {
@@ -88,6 +94,7 @@ export async function createRecordAction(
   const date = readString(formData, "date");
   const content = readString(formData, "content");
   const files = readFiles(formData, "images");
+  const imageVisibilities = readImageVisibilities(formData);
 
   if (!title || !date || !content) {
     return { status: "error", message: recordFormMessage(locale, "required") };
@@ -180,6 +187,7 @@ export async function createRecordAction(
         file_size: files[index].size,
         sort_order: index + 1,
         is_cover: index === 0,
+        visibility: imageVisibilities[index] ?? "public",
       }));
 
       const { error: insertError } = await supabase.from("record_images").insert(rows);

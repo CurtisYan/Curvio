@@ -36,6 +36,11 @@ function getShortcutLabel(isMac: boolean) {
   return isMac ? "Cmd K" : "Ctrl K";
 }
 
+function getNavigatorPlatform() {
+  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+  return nav.userAgentData?.platform ?? nav.platform ?? "";
+}
+
 export function SearchTrigger({
   locale,
   label,
@@ -70,7 +75,7 @@ export function SearchTrigger({
       return false;
     }
 
-    const platform = navigator.userAgentData?.platform ?? navigator.platform ?? "";
+    const platform = getNavigatorPlatform();
     return /mac/i.test(platform);
   });
   const [open, setOpen] = useState(false);

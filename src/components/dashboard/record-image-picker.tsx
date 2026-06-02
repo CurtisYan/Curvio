@@ -4,6 +4,8 @@ import { ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
+type ImageVisibility = "public" | "private";
+
 export function RecordImagePicker({
   name,
   maxCount = 15,
@@ -18,12 +20,15 @@ export function RecordImagePicker({
     imagesSelected: string;
     imagesRemaining: string;
     imagesNote: string;
+    imagePublic: string;
+    imagePrivate: string;
   };
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const previewUrlsRef = useRef<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [visibilities, setVisibilities] = useState<ImageVisibility[]>([]);
 
   const remaining = Math.max(maxCount - existingCount - files.length, 0);
 
@@ -40,6 +45,13 @@ export function RecordImagePicker({
     previewUrlsRef.current = nextPreviews;
     setFiles(nextFiles);
     setPreviews(nextPreviews);
+    setVisibilities(nextFiles.map(() => "public"));
+  }
+
+  function updateVisibility(index: number, visibility: ImageVisibility) {
+    setVisibilities((current) =>
+      current.map((value, currentIndex) => (currentIndex === index ? visibility : value)),
+    );
   }
 
   return (
@@ -71,10 +83,41 @@ export function RecordImagePicker({
         </button>
         {previews.map((src, index) => (
           <div
-            className="h-24 w-24 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
+            className="w-32 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
             key={`${src}-${index}`}
           >
-            <img alt="" className="h-full w-full object-cover" src={src} />
+            <div className="h-24 w-full">
+              <img alt="" className="h-full w-full object-cover" src={src} />
+            </div>
+            <div className="space-y-2 p-2">
+              <input name="image_visibility" type="hidden" value={visibilities[index] ?? "public"} />
+              <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border-subtle bg-surface">
+                <button
+                  className={cn(
+                    "px-2 py-1 text-[11px] transition-colors",
+                    (visibilities[index] ?? "public") === "public"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted hover:text-primary",
+                  )}
+                  onClick={() => updateVisibility(index, "public")}
+                  type="button"
+                >
+                  {labels.imagePublic}
+                </button>
+                <button
+                  className={cn(
+                    "border-l border-border-subtle px-2 py-1 text-[11px] transition-colors",
+                    visibilities[index] === "private"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted hover:text-primary",
+                  )}
+                  onClick={() => updateVisibility(index, "private")}
+                  type="button"
+                >
+                  {labels.imagePrivate}
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>

@@ -4,6 +4,7 @@ import {
   deleteRecordImageAction,
   moveRecordImageAction,
   setCoverImageAction,
+  updateRecordImageVisibilityAction,
   uploadRecordImagesAction,
 } from "@/app/record-images-actions";
 import { AmountVisibilityField } from "@/components/dashboard/amount-visibility-field";
@@ -52,7 +53,7 @@ export default async function EditRecordPage({
 
   const { data: images } = await supabase
     .from("record_images")
-    .select("id, r2_url, sort_order, is_cover")
+    .select("id, r2_url, sort_order, is_cover, visibility")
     .eq("record_id", record.id)
     .order("sort_order", { ascending: true });
 
@@ -138,6 +139,8 @@ export default async function EditRecordPage({
               imagesNote: messages.dashboard.imagesNote,
               imagesRemaining: messages.dashboard.imagesRemaining,
               imagesSelected: messages.dashboard.imagesSelected,
+              imagePrivate: messages.dashboard.imagePrivate,
+              imagePublic: messages.dashboard.imagePublic,
             }}
             name="images"
           />
@@ -169,6 +172,11 @@ export default async function EditRecordPage({
                         {messages.dashboard.coverLabel}
                       </Badge>
                     ) : null}
+                    <Badge>
+                      {image.visibility === "private"
+                        ? messages.dashboard.imagePrivate
+                        : messages.dashboard.imagePublic}
+                    </Badge>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <form action={moveRecordImageAction}>
@@ -203,6 +211,21 @@ export default async function EditRecordPage({
                         </Button>
                       </form>
                     ) : null}
+                    <form action={updateRecordImageVisibilityAction}>
+                      <input name="locale" type="hidden" value={locale} />
+                      <input name="record_id" type="hidden" value={record.id} />
+                      <input name="image_id" type="hidden" value={image.id} />
+                      <input
+                        name="visibility"
+                        type="hidden"
+                        value={image.visibility === "private" ? "public" : "private"}
+                      />
+                      <Button type="submit" variant="secondary">
+                        {image.visibility === "private"
+                          ? messages.dashboard.makeImagePublic
+                          : messages.dashboard.makeImagePrivate}
+                      </Button>
+                    </form>
                     <form action={deleteRecordImageAction}>
                       <input name="locale" type="hidden" value={locale} />
                       <input name="record_id" type="hidden" value={record.id} />

@@ -44,8 +44,8 @@ function localized(locale: Locale, en: string, zh: string) {
   return locale === "zh" ? zh : en;
 }
 
-function readClientIp() {
-  const headerStore = headers();
+async function readClientIp() {
+  const headerStore = await headers();
   const forwardedFor = headerStore.get("cf-connecting-ip") ?? headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip");
 
   if (!forwardedFor) {
@@ -186,7 +186,7 @@ export async function signInAction(formData: FormData) {
   }
 
   const emailHash = hashRateLimitKey(email);
-  const ipAddress = readClientIp();
+  const ipAddress = await readClientIp();
   const recentFailures = await countRecentLoginFailures(emailHash);
   const challengeRequired = recentFailures >= 5;
 
@@ -361,7 +361,7 @@ export async function sendResetAction(formData: FormData) {
 
   const adminClient = createAdminClient();
   if (adminClient) {
-    const ipAddress = readClientIp();
+    const ipAddress = await readClientIp();
     const emailHash = hashRateLimitKey(email);
     const { data: rateLimitResult, error: rateLimitError } = await adminClient.rpc("consume_reset_request_limit", {
       p_ip_address: ipAddress,

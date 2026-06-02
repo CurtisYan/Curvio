@@ -66,5 +66,6 @@ export type RecordImage = {
   fileSize?: number | null;
   sortOrder: number;
   isCover?: boolean | null;
+  visibility: "public" | "private";
   createdAt: string;
 };

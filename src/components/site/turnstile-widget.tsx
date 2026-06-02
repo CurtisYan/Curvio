@@ -3,6 +3,24 @@
 import Script from "next/script";
 import { useEffect, useId, useRef, useState } from "react";
 
+type TurnstileWindow = typeof window & {
+  turnstile?: {
+    render: (
+      container: string | HTMLElement,
+      options: {
+        sitekey: string;
+        theme?: "auto" | "light" | "dark";
+        callback?: (value?: string) => void;
+        "expired-callback"?: () => void;
+        "error-callback"?: () => void;
+      },
+    ) => string;
+    remove?: (widgetId: string) => void;
+  };
+};
+
+type TurnstileCallbacks = Record<string, (token?: string) => void>;
+
 export function TurnstileWidget({ siteKey }: { siteKey: string }) {
   const [token, setToken] = useState("");
   const [scriptReady, setScriptReady] = useState(false);
@@ -15,32 +33,18 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
   const widgetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const win = window as typeof window & {
-      [key: string]: (token?: string) => void;
-      turnstile?: {
-        render: (
-          container: string | HTMLElement,
-          options: {
-            sitekey: string;
-            theme?: "auto" | "light" | "dark";
-            callback?: (value?: string) => void;
-            "expired-callback"?: () => void;
-            "error-callback"?: () => void;
-          },
-        ) => string;
-        remove?: (widgetId: string) => void;
-      };
-    };
+    const win = window as TurnstileWindow;
+    const callbacks = window as unknown as TurnstileCallbacks;
 
-    win[callbackName] = (value?: string) => {
+    callbacks[callbackName] = (value?: string) => {
       setToken(value ?? "");
     };
 
-    win[expiredCallbackName] = () => {
+    callbacks[expiredCallbackName] = () => {
       setToken("");
     };
 
-    win[errorCallbackName] = () => {
+    callbacks[errorCallbackName] = () => {
       setToken("");
     };
 
@@ -52,9 +56,9 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
           // Ignore cleanup errors during route transitions and dev remounts.
         }
       }
-      delete win[callbackName];
-      delete win[expiredCallbackName];
-      delete win[errorCallbackName];
+      delete callbacks[callbackName];
+      delete callbacks[expiredCallbackName];
+      delete callbacks[errorCallbackName];
     };
   }, [callbackName, expiredCallbackName, errorCallbackName]);
 
@@ -63,20 +67,8 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
       return;
     }
 
-    const win = window as typeof window & {
-      turnstile?: {
-        render: (
-          container: string | HTMLElement,
-          options: {
-            sitekey: string;
-            theme?: "auto" | "light" | "dark";
-            callback?: (value?: string) => void;
-            "expired-callback"?: () => void;
-            "error-callback"?: () => void;
-          },
-        ) => string;
-      };
-    };
+    const win = window as TurnstileWindow;
+    const callbacks = window as unknown as TurnstileCallbacks;
 
     if (!win.turnstile) {
       return;
@@ -85,9 +77,9 @@ export function TurnstileWidget({ siteKey }: { siteKey: string }) {
     widgetIdRef.current = win.turnstile.render(containerRef.current, {
       sitekey: siteKey,
       theme: "light",
-      callback: win[callbackName],
-      "expired-callback": win[expiredCallbackName],
-      "error-callback": win[errorCallbackName],
+      callback: callbacks[callbackName],
+      "expired-callback": callbacks[expiredCallbackName],
+      "error-callback": callbacks[errorCallbackName],
     });
   }, [callbackName, errorCallbackName, expiredCallbackName, scriptReady, siteKey]);
 

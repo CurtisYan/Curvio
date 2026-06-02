@@ -54,6 +54,7 @@ export default async function RecordDetailPage({
     .from("record_images")
     .select("id, r2_url, sort_order, is_cover")
     .eq("record_id", record.id)
+    .eq("visibility", "public")
     .order("sort_order", { ascending: true });
 
   const typeLabels = {

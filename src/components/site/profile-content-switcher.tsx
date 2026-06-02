@@ -73,11 +73,20 @@ export function ProfileContentSwitcher({
     recordOpenWork: string;
     by: string;
     anonymous: string;
+    emptyDonations: string;
+    emptyKindness: string;
+    emptyOpenWork: string;
+    emptyAnnualSummary: string;
     emptyFollowing: string;
     emptyFollowers: string;
   };
 }) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("annual_summary");
+  const typeLabels = {
+    donation: labels.recordDonation,
+    kindness: labels.recordKindness,
+    open_source: labels.recordOpenWork,
+  };
 
   useEffect(() => {
     const setFromHash = () => {
@@ -163,7 +172,15 @@ export function ProfileContentSwitcher({
               {records.donations.length === 0 ? (
                 <div className="text-muted">{labels.emptyDonations}</div>
               ) : (
-                records.donations.map((r) => <RecordCard key={r.id} record={r} />)
+                records.donations.map((r) => (
+                  <RecordCard
+                    anonymousLabel={labels.anonymous}
+                    key={r.id}
+                    locale={locale}
+                    record={r}
+                    typeLabels={typeLabels}
+                  />
+                ))
               )}
             </div>
           )}
@@ -172,7 +189,15 @@ export function ProfileContentSwitcher({
               {records.kindness.length === 0 ? (
                 <div className="text-muted">{labels.emptyKindness}</div>
               ) : (
-                records.kindness.map((r) => <RecordCard key={r.id} record={r} />)
+                records.kindness.map((r) => (
+                  <RecordCard
+                    anonymousLabel={labels.anonymous}
+                    key={r.id}
+                    locale={locale}
+                    record={r}
+                    typeLabels={typeLabels}
+                  />
+                ))
               )}
             </div>
           )}
@@ -181,16 +206,22 @@ export function ProfileContentSwitcher({
               {records.open_source.length === 0 ? (
                 <div className="text-muted">{labels.emptyOpenWork}</div>
               ) : (
-                records.open_source.map((r) => <RecordCard key={r.id} record={r} />)
+                records.open_source.map((r) => (
+                  <RecordCard
+                    anonymousLabel={labels.anonymous}
+                    key={r.id}
+                    locale={locale}
+                    record={r}
+                    typeLabels={typeLabels}
+                  />
+                ))
               )}
             </div>
           )}
           {activeTab === "annual_summary" && (
             <div className="space-y-6">
-              {(!annualSummary || (Array.isArray(annualSummary) && annualSummary.length === 0)) ? (
+              {!annualSummary ? (
                 <div className="text-muted">{labels.emptyAnnualSummary}</div>
-              ) : Array.isArray(annualSummary) ? (
-                annualSummary.map((r) => <RecordCard key={r.id} record={r} />)
               ) : (
                 <Card className="p-6">
                   <div>

@@ -47,6 +47,7 @@ function imageActionMessage(locale: Locale, key: string) {
       delete: "Image could not be deleted.",
       cover: "Cover image updated.",
       order: "Image order updated.",
+      visibility: "Image visibility updated.",
     },
     zh: {
       auth: "请先登录再上传图片。",
@@ -59,6 +60,7 @@ function imageActionMessage(locale: Locale, key: string) {
       delete: "图片删除失败。",
       cover: "已设置主图。",
       order: "图片顺序已更新。",
+      visibility: "图片可见范围已更新。",
     },
   };
 
@@ -71,11 +73,18 @@ function readFiles(formData: FormData, key: string) {
     .filter((value): value is File => value instanceof File && value.size > 0);
 }
 
+function readImageVisibilities(formData: FormData) {
+  return formData
+    .getAll("image_visibility")
+    .map((value) => (value === "private" ? "private" : "public"));
+}
+
 export async function uploadRecordImagesAction(formData: FormData) {
   const locale = readLocale(formData);
   const recordId = readString(formData, "record_id");
   const recordTypeValue = readString(formData, "record_type");
   const files = readFiles(formData, "images");
+  const imageVisibilities = readImageVisibilities(formData);
 
   if (!recordId) {
     redirect(`/${locale}/dashboard/records`);
@@ -158,6 +167,7 @@ export async function uploadRecordImagesAction(formData: FormData) {
     file_size: files[index].size,
     sort_order: currentCount + index + 1,
     is_cover: shouldSetCover && index === 0,
+    visibility: imageVisibilities[index] ?? "public",
   }));
 
   const { error: insertError } = await supabase.from("record_images").insert(rows);
@@ -377,4 +387,57 @@ export async function moveRecordImageAction(formData: FormData) {
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "order"));
+}
+
+export async function updateRecordImageVisibilityAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const imageId = readString(formData, "image_id");
+  const visibility = readString(formData, "visibility") === "private" ? "private" : "public";
+
+  if (!recordId || !imageId) {
+    redirect(`/${locale}/dashboard/records`);
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: record } = await supabase
+    .from("records")
+    .select("id, date")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!record) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
+  }
+
+  const { error: updateError } = await supabase
+    .from("record_images")
+    .update({ visibility })
+    .eq("id", imageId)
+    .eq("record_id", recordId)
+    .eq("user_id", user.id);
+
+  if (updateError) {
+    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
+  }
+
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/explore`);
+  redirectToEdit(
+    locale,
+    formatRecordPublicId(record.date, record.id),
+    "saved",
+    imageActionMessage(locale, "visibility"),
+  );
 }

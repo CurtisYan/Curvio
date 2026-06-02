@@ -29,6 +29,8 @@ export function RecordFormShell({
     imagesNote: string;
     imagesSelected: string;
     imagesRemaining: string;
+    imagePublic: string;
+    imagePrivate: string;
     addImages: string;
     fieldCategory: string;
     titlePlaceholder: string;
@@ -108,6 +110,8 @@ export function RecordFormShell({
               imagesNote: labels.imagesNote,
               imagesRemaining: labels.imagesRemaining,
               imagesSelected: labels.imagesSelected,
+              imagePrivate: labels.imagePrivate,
+              imagePublic: labels.imagePublic,
             }}
             name="images"
           />

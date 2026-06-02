@@ -104,11 +104,13 @@ Columns:
 - `sort_order`: image ordering value. Defaults to `0`.
 - `created_at`: creation time. Defaults to `now()`.
 - `is_cover`: whether this image is the cover image. Defaults to `false`.
+- `visibility`: image display visibility. Defaults to `public`. Allowed values: `public`, `private`. Private images are hidden from public record pages and only shown in the owner's dashboard.
 
 Constraints:
 
 - Primary key: `record_images_pkey` on `id`.
 - Foreign keys: `record_id` references `public.records(id)`, `user_id` references `public.profiles(id)`.
+- Check: image visibility.
 
 ## 5. profile_sections
 
