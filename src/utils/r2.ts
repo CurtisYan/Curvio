@@ -12,7 +12,7 @@ const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
 const allowedAvatarTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 const maxAvatarSize = 5 * 1024 * 1024;
 const allowedRecordImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
-const maxRecordImageSize = 4 * 1024 * 1024;
+const maxRecordImageSize = 5 * 1024 * 1024;
 
 let client: S3Client | null = null;
 
@@ -94,7 +94,7 @@ export async function uploadRecordImageToR2({
   }
 
   if (file.size > maxRecordImageSize) {
-    throw new Error("Record image must be 4 MB or smaller.");
+    throw new Error("Record image must be 5 MB or smaller.");
   }
 
   const extension = getExtensionFromMimeType(file.type);

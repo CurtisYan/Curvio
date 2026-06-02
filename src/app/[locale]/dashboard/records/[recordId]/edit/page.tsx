@@ -26,7 +26,7 @@ export default async function EditRecordPage({
   searchParams: Promise<{ status?: string; message?: string }>;
 }) {
   const { locale: rawLocale, recordId } = await params;
-  const { status, message } = await searchParams;
+  const { status } = await searchParams;
   const dbRecordId = resolveRecordId(recordId);
 
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
@@ -74,12 +74,12 @@ export default async function EditRecordPage({
         </div>
         {status === "saved" ? (
           <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
-            {message ?? messages.dashboard.editSaved}
+            {messages.dashboard.editSaved}
           </div>
         ) : null}
         {status === "error" ? (
           <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-sm text-error">
-            {message ?? messages.dashboard.editError}
+            {messages.dashboard.editError}
           </div>
         ) : null}
         <form action={updateRecordAction} className="space-y-6">
@@ -141,6 +141,10 @@ export default async function EditRecordPage({
               imagesSelected: messages.dashboard.imagesSelected,
               imagePrivate: messages.dashboard.imagePrivate,
               imagePublic: messages.dashboard.imagePublic,
+              insertImage: messages.dashboard.insertImage,
+              privateImageInsertHint: messages.dashboard.privateImageInsertHint,
+              imageTooLarge: messages.dashboard.imageTooLarge,
+              imageTypeUnsupported: messages.dashboard.imageTypeUnsupported,
             }}
             name="images"
           />

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
+import { markdownToPlainText } from "@/lib/markdown";
 import { recordTypeToSegment } from "@/lib/record-types";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
@@ -112,7 +113,7 @@ export function Timeline({
                 </Link>
               </div>
               <p className="text-sm leading-6 text-on-surface-variant">
-                {record.content}
+                {markdownToPlainText(record.content)}
               </p>
               {record.amountHidden ? (
                 <p className="mt-4 text-sm italic text-muted">{hiddenAmountLabel}</p>

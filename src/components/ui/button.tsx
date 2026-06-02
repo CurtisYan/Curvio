@@ -9,6 +9,8 @@ const variants = {
     `bg-surface-offwhite text-primary ${surfaceHoverLow} border-border-subtle`,
   ghost:
     `bg-transparent text-muted hover:text-primary ${surfaceHoverLow} border-transparent`,
+  danger:
+    "border-error/30 bg-error/10 text-error hover:bg-error/15",
 };
 
 type BaseProps = {

@@ -1,4 +1,4 @@
--- profile username/display_name constraints + deletion request workflow table
+-- profile username/display_name constraints
 
 alter table public.profiles
 drop constraint if exists profiles_username_format;
@@ -23,35 +23,6 @@ check (char_length(username) between 3 and 24);
 alter table public.profiles
 add constraint profiles_display_name_length
 check (char_length(display_name) between 2 and 40);
-
-create table if not exists public.deletion_requests (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  request_content text not null,
-  status text not null default 'pending' check (status in ('pending', 'processing', 'completed', 'rejected')),
-  processed_note text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  processed_at timestamptz
-);
-
-drop trigger if exists deletion_requests_set_updated_at on public.deletion_requests;
-
-create trigger deletion_requests_set_updated_at
-before update on public.deletion_requests
-for each row execute function public.set_updated_at();
-
-alter table public.deletion_requests enable row level security;
-
-drop policy if exists "Users can insert their own deletion requests" on public.deletion_requests;
-create policy "Users can insert their own deletion requests"
-on public.deletion_requests for insert
-with check (auth.uid() = user_id);
-
-drop policy if exists "Users can read their own deletion requests" on public.deletion_requests;
-create policy "Users can read their own deletion requests"
-on public.deletion_requests for select
-using (auth.uid() = user_id);
 
 create or replace function public.handle_new_user()
 returns trigger

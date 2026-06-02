@@ -44,6 +44,35 @@ function localized(locale: Locale, en: string, zh: string) {
   return locale === "zh" ? zh : en;
 }
 
+function authServiceUnavailableMessage(locale: Locale) {
+  return localized(
+    locale,
+    "Sign-in service is temporarily unavailable. Please try again in a moment.",
+    "登录服务暂时不可用，请稍后再试。",
+  );
+}
+
+function publicAuthErrorMessage(locale: Locale, message: string) {
+  const lowerMessage = message.toLowerCase();
+  const unsafePatterns = [
+    "fetch failed",
+    "failed to fetch",
+    "networkerror",
+    "network error",
+    "typeerror",
+    "supabase",
+    "http://",
+    "https://",
+    "econn",
+  ];
+
+  if (unsafePatterns.some((pattern) => lowerMessage.includes(pattern))) {
+    return authServiceUnavailableMessage(locale);
+  }
+
+  return message;
+}
+
 async function readClientIp() {
   const headerStore = await headers();
   const forwardedFor = headerStore.get("cf-connecting-ip") ?? headerStore.get("x-forwarded-for") ?? headerStore.get("x-real-ip");
@@ -149,16 +178,25 @@ async function verifyTurnstile(
     fail(locale, path, "Please complete the verification challenge.");
   }
 
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      secret,
-      response: token,
-    }).toString(),
-  });
+  let response: Response;
+  try {
+    response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret,
+        response: token,
+      }).toString(),
+    });
+  } catch {
+    if (options?.challenge && path === "login") {
+      failWithParams(locale, path, authServiceUnavailableMessage(locale), { challenge: "1" });
+    }
+
+    fail(locale, path, authServiceUnavailableMessage(locale));
+  }
 
   const result = (await response.json()) as { success: boolean; "error-codes"?: string[] };
 
@@ -204,13 +242,20 @@ export async function signInAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let signInError: Error | null = null;
 
-  if (error) {
-    if (error.message.toLowerCase().includes("email not confirmed")) {
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    signInError = error;
+  } catch (error) {
+    signInError = error instanceof Error ? error : new Error("Sign-in failed.");
+  }
+
+  if (signInError) {
+    if (signInError.message.toLowerCase().includes("email not confirmed")) {
       redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}`);
     }
 
@@ -227,7 +272,7 @@ export async function signInAction(formData: FormData) {
       );
     }
 
-    fail(locale, "login", error.message);
+    fail(locale, "login", publicAuthErrorMessage(locale, signInError.message));
   }
 
   await clearLoginFailures(emailHash);
@@ -290,7 +335,7 @@ export async function signUpAction(formData: FormData) {
   });
 
   if (error) {
-    fail(locale, "register", error.message);
+    fail(locale, "register", publicAuthErrorMessage(locale, error.message));
   }
 
   redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}`);
@@ -317,7 +362,7 @@ export async function verifyOtpAction(formData: FormData) {
   });
 
   if (error) {
-    fail(locale, "register/verify", error.message);
+    fail(locale, "register/verify", publicAuthErrorMessage(locale, error.message));
   }
 
   revalidatePath("/", "layout");
@@ -342,7 +387,7 @@ export async function resendOtpAction(formData: FormData) {
   });
 
   if (error) {
-    fail(locale, "register/verify", error.message);
+    fail(locale, "register/verify", publicAuthErrorMessage(locale, error.message));
   }
 
   redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}&sent=1`);
@@ -438,7 +483,7 @@ export async function completeResetAction(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
-    fail(locale, "reset", error.message);
+    fail(locale, "reset", publicAuthErrorMessage(locale, error.message));
   }
 
   revalidatePath("/", "layout");

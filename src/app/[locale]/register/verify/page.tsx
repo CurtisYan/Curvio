@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { resendOtpAction, verifyOtpAction } from "@/app/auth-actions";
 import { VerifyOtpShell } from "@/components/site/verify-otp-shell";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { isUnsafeQueryMessage, safeQueryMessage } from "@/lib/safe-query-message";
 
 export default async function VerifyRegisterPage({
   params,
@@ -14,10 +16,23 @@ export default async function VerifyRegisterPage({
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
 
+  if (isUnsafeQueryMessage(error)) {
+    const params = new URLSearchParams();
+    if (email) {
+      params.set("email", email);
+    }
+    if (sent) {
+      params.set("sent", sent);
+    }
+    redirect(`/${locale}/register/verify${params.size > 0 ? `?${params.toString()}` : ""}`);
+  }
+
+  const safeError = safeQueryMessage(error, messages.auth.temporaryError);
+
   return (
     <VerifyOtpShell
       email={email}
-      error={error}
+      error={safeError}
       labels={messages.auth}
       locale={locale}
       resendAction={resendOtpAction}

@@ -6,7 +6,7 @@ import { isLocale, type Locale } from "@/lib/i18n";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import { recordTypeToSegment } from "@/lib/record-types";
 import type { RecordType } from "@/lib/types";
-import { uploadAvatarToR2, uploadRecordImageToR2 } from "@/utils/r2";
+import { deleteRecordImageFromR2, uploadAvatarToR2, uploadRecordImageToR2 } from "@/utils/r2";
 import { createClient } from "@/utils/supabase/server";
 
 function readString(formData: FormData, key: string) {
@@ -29,6 +29,18 @@ function readImageVisibilities(formData: FormData) {
   return formData
     .getAll("image_visibility")
     .map((value) => (value === "private" ? "private" : "public"));
+}
+
+function readImageTokens(formData: FormData) {
+  return formData
+    .getAll("image_token")
+    .map((value) => (typeof value === "string" ? value.trim() : ""));
+}
+
+function replaceImagePlaceholders(content: string, imageUrlsByToken: Map<string, string>) {
+  return content.replace(/curvio-image:([a-zA-Z0-9_-]+)/g, (_match, token: string) => {
+    return imageUrlsByToken.get(token) ?? "";
+  });
 }
 
 const recordTypeValues: RecordType[] = ["donation", "kindness", "open_source"];
@@ -55,6 +67,16 @@ function recordEditRedirect(
     params.set("message", message);
   }
   redirect(`/${locale}/dashboard/records/${recordId}/edit?${params.toString()}`);
+}
+
+function dashboardRedirect(
+  locale: Locale,
+  path: string,
+  status: "deleted" | "delete_error",
+): never {
+  const safePaths = new Set(["dashboard", "dashboard/records", "dashboard/projects"]);
+  const safePath = safePaths.has(path) ? path : "dashboard";
+  redirect(`/${locale}/${safePath}?status=${status}`);
 }
 
 function recordFormMessage(locale: Locale, key: string) {
@@ -84,6 +106,20 @@ function recordFormMessage(locale: Locale, key: string) {
   return messages[locale]?.[key as keyof (typeof messages)["en"]] ?? messages.en[key as keyof (typeof messages)["en"]];
 }
 
+async function cleanupCreatedRecord({
+  recordId,
+  uploadedKeys,
+}: {
+  recordId: string;
+  uploadedKeys: string[];
+}) {
+  await Promise.allSettled(uploadedKeys.map((key) => deleteRecordImageFromR2(key)));
+
+  const supabase = await createClient();
+  await supabase.from("record_images").delete().eq("record_id", recordId);
+  await supabase.from("records").delete().eq("id", recordId);
+}
+
 export async function createRecordAction(
   _prevState: RecordFormState,
   formData: FormData,
@@ -95,6 +131,7 @@ export async function createRecordAction(
   const content = readString(formData, "content");
   const files = readFiles(formData, "images");
   const imageVisibilities = readImageVisibilities(formData);
+  const imageTokens = readImageTokens(formData);
 
   if (!title || !date || !content) {
     return { status: "error", message: recordFormMessage(locale, "required") };
@@ -166,17 +203,21 @@ export async function createRecordAction(
   const publicRecordId = formatRecordPublicId(record.date, record.id);
 
   if (files.length > 0) {
+    const uploadedKeys: string[] = [];
+
     try {
-      const uploads = await Promise.all(
-        files.map((file) =>
-          uploadRecordImageToR2({
-            userId: user.id,
-            recordId: record.id,
-            type: typeValue,
-            file,
-          }),
-        ),
-      );
+      const uploads: Awaited<ReturnType<typeof uploadRecordImageToR2>>[] = [];
+      for (const file of files) {
+        const upload = await uploadRecordImageToR2({
+          userId: user.id,
+          recordId: record.id,
+          type: typeValue,
+          file,
+        });
+        uploadedKeys.push(upload.key);
+        uploads.push(upload);
+      }
+      const publicImageUrlsByToken = new Map<string, string>();
 
       const rows = uploads.map((upload, index) => ({
         record_id: record.id,
@@ -190,13 +231,39 @@ export async function createRecordAction(
         visibility: imageVisibilities[index] ?? "public",
       }));
 
+      uploads.forEach((upload, index) => {
+        const token = imageTokens[index];
+        if (token && (imageVisibilities[index] ?? "public") === "public") {
+          publicImageUrlsByToken.set(token, upload.url);
+        }
+      });
+
       const { error: insertError } = await supabase.from("record_images").insert(rows);
 
       if (insertError) {
+        await cleanupCreatedRecord({ recordId: record.id, uploadedKeys });
         return { status: "error", message: recordFormMessage(locale, "imageSaveFailed") };
       }
-    } catch {
-      return { status: "error", message: recordFormMessage(locale, "uploadFailed") };
+
+      const contentWithImages = replaceImagePlaceholders(content, publicImageUrlsByToken);
+      if (contentWithImages !== content) {
+        const { error: contentUpdateError } = await supabase
+          .from("records")
+          .update({ content: contentWithImages })
+          .eq("id", record.id)
+          .eq("user_id", user.id);
+
+        if (contentUpdateError) {
+          await cleanupCreatedRecord({ recordId: record.id, uploadedKeys });
+          return { status: "error", message: recordFormMessage(locale, "imageSaveFailed") };
+        }
+      }
+    } catch (error) {
+      await cleanupCreatedRecord({ recordId: record.id, uploadedKeys });
+      return {
+        status: "error",
+        message: error instanceof Error ? error.message : recordFormMessage(locale, "uploadFailed"),
+      };
     }
   }
 
@@ -285,6 +352,80 @@ export async function updateRecordAction(formData: FormData) {
   recordEditRedirect(locale, publicRecordId, "saved");
 }
 
+export async function deleteRecordAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const returnPath = readString(formData, "return_path");
+  const confirmed = readString(formData, "confirm_delete") === "1";
+
+  if (!recordId || !confirmed) {
+    dashboardRedirect(locale, returnPath, "delete_error");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const { data: record, error: recordError } = await supabase
+    .from("records")
+    .select("id, type")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (recordError || !record) {
+    dashboardRedirect(locale, returnPath, "delete_error");
+  }
+
+  const { data: images } = await supabase
+    .from("record_images")
+    .select("r2_key")
+    .eq("record_id", record.id)
+    .eq("user_id", user.id);
+
+  await Promise.allSettled(
+    (images ?? []).map((image) => deleteRecordImageFromR2(image.r2_key)),
+  );
+
+  await supabase
+    .from("record_images")
+    .delete()
+    .eq("record_id", record.id)
+    .eq("user_id", user.id);
+
+  const { error: deleteError } = await supabase
+    .from("records")
+    .delete()
+    .eq("id", record.id)
+    .eq("user_id", user.id);
+
+  if (deleteError) {
+    dashboardRedirect(locale, returnPath, "delete_error");
+  }
+
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/projects`);
+
+  if (profile?.username) {
+    revalidatePath(`/${locale}/u/${profile.username}`);
+  }
+
+  dashboardRedirect(locale, returnPath, "deleted");
+}
+
 function redirectWithStatus(locale: Locale, status: "saved" | "error", message?: string): never {
   const params = new URLSearchParams({ status });
   if (message) {
@@ -342,6 +483,7 @@ export async function updateProfileSettingsAction(formData: FormData) {
     principle: readString(formData, "principle") || null,
     website_url: websiteUrl,
     preferred_language: locale,
+    preferred_editor_mode: readString(formData, "preferred_editor_mode") === "plain" ? "plain" : "markdown",
     is_public: formData.has("is_public"),
     allow_follow: formData.has("allow_follow"),
     hide_amounts_by_default: formData.has("hide_amounts_by_default"),

@@ -93,7 +93,7 @@ export function SiteHeader({
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <Link
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-transparent font-sans text-sm font-medium text-muted transition-colors hover:border-border-subtle hover:bg-surface-offwhite hover:text-primary"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border-subtle bg-surface-offwhite font-sans text-sm font-medium text-primary transition-colors hover:border-primary/30 hover:bg-surface-container-low"
             href={localizePath(locale, "/new")}
           >
             {messages.nav.new}

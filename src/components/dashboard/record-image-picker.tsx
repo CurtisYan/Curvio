@@ -1,16 +1,45 @@
 "use client";
 
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, TextCursorInput } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type ImageVisibility = "public" | "private";
+
+const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
+const maxImageSize = 5 * 1024 * 1024;
+
+type ImageItem = {
+  file: File;
+  preview: string;
+  token: string;
+  visibility: ImageVisibility;
+};
+
+function createImageToken() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function syncInputFiles(input: HTMLInputElement | null, items: ImageItem[]) {
+  if (!input) {
+    return;
+  }
+
+  const dataTransfer = new DataTransfer();
+  items.forEach((item) => dataTransfer.items.add(item.file));
+  input.files = dataTransfer.files;
+}
 
 export function RecordImagePicker({
   name,
   maxCount = 15,
   existingCount = 0,
   labels,
+  onInsertImage,
+  onPreviewUrlsChange,
 }: {
   name: string;
   maxCount?: number;
@@ -22,49 +51,60 @@ export function RecordImagePicker({
     imagesNote: string;
     imagePublic: string;
     imagePrivate: string;
+    insertImage: string;
+    privateImageInsertHint: string;
+    imageTooLarge: string;
+    imageTypeUnsupported: string;
   };
+  onInsertImage?: (token: string) => void;
+  onPreviewUrlsChange?: (previewUrls: Record<string, string>) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const previewUrlsRef = useRef<string[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [visibilities, setVisibilities] = useState<ImageVisibility[]>([]);
+  const itemsRef = useRef<ImageItem[]>([]);
+  const [items, setItems] = useState<ImageItem[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const remaining = Math.max(maxCount - existingCount - files.length, 0);
+  const remaining = Math.max(maxCount - existingCount - items.length, 0);
 
   useEffect(() => {
     return () => {
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      itemsRef.current.forEach((item) => URL.revokeObjectURL(item.preview));
     };
   }, []);
 
-  function updateFiles(nextFiles: File[]) {
-    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-
-    const nextPreviews = nextFiles.map((file) => URL.createObjectURL(file));
-    previewUrlsRef.current = nextPreviews;
-    setFiles(nextFiles);
-    setPreviews(nextPreviews);
-    setVisibilities(nextFiles.map(() => "public"));
+  function updateItems(nextItems: ImageItem[]) {
+    itemsRef.current = nextItems;
+    setItems(nextItems);
+    syncInputFiles(inputRef.current, nextItems);
+    onPreviewUrlsChange?.(
+      Object.fromEntries(nextItems.map((item) => [item.token, item.preview])),
+    );
   }
 
   function updateVisibility(index: number, visibility: ImageVisibility) {
-    setVisibilities((current) =>
-      current.map((value, currentIndex) => (currentIndex === index ? visibility : value)),
+    const nextItems = items.map((item, currentIndex) =>
+      currentIndex === index ? { ...item, visibility } : item,
     );
+    itemsRef.current = nextItems;
+    setItems(nextItems);
   }
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
         <span>
-          {labels.imagesSelected} {files.length}
+          {labels.imagesSelected} {items.length}
         </span>
         <span className="h-3 w-px bg-border-subtle" />
         <span>
           {labels.imagesRemaining} {remaining}
         </span>
       </div>
+      {errorMessage ? (
+        <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-xs leading-5 text-error">
+          {errorMessage}
+        </div>
+      ) : null}
       <div className="flex flex-wrap gap-3">
         <button
           aria-label={labels.addImages}
@@ -81,21 +121,22 @@ export function RecordImagePicker({
         >
           <ImagePlus className="h-6 w-6" />
         </button>
-        {previews.map((src, index) => (
+        {items.map((item, index) => (
           <div
-            className="w-32 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
-            key={`${src}-${index}`}
+            className="w-36 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
+            key={item.token}
           >
             <div className="h-24 w-full">
-              <img alt="" className="h-full w-full object-cover" src={src} />
+              <img alt="" className="h-full w-full object-cover" src={item.preview} />
             </div>
             <div className="space-y-2 p-2">
-              <input name="image_visibility" type="hidden" value={visibilities[index] ?? "public"} />
+              <input name="image_visibility" type="hidden" value={item.visibility} />
+              <input name="image_token" type="hidden" value={item.token} />
               <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border-subtle bg-surface">
                 <button
                   className={cn(
                     "px-2 py-1 text-[11px] transition-colors",
-                    (visibilities[index] ?? "public") === "public"
+                    item.visibility === "public"
                       ? "bg-primary/10 text-primary"
                       : "text-muted hover:text-primary",
                   )}
@@ -107,7 +148,7 @@ export function RecordImagePicker({
                 <button
                   className={cn(
                     "border-l border-border-subtle px-2 py-1 text-[11px] transition-colors",
-                    visibilities[index] === "private"
+                    item.visibility === "private"
                       ? "bg-primary/10 text-primary"
                       : "text-muted hover:text-primary",
                   )}
@@ -117,6 +158,18 @@ export function RecordImagePicker({
                   {labels.imagePrivate}
                 </button>
               </div>
+              {item.visibility === "public" ? (
+                <button
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-2 py-1.5 text-[11px] font-medium text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
+                  onClick={() => onInsertImage?.(item.token)}
+                  type="button"
+                >
+                  <TextCursorInput className="h-3.5 w-3.5" />
+                  {labels.insertImage}
+                </button>
+              ) : (
+                <p className="text-[11px] leading-4 text-muted">{labels.privateImageInsertHint}</p>
+              )}
             </div>
           </div>
         ))}
@@ -130,11 +183,35 @@ export function RecordImagePicker({
         onChange={(event) => {
           const selected = Array.from(event.target.files ?? []);
           if (selected.length === 0) {
-            updateFiles([]);
             return;
           }
-          const next = remaining > 0 ? selected.slice(0, remaining) : [];
-          updateFiles(next);
+
+          setErrorMessage("");
+          const acceptedFiles: File[] = [];
+          for (const file of selected) {
+            if (!allowedImageTypes.has(file.type)) {
+              setErrorMessage(labels.imageTypeUnsupported);
+              continue;
+            }
+
+            if (file.size > maxImageSize) {
+              setErrorMessage(labels.imageTooLarge);
+              continue;
+            }
+
+            acceptedFiles.push(file);
+          }
+
+          const nextItems = [
+            ...items,
+            ...acceptedFiles.slice(0, remaining).map((file) => ({
+              file,
+              preview: URL.createObjectURL(file),
+              token: createImageToken(),
+              visibility: "public" as const,
+            })),
+          ];
+          updateItems(nextItems);
         }}
         ref={inputRef}
         type="file"

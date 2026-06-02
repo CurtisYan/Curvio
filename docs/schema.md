@@ -25,6 +25,7 @@ Columns:
 - `github_url`: optional GitHub URL.
 - `blog_url`: optional blog URL.
 - `preferred_language`: required preferred language. Defaults to `en`. Allowed values: `en`, `zh`.
+- `preferred_editor_mode`: required default record editor mode. Defaults to `markdown`. Allowed values: `markdown`, `plain`.
 - `is_public`: whether the profile is public. Defaults to `true`.
 - `allow_follow`: whether other users can follow this profile. Defaults to `true`.
 - `show_annual_summary`: whether to show the annual summary. Defaults to `true`.
@@ -37,7 +38,7 @@ Constraints:
 - Primary key: `profiles_pkey` on `id`.
 - Foreign key: `profiles_id_fkey`, `id` references `auth.users(id)`.
 - Unique: `username`.
-- Checks: username format, display name length, preferred language.
+- Checks: username format, display name length, preferred language, preferred editor mode.
 
 ## 2. follows
 
@@ -184,38 +185,50 @@ Constraints:
 
 - Primary key: `donation_platforms_pkey` on `id`.
 
-## 8. deletion_requests
+## 8. reset_requests
 
-Purpose: records user requests for data deletion or account cleanup.
+Purpose: records password reset request attempts for rate limiting.
 
 Columns:
 
-- `id`: deletion request ID. Primary key. Defaults to `gen_random_uuid()`.
-- `user_id`: requesting profile ID. Required. References `public.profiles(id)`.
-- `request_content`: request body. Required.
-- `status`: processing status. Defaults to `pending`. Allowed values: `pending`, `processing`, `completed`, `rejected`.
-- `processed_note`: optional processing note.
-- `created_at`: creation time. Defaults to `now()`.
-- `updated_at`: update time. Defaults to `now()`.
-- `processed_at`: optional processed time.
+- `id`: reset request ID. Primary key. Defaults to `gen_random_uuid()`.
+- `ip_address`: requesting IP address. Required.
+- `email_hash`: hashed email identifier. Required.
+- `created_at`: request creation time. Defaults to `now()`.
 
 Constraints:
 
-- Primary key: `deletion_requests_pkey` on `id`.
-- Foreign key: `deletion_requests_user_id_fkey`, `user_id` references `public.profiles(id)`.
-- Check: deletion request status.
+- Primary key on `id`.
+- Index: `reset_requests_ip_email_created_at_idx` on `ip_address`, `email_hash`, and `created_at desc`.
+
+## 9. login_failures
+
+Purpose: records failed login attempts for challenge or rate-limit logic.
+
+Columns:
+
+- `id`: login failure ID. Primary key. Defaults to `gen_random_uuid()`.
+- `email_hash`: hashed email identifier. Required.
+- `ip_address`: requesting IP address. Required.
+- `created_at`: failure creation time. Defaults to `now()`.
+
+Constraints:
+
+- Primary key on `id`.
+- Indexes: `login_failures_email_created_at_idx` and `login_failures_ip_created_at_idx`.
+
+## RPC Functions
+
+- `consume_reset_request_limit(p_ip_address, p_email_hash, p_window_minutes, p_limit)`: inserts an allowed reset request attempt or returns the current attempt count and retry time when the limit has been reached.
 
 ## Current Table List
 
-- `deletion_requests`
 - `donation_platforms`
 - `follows`
 - `open_source_projects`
 - `profile_sections`
 - `profiles`
 - `record_images`
+- `login_failures`
 - `records`
-
-## Notes Removed From Previous Local Record
-
-The latest provided SQL does not include `reset_requests`, `login_failures`, or the `consume_reset_request_limit` RPC, so they are not listed in this schema note.
+- `reset_requests`

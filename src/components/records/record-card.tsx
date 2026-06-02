@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
+import { markdownToPlainText } from "@/lib/markdown";
 import { recordTypeToSegment } from "@/lib/record-types";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
@@ -22,6 +23,7 @@ export function RecordCard({
 }) {
   const author = record.isAnonymous ? anonymousLabel : record.authorDisplayName;
   const typeLabel = typeLabels?.[record.type] ?? recordLabel(record.type);
+  const contentSummary = markdownToPlainText(record.content);
   const publicRecordId = formatRecordPublicId(record.date, record.id);
   const detailHref = localizePath(
     locale,
@@ -58,7 +60,7 @@ export function RecordCard({
           {record.title}
         </Link>
       )}
-      <p className="text-sm leading-6 text-on-surface-variant">{record.content}</p>
+      <p className="text-sm leading-6 text-on-surface-variant">{contentSummary}</p>
       <div className="mt-auto space-y-3 pt-3">
         {record.isAnonymous ? (
           <p className="text-sm text-muted">by {author}</p>

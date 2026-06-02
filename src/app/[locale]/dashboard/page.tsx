@@ -6,10 +6,13 @@ import { createClient } from "@/utils/supabase/server";
 
 export default async function DashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   const { locale: rawLocale } = await params;
+  const { status } = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
   const supabase = await createClient();
@@ -47,6 +50,7 @@ export default async function DashboardPage({
           mode="overview"
           profile={{ username: profile.username, display_name: profile.display_name }}
           records={records ?? []}
+          status={status}
         />
       </div>
     </main>

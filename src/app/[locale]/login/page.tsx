@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/site/auth-shell";
 import { signInAction } from "@/app/auth-actions";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { isUnsafeQueryMessage, safeQueryMessage } from "@/lib/safe-query-message";
 
 export default async function LoginPage({
   params,
@@ -14,10 +16,16 @@ export default async function LoginPage({
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
 
+  if (isUnsafeQueryMessage(error)) {
+    redirect(`/${locale}/login`);
+  }
+
+  const safeError = safeQueryMessage(error, messages.auth.temporaryError);
+
   return (
     <AuthShell
       action={signInAction}
-      error={error}
+      error={safeError}
       challenge={challenge === "1"}
       labels={messages.auth}
       locale={locale}

@@ -20,13 +20,21 @@ export default async function NewRecordPage({
     redirect(`/${locale}/login`);
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("preferred_editor_mode")
+    .eq("id", user.id)
+    .maybeSingle();
+
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
       <RecordFormShell
+        defaultEditorMode={profile?.preferred_editor_mode === "plain" ? "plain" : "markdown"}
         labels={messages.dashboard}
         locale={locale}
         note=""
         title={messages.dashboard.newTitle}
+        userId={user.id}
       />
     </main>
   );

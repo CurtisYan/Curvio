@@ -1,5 +1,6 @@
 export type RecordType = "donation" | "kindness" | "open_source";
 export type LocaleCode = "en" | "zh";
+export type EditorMode = "markdown" | "plain";
 
 export type GoodwillRecord = {
   id: string;

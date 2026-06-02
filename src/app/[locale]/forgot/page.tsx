@@ -3,6 +3,7 @@ import { sendResetAction } from "@/app/auth-actions";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { isUnsafeQueryMessage, safeQueryMessage } from "@/lib/safe-query-message";
 
 export default async function ForgotPage({
   params,
@@ -18,8 +19,13 @@ export default async function ForgotPage({
   const messages = getDictionary(locale);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const cookieSent = cookieStore.get("curvio_reset_sent")?.value === "1";
+  const safeError = safeQueryMessage(error, messages.auth.temporaryError);
 
   if (querySent === "1") {
+    redirect(`/${locale}/forgot`);
+  }
+
+  if (isUnsafeQueryMessage(error)) {
     redirect(`/${locale}/forgot`);
   }
 
@@ -37,7 +43,7 @@ export default async function ForgotPage({
       locale={locale}
       turnstileSiteKey={turnstileSiteKey}
       sendAction={sendResetAction}
-      error={error}
+      error={safeError}
       sent={cookieSent}
     />
   );

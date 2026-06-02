@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RecordIcon } from "@/components/records/record-icon";
+import { RecordMarkdown } from "@/components/records/record-markdown";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getDictionary, isLocale, localizePath, type Locale } from "@/lib/i18n";
@@ -56,6 +57,7 @@ export default async function RecordDetailPage({
     .eq("record_id", record.id)
     .eq("visibility", "public")
     .order("sort_order", { ascending: true });
+  const galleryImages = (images ?? []).filter((image) => !record.content.includes(image.r2_url));
 
   const typeLabels = {
     donation: messages.common.recordDonation,
@@ -102,7 +104,7 @@ export default async function RecordDetailPage({
           </p>
         </div>
 
-        <p className="text-base leading-7 text-on-surface-variant">{record.content}</p>
+        <RecordMarkdown>{record.content}</RecordMarkdown>
 
         {record.reflection ? (
           <p className="rounded-lg border border-border-subtle bg-surface-container-low px-4 py-3 text-sm italic text-muted">
@@ -127,10 +129,10 @@ export default async function RecordDetailPage({
         ) : null}
       </Card>
 
-      {images && images.length > 0 ? (
+      {galleryImages.length > 0 ? (
         <section className="mt-10">
           {(() => {
-            const cover = images.find((image) => image.is_cover);
+            const cover = galleryImages.find((image) => image.is_cover);
             return cover ? (
             <div className="mb-6 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low">
               <img
@@ -143,7 +145,7 @@ export default async function RecordDetailPage({
             ) : null;
           })()}
           <div className="grid gap-4 md:grid-cols-2">
-            {images
+            {galleryImages
               .filter((image) => !image.is_cover)
               .map((image) => (
                 <div
