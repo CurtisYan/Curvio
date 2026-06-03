@@ -226,7 +226,7 @@ export async function signInAction(formData: FormData) {
   const emailHash = hashRateLimitKey(email);
   const ipAddress = await readClientIp();
   const recentFailures = await countRecentLoginFailures(emailHash);
-  const challengeRequired = recentFailures >= 5;
+  const challengeRequired = recentFailures >= 1;
 
   if (challengeRequired) {
     if (!turnstileToken) {
@@ -261,7 +261,7 @@ export async function signInAction(formData: FormData) {
 
     await recordLoginFailure(emailHash, ipAddress);
     const updatedFailures = await countRecentLoginFailures(emailHash);
-    const shouldChallenge = challengeRequired || updatedFailures >= 5;
+    const shouldChallenge = challengeRequired || updatedFailures >= 1;
 
     if (shouldChallenge) {
       failWithParams(
@@ -449,7 +449,7 @@ export async function sendResetAction(formData: FormData) {
     await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}/reset`,
     });
-  } catch (e) {
+  } catch {
     // Swallow errors to avoid revealing information. Consider logging server-side.
   }
 

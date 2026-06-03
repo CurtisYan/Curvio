@@ -37,29 +37,43 @@ export default async function RecordDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: record } = await supabase
-    .from("records")
-    .select("*")
-    .eq("id", dbRecordId)
-    .maybeSingle();
+  const { data: ownerRecord } = user
+    ? await supabase
+        .from("records")
+        .select("*")
+        .eq("id", dbRecordId)
+        .maybeSingle()
+    : { data: null };
+
+  const isOwner = Boolean(ownerRecord && user?.id === ownerRecord.user_id);
+  const { data: publicRecord } = !isOwner
+    ? await supabase
+        .from("public_records")
+        .select("*")
+        .eq("id", dbRecordId)
+        .eq("username", username)
+        .maybeSingle()
+    : { data: null };
+
+  const record = ownerRecord ?? publicRecord;
 
   if (!record || record.type !== type) {
     notFound();
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username, display_name, avatar_url")
-    .eq("id", record.user_id)
-    .maybeSingle();
+  const profile = isOwner
+    ? (await supabase
+        .from("profiles")
+        .select("username, display_name, avatar_url")
+        .eq("id", record.user_id)
+        .maybeSingle()).data
+    : {
+        username: "username" in record ? record.username : username,
+        display_name: "display_name" in record ? record.display_name : username,
+        avatar_url: "avatar_url" in record ? record.avatar_url : null,
+      };
 
   if (!profile || profile.username !== username) {
-    notFound();
-  }
-
-  const isOwner = user?.id === record.user_id;
-
-  if ((!record.is_public || record.archived_at) && !isOwner) {
     notFound();
   }
 
@@ -87,7 +101,9 @@ export default async function RecordDetailPage({
       .slice(0, 2)
       .map((part: string) => part[0]?.toUpperCase())
       .join("") || "U";
-  const publicRecordId = formatRecordPublicId(record.date, record.id);
+  const publicRecordId = "public_record_id" in record && record.public_record_id
+    ? record.public_record_id
+    : formatRecordPublicId(record.date, record.id);
   const ownerReturnPath =
     record.type === "donation"
       ? "dashboard/donations"
@@ -136,7 +152,7 @@ export default async function RecordDetailPage({
                 <Pencil className="h-4 w-4" aria-hidden="true" />
                 {messages.dashboard.editRecord}
               </Link>
-              {record.archived_at ? (
+              {"archived_at" in record && record.archived_at ? (
                 <form action={restoreRecordAction}>
                   <input name="locale" type="hidden" value={locale} />
                   <input name="record_id" type="hidden" value={record.id} />
@@ -213,11 +229,11 @@ export default async function RecordDetailPage({
           </p>
         ) : null}
 
-        {record.show_amount && record.amount ? (
+        {"show_amount" in record && record.show_amount && record.amount ? (
           <div className="text-sm text-muted">
             {record.amount} {record.currency ?? ""}
           </div>
-        ) : record.amount ? (
+        ) : (("amount" in record && record.amount) || ("amount_hidden" in record && record.amount_hidden)) ? (
           <div className="text-sm italic text-muted">{messages.common.hiddenAmount}</div>
         ) : null}
 

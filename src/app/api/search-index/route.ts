@@ -10,15 +10,15 @@ export async function GET() {
         .from("profiles")
         .select("username, display_name, avatar_url")
         .eq("is_public", true)
-        .order("updated_at", { ascending: false }),
+        .order("updated_at", { ascending: false })
+        .limit(100),
       supabase
-        .from("records")
+        .from("public_records")
         .select(
-          "id, type, title, content, reflection, date, is_anonymous, organization_name, platform_name, tags, profiles(username, display_name, avatar_url)",
+          "id, type, title, content, reflection, date, is_anonymous, organization_name, platform_name, tags, username, display_name, avatar_url",
         )
-        .eq("is_public", true)
-        .is("archived_at", null)
-        .order("date", { ascending: false }),
+        .order("date", { ascending: false })
+        .limit(100),
     ]);
 
     if (profilesResult.error) {
@@ -36,8 +36,6 @@ export async function GET() {
     }));
 
     const records = (recordsResult.data ?? []).map((record) => {
-      const profile = Array.isArray(record.profiles) ? record.profiles[0] : record.profiles;
-
       return {
         id: record.id,
         type: record.type,
@@ -45,9 +43,9 @@ export async function GET() {
         content: record.content,
         reflection: record.reflection ?? null,
         date: record.date,
-        authorUsername: profile?.username ?? "anonymous",
-        authorDisplayName: profile?.display_name ?? profile?.username ?? "Anonymous",
-        authorAvatarUrl: profile?.avatar_url ?? null,
+        authorUsername: record.username ?? "anonymous",
+        authorDisplayName: record.display_name ?? record.username ?? "Anonymous",
+        authorAvatarUrl: record.avatar_url ?? null,
         isAnonymous: record.is_anonymous,
         organizationName: record.organization_name ?? null,
         platformName: record.platform_name ?? null,

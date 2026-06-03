@@ -46,6 +46,15 @@ type Profile = {
   is_following?: boolean | null;
 };
 
+type PublicRecordImage = {
+  id: string;
+  record_id: string;
+  r2_url: string;
+  sort_order: number | null;
+  is_cover: boolean | null;
+  visibility: string | null;
+};
+
 export default async function UserProfilePage({
   params,
 }: {
@@ -100,18 +109,22 @@ export default async function UserProfilePage({
     notFound();
   }
 
-  const recordsQuery = supabase
-    .from("records")
-    .select(
-      "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)",
-    )
-    .eq("user_id", profile.id)
-    .is("archived_at", null)
-    .order("date", { ascending: false });
-
-  if (!isOwnProfile) {
-    recordsQuery.eq("is_public", true);
-  }
+  const recordsQuery = isOwnProfile
+    ? supabase
+        .from("records")
+        .select(
+          "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)",
+        )
+        .eq("user_id", profile.id)
+        .is("archived_at", null)
+        .order("date", { ascending: false })
+    : supabase
+        .from("public_records")
+        .select(
+          "id, type, title, content, date, is_anonymous, amount_hidden, organization_name, platform_name, project_url, tags, language",
+        )
+        .eq("username", profile.username)
+        .order("date", { ascending: false });
 
   const [{ count: followingCount }, { count: followerCount }, { data: followingRows }, { data: followerRows }, { data: recordRows }] = await Promise.all([
     supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", profile?.id),
@@ -120,6 +133,22 @@ export default async function UserProfilePage({
     supabase.from("follows").select("follower_id").eq("following_id", profile?.id),
     recordsQuery,
   ]);
+
+  const publicRecordIds = !isOwnProfile ? (recordRows ?? []).map((record) => record.id) : [];
+  const { data: publicImages } = publicRecordIds.length
+    ? await supabase
+        .from("record_images")
+        .select("id, record_id, r2_url, sort_order, is_cover, visibility")
+        .in("record_id", publicRecordIds)
+        .eq("visibility", "public")
+    : { data: [] };
+
+  const publicImagesByRecordId = new Map<string, PublicRecordImage[]>();
+  for (const image of publicImages ?? []) {
+    const existing = publicImagesByRecordId.get(image.record_id) ?? [];
+    existing.push(image);
+    publicImagesByRecordId.set(image.record_id, existing);
+  }
 
   const isFollowing = Boolean(profile?.is_following);
 
@@ -135,30 +164,38 @@ export default async function UserProfilePage({
       : Promise.resolve({ data: [] as Array<{ id: string; username: string; display_name: string; avatar_url: string | null }> }),
   ]);
 
-  const records: GoodwillRecord[] = (recordRows ?? []).map((record) => ({
-    id: record.id,
-    type: record.type,
-    title: record.title,
-    content: record.content,
-    date: record.date,
-    authorUsername: profile.username,
-    authorDisplayName: profile.display_name,
-    isAnonymous: record.is_anonymous,
-    amountHidden: Boolean(record.amount) && !record.show_amount,
-    organizationName: record.organization_name ?? undefined,
-    platformName: record.platform_name ?? undefined,
-    projectUrl: record.project_url ?? undefined,
-    tags: record.tags ?? [],
-    language: record.language,
-    images: (record.record_images ?? [])
-      .filter((image) => isOwnProfile || image.visibility === "public")
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((image) => ({
-        id: image.id,
-        url: image.r2_url,
-        isCover: image.is_cover,
-      })),
-  }));
+  const records: GoodwillRecord[] = (recordRows ?? []).map((record) => {
+    const recordImages = isOwnProfile
+      ? (("record_images" in record ? record.record_images : []) ?? [])
+      : publicImagesByRecordId.get(record.id) ?? [];
+
+    return {
+      id: record.id,
+      type: record.type,
+      title: record.title,
+      content: record.content,
+      date: record.date,
+      authorUsername: profile.username,
+      authorDisplayName: profile.display_name,
+      isAnonymous: record.is_anonymous,
+      amountHidden: isOwnProfile
+        ? Boolean("amount" in record ? record.amount : null) && !("show_amount" in record ? record.show_amount : false)
+        : Boolean("amount_hidden" in record ? record.amount_hidden : false),
+      organizationName: record.organization_name ?? undefined,
+      platformName: record.platform_name ?? undefined,
+      projectUrl: record.project_url ?? undefined,
+      tags: record.tags ?? [],
+      language: record.language,
+      images: recordImages
+        .filter((image) => isOwnProfile || image.visibility === "public")
+        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+        .map((image) => ({
+          id: image.id,
+          url: image.r2_url,
+          isCover: image.is_cover,
+        })),
+    };
+  });
 
   const currentYear = new Date().getFullYear();
   const annualRecords = records.filter(

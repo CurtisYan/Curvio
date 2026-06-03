@@ -221,6 +221,17 @@ Constraints:
 ## RPC Functions
 
 - `consume_reset_request_limit(p_ip_address, p_email_hash, p_window_minutes, p_limit)`: inserts an allowed reset request attempt or returns the current attempt count and retry time when the limit has been reached.
+- `is_public_record_visible(record_uuid)`: checks whether a record is publicly visible, including record visibility, archive status, and profile visibility.
+
+## Views
+
+- `public_records`: public-safe record view for anonymous and authenticated public surfaces. It exposes public record fields, author display fields, and `amount_hidden`, but does not expose raw `amount`, `currency`, or `show_amount`.
+
+## Security Notes
+
+- Direct `records` reads are limited to the record owner. Public pages and search should read from `public_records`.
+- `reset_requests` and `login_failures` have row level security enabled and direct grants revoked from `anon` and `authenticated`.
+- Public record images are readable only when their image visibility is `public` and the owning record is visible through the public visibility rule.
 
 ## Current Table List
 
