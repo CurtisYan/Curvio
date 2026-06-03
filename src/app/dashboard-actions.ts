@@ -564,7 +564,10 @@ export async function updateProfileSettingsAction(formData: FormData) {
       const uploaded = await uploadAvatarToR2(user.id, avatarFile);
       avatarUrl = uploaded.url;
     } catch (error) {
-      redirectWithStatus(locale, "error", error instanceof Error ? error.message : "Avatar upload failed.");
+      const message = error instanceof Error && error.message.includes("R2 is not configured")
+        ? "r2_not_configured"
+        : "avatar_upload_failed";
+      redirectWithStatus(locale, "error", message);
     }
   }
 

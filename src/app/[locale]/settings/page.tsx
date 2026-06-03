@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { updateProfileSettingsAction } from "@/app/dashboard-actions";
 import { AvatarUploader } from "@/components/dashboard/avatar-uploader";
-import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { ProfileLayoutSorter } from "@/components/dashboard/profile-layout-sorter";
+import { CleanUrlOnMount } from "@/components/site/clean-url-on-mount";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
@@ -17,7 +17,7 @@ export default async function SettingsPage({
   searchParams: Promise<{ status?: string; message?: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const { status } = await searchParams;
+  const { status, message } = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
   const supabase = await createClient();
@@ -76,7 +76,7 @@ export default async function SettingsPage({
 
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
-      <DashboardNav locale={locale} labels={messages.dashboard} />
+      {status ? <CleanUrlOnMount /> : null}
       <form action={updateProfileSettingsAction}>
         <input name="locale" type="hidden" value={locale} />
         <Card className="mt-8 space-y-6">
@@ -92,7 +92,9 @@ export default async function SettingsPage({
           ) : null}
           {status === "error" ? (
             <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-sm text-error">
-              {messages.dashboard.settingsError}
+              {message === "r2_not_configured"
+                ? messages.dashboard.r2NotConfigured
+                : messages.dashboard.settingsError}
             </div>
           ) : null}
 

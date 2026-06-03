@@ -31,6 +31,7 @@ export function AuthShell({
   action,
   error,
   challenge = false,
+  defaultEmail = "",
 }: {
   locale: Locale;
   title: string;
@@ -41,6 +42,7 @@ export function AuthShell({
   action: (formData: FormData) => void | Promise<void>;
   error?: string;
   challenge?: boolean;
+  defaultEmail?: string;
 }) {
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const showTurnstile = Boolean(turnstileSiteKey) && (mode === "register" || (mode === "login" && challenge));
@@ -74,7 +76,14 @@ export function AuthShell({
           ) : null}
           <label className="space-y-3 text-sm font-medium">
             {labels.email}
-            <Input autoComplete="email" name="email" placeholder={labels.emailPlaceholder} required type="email" />
+            <Input
+              autoComplete="email"
+              defaultValue={defaultEmail}
+              name="email"
+              placeholder={labels.emailPlaceholder}
+              required
+              type="email"
+            />
           </label>
           <label className="space-y-3 text-sm font-medium">
             {labels.password}

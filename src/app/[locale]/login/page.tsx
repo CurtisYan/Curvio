@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/site/auth-shell";
+import { CleanUrlOnMount } from "@/components/site/clean-url-on-mount";
 import { signInAction } from "@/app/auth-actions";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { isUnsafeQueryMessage, safeQueryMessage } from "@/lib/safe-query-message";
@@ -9,10 +10,10 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string; challenge?: string }>;
+  searchParams: Promise<{ error?: string; challenge?: string; email?: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const { error, challenge } = await searchParams;
+  const { error, challenge, email } = await searchParams;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
   const messages = getDictionary(locale);
 
@@ -23,8 +24,10 @@ export default async function LoginPage({
   const safeError = safeQueryMessage(error, messages.auth.temporaryError);
 
   return (
+    <>
     <AuthShell
       action={signInAction}
+      defaultEmail={email}
       error={safeError}
       challenge={challenge === "1"}
       labels={messages.auth}
@@ -34,5 +37,7 @@ export default async function LoginPage({
       submit={messages.auth.submitLogin}
       title={messages.auth.loginTitle}
     />
+    {error || challenge || email ? <CleanUrlOnMount /> : null}
+    </>
   );
 }

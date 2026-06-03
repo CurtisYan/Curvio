@@ -231,9 +231,10 @@ export default async function UserProfilePage({
             <div>
               <h1 className="text-4xl font-semibold tracking-tight">{profile.display_name}</h1>
               <p className="mt-1 text-sm text-muted">@{profile.username}</p>
-              <p className="mt-2 text-muted">
-                {(profile.bio ?? "").trim() ? profile.bio : profile.principle}
-                <span className="mx-2">·</span>
+              {(profile.bio ?? "").trim() ? (
+                <p className="mt-2 max-w-3xl text-muted">{profile.bio}</p>
+              ) : null}
+              <p className="mt-3 flex flex-wrap items-center gap-2 text-muted">
                 <a
                   href="#following"
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${surfaceHover}`}
@@ -241,7 +242,7 @@ export default async function UserProfilePage({
                 >
                   {followingCount ?? 0} {messages.profile.following}
                 </a>
-                <span className="mx-2">·</span>
+                <span aria-hidden="true">·</span>
                 <a
                   href="#followers"
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${surfaceHover}`}
@@ -252,7 +253,7 @@ export default async function UserProfilePage({
               </p>
             </div>
             {isOwnProfile ? (
-              <ButtonLink href={localizePath(locale, "/settings")} variant="secondary">
+              <ButtonLink className="whitespace-nowrap" href={localizePath(locale, "/settings")} variant="secondary">
                 {messages.profile.edit}
               </ButtonLink>
             ) : (

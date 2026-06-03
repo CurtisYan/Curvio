@@ -276,6 +276,7 @@
     "saveSettings": "Save settings",
     "settingsSaved": "Settings saved.",
     "settingsError": "Settings could not be saved.",
+    "r2NotConfigured": "Avatar upload is not configured yet. Please check the R2 environment variables in Cloudflare.",
     "donations": "Donations",
     "acts": "Acts",
     "openWork": "Open Work",

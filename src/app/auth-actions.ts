@@ -52,8 +52,32 @@ function authServiceUnavailableMessage(locale: Locale) {
   );
 }
 
+function loginChallengeMessage(locale: Locale) {
+  return localized(locale, "Please complete verification before trying again.", "请先完成验证后再重试。");
+}
+
+function turnstileUnavailableMessage(locale: Locale) {
+  return localized(locale, "Verification is not configured yet. Please try again later.", "验证服务尚未配置完成，请稍后再试。");
+}
+
+function turnstileFailedMessage(locale: Locale) {
+  return localized(locale, "Verification failed. Please try again.", "验证失败，请重试。");
+}
+
+function invalidLoginMessage(locale: Locale) {
+  return localized(locale, "Invalid email or password.", "邮箱或密码不正确。");
+}
+
 function publicAuthErrorMessage(locale: Locale, message: string) {
   const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("invalid login credentials") ||
+    lowerMessage.includes("invalid email or password")
+  ) {
+    return invalidLoginMessage(locale);
+  }
+
   const unsafePatterns = [
     "fetch failed",
     "failed to fetch",
@@ -158,21 +182,27 @@ async function verifyTurnstile(
   locale: Locale,
   path: "login" | "register" | "register/verify" | "forgot" | "reset",
   token: string,
-  options?: { challenge?: boolean },
+  options?: { challenge?: boolean; email?: string },
 ) {
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
     if (options?.challenge && path === "login") {
-      failWithParams(locale, path, "Turnstile is not configured. Please try again later.", { challenge: "1" });
+      failWithParams(locale, path, turnstileUnavailableMessage(locale), {
+        challenge: "1",
+        email: options.email ?? "",
+      });
     }
 
-    fail(locale, path, "Turnstile is not configured. Please try again later.");
+    fail(locale, path, turnstileUnavailableMessage(locale));
   }
 
   if (!token) {
     if (options?.challenge && path === "login") {
-      failWithParams(locale, path, "Please complete the verification challenge.", { challenge: "1" });
+      failWithParams(locale, path, loginChallengeMessage(locale), {
+        challenge: "1",
+        email: options.email ?? "",
+      });
     }
 
     fail(locale, path, "Please complete the verification challenge.");
@@ -192,7 +222,10 @@ async function verifyTurnstile(
     });
   } catch {
     if (options?.challenge && path === "login") {
-      failWithParams(locale, path, authServiceUnavailableMessage(locale), { challenge: "1" });
+      failWithParams(locale, path, authServiceUnavailableMessage(locale), {
+        challenge: "1",
+        email: options.email ?? "",
+      });
     }
 
     fail(locale, path, authServiceUnavailableMessage(locale));
@@ -202,10 +235,13 @@ async function verifyTurnstile(
 
   if (!result.success) {
     if (options?.challenge && path === "login") {
-      failWithParams(locale, path, "Verification failed. Please try again.", { challenge: "1" });
+      failWithParams(locale, path, turnstileFailedMessage(locale), {
+        challenge: "1",
+        email: options.email ?? "",
+      });
     }
 
-    fail(locale, path, "Verification failed. Please try again.");
+    fail(locale, path, turnstileFailedMessage(locale));
   }
 }
 
@@ -233,12 +269,12 @@ export async function signInAction(formData: FormData) {
       failWithParams(
         locale,
         "login",
-        localized(locale, "Too many failed sign-in attempts. Please complete the verification challenge.", "登录失败次数过多，请先完成验证。"),
-        { challenge: "1" },
+        loginChallengeMessage(locale),
+        { challenge: "1", email },
       );
     }
 
-    await verifyTurnstile(locale, "login", turnstileToken, { challenge: true });
+    await verifyTurnstile(locale, "login", turnstileToken, { challenge: true, email });
   }
 
   const supabase = await createClient();
@@ -260,19 +296,10 @@ export async function signInAction(formData: FormData) {
     }
 
     await recordLoginFailure(emailHash, ipAddress);
-    const updatedFailures = await countRecentLoginFailures(emailHash);
-    const shouldChallenge = challengeRequired || updatedFailures >= 1;
-
-    if (shouldChallenge) {
-      failWithParams(
-        locale,
-        "login",
-        localized(locale, "Too many failed sign-in attempts. Please complete the verification challenge.", "登录失败次数过多，请先完成验证。"),
-        { challenge: "1" },
-      );
-    }
-
-    fail(locale, "login", publicAuthErrorMessage(locale, signInError.message));
+    failWithParams(locale, "login", publicAuthErrorMessage(locale, signInError.message), {
+      challenge: "1",
+      email,
+    });
   }
 
   await clearLoginFailures(emailHash);
