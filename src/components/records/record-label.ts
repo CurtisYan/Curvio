@@ -2,12 +2,12 @@ import type { RecordType } from "@/lib/types";
 
 export function recordLabel(type: RecordType) {
   if (type === "donation") {
-    return "Donation";
+    return "Donations";
   }
 
   if (type === "open_source") {
     return "Open Work";
   }
 
-  return "Kindness";
+  return "Acts";
 }

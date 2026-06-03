@@ -17,6 +17,7 @@ export async function GET() {
           "id, type, title, content, reflection, date, is_anonymous, organization_name, platform_name, tags, profiles(username, display_name, avatar_url)",
         )
         .eq("is_public", true)
+        .is("archived_at", null)
         .order("date", { ascending: false }),
     ]);
 

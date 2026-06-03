@@ -1,9 +1,10 @@
-import { Pencil, Trash2 } from "lucide-react";
-import { deleteRecordAction } from "@/app/dashboard-actions";
+import { Archive, RotateCcw, Trash2 } from "lucide-react";
+import { deleteRecordAction, restoreRecordAction } from "@/app/dashboard-actions";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { RecordCard } from "@/components/records/record-card";
 import { localizePath, type Locale } from "@/lib/i18n";
 import { formatRecordPublicId } from "@/lib/record-public-id";
+import { recordTypeToSegment } from "@/lib/record-types";
 
 type DashboardRecord = {
   id: string;
@@ -15,6 +16,7 @@ type DashboardRecord = {
   show_amount: boolean;
   amount: number | null;
   tags: string[] | null;
+  archived_at: string | null;
 };
 
 type ProfileSummary = {
@@ -24,22 +26,33 @@ type ProfileSummary = {
 
 type DashboardLabels = {
   all: string;
-  records: string;
-  projects: string;
-  recordsTitle: string;
-  recordsLead: string;
+  donations: string;
+  acts: string;
+  openWork: string;
+  donationsLead: string;
+  actsLead: string;
+  openWorkLead: string;
   projectsLead: string;
   overviewLead: string;
-  recordsEmpty: string;
-  projectsEmpty: string;
+  donationsEmpty: string;
+  actsEmpty: string;
+  openWorkEmpty: string;
   editRecord: string;
+  openRecord: string;
+  activeRecords: string;
+  archivedRecords: string;
+  archivedLead: string;
+  archivedEmpty: string;
+  restoreRecord: string;
+  restoreRecordDone: string;
+  archiveRecordDone: string;
   deleteRecord: string;
   deleteRecordTitle: string;
   deleteRecordLead: string;
   deleteRecordConfirm: string;
   deleteRecordSubmit: string;
   deleteRecordDeleted: string;
-  deleteRecordError: string;
+  manageRecordError: string;
   anonymous: string;
   recordDonation: string;
   recordKindness: string;
@@ -58,7 +71,7 @@ export function DashboardArchiveView({
   labels: DashboardLabels;
   profile: ProfileSummary;
   records: DashboardRecord[];
-  mode: "overview" | "records" | "projects";
+  mode: "overview" | "donations" | "acts" | "projects";
   status?: string;
 }) {
   const recordTypeLabels = {
@@ -81,7 +94,20 @@ export function DashboardArchiveView({
     language: locale,
   }));
 
-  const renderList = (items: DashboardRecord[], emptyMessage: string) => {
+  const returnPath =
+    mode === "projects"
+      ? "dashboard/projects"
+      : mode === "donations"
+        ? "dashboard/donations"
+        : mode === "acts"
+          ? "dashboard/acts"
+          : "dashboard";
+
+  const renderList = (
+    items: DashboardRecord[],
+    emptyMessage: string,
+    options?: { archived?: boolean },
+  ) => {
     if (items.length === 0) {
       return (
         <div className="rounded-xl border border-border-subtle bg-surface-container-low px-6 py-8 text-sm text-muted">
@@ -117,53 +143,55 @@ export function DashboardArchiveView({
                 }
                 typeLabels={recordTypeLabels}
               />
-              <div className="grid gap-2">
+              <div className="flex items-center justify-end gap-3 px-1">
                 <ButtonLink
-                  className="w-full"
-                  href={localizePath(locale, `/dashboard/records/${publicRecordId}/edit`)}
-                  variant="secondary"
+                  className="h-8 border-transparent bg-transparent px-2 text-xs text-muted hover:text-primary"
+                  href={localizePath(
+                    locale,
+                    `/u/${profile.username}/${recordTypeToSegment(record.type)}/${publicRecordId}`,
+                  )}
+                  variant="ghost"
                 >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                  {labels.editRecord}
+                  {labels.openRecord}
                 </ButtonLink>
-                <details className="rounded-lg border border-error/20 bg-error/5 px-3 py-2">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-error marker:hidden">
-                    <span className="inline-flex items-center gap-2">
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      {labels.deleteRecord}
-                    </span>
-                    <span className="text-xs font-normal text-muted">{labels.deleteRecordTitle}</span>
-                  </summary>
-                  <form action={deleteRecordAction} className="mt-3 space-y-3 border-t border-error/15 pt-3">
+                {options?.archived ? (
+                  <form action={restoreRecordAction}>
                     <input name="locale" type="hidden" value={locale} />
                     <input name="record_id" type="hidden" value={record.id} />
-                    <input
-                      name="return_path"
-                      type="hidden"
-                      value={
-                        mode === "records"
-                          ? "dashboard/records"
-                          : mode === "projects"
-                            ? "dashboard/projects"
-                            : "dashboard"
-                      }
-                    />
-                    <p className="text-xs leading-5 text-muted">{labels.deleteRecordLead}</p>
-                    <label className="flex items-start gap-2 rounded-md border border-error/15 bg-surface-offwhite px-3 py-2 text-xs leading-5 text-muted">
-                      <input
-                        className="mt-0.5 h-4 w-4 rounded border-border-subtle accent-error"
-                        name="confirm_delete"
-                        required
-                        type="checkbox"
-                        value="1"
-                      />
-                      {labels.deleteRecordConfirm}
-                    </label>
-                    <Button className="h-10 w-full" type="submit" variant="danger">
-                      {labels.deleteRecordSubmit}
+                    <input name="return_path" type="hidden" value={returnPath} />
+                    <Button className="h-8 border-transparent bg-transparent px-2 text-xs text-muted hover:text-primary" type="submit" variant="ghost">
+                      <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                      {labels.restoreRecord}
                     </Button>
                   </form>
-                </details>
+                ) : null}
+                {options?.archived ? (
+                  <details className="relative">
+                    <summary className="flex h-8 cursor-pointer list-none items-center gap-1 rounded-lg px-2 text-xs text-muted transition-colors hover:bg-error/5 hover:text-error marker:hidden">
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      {labels.deleteRecord}
+                    </summary>
+                    <form action={deleteRecordAction} className="absolute right-0 z-10 mt-2 w-72 space-y-3 rounded-lg border border-error/20 bg-surface-offwhite p-3 shadow-[0_16px_40px_rgba(0,0,0,0.08)]">
+                      <input name="locale" type="hidden" value={locale} />
+                      <input name="record_id" type="hidden" value={record.id} />
+                      <input name="return_path" type="hidden" value={returnPath} />
+                      <p className="text-xs leading-5 text-muted">{labels.deleteRecordLead}</p>
+                      <label className="flex items-start gap-2 rounded-md border border-error/15 bg-error/5 px-3 py-2 text-xs leading-5 text-muted">
+                        <input
+                          className="mt-0.5 h-4 w-4 rounded border-border-subtle accent-error"
+                          name="confirm_delete"
+                          required
+                          type="checkbox"
+                          value="1"
+                        />
+                        {labels.deleteRecordConfirm}
+                      </label>
+                      <Button className="h-10 w-full" type="submit" variant="danger">
+                        {labels.deleteRecordSubmit}
+                      </Button>
+                    </form>
+                  </details>
+                ) : null}
               </div>
             </div>
           );
@@ -172,22 +200,41 @@ export function DashboardArchiveView({
     );
   };
 
-  const recordItems = records.filter((record) => record.type !== "open_source");
-  const projectItems = records.filter((record) => record.type === "open_source");
+  const activeRecords = records.filter((record) => !record.archived_at);
+  const archivedRecords = records.filter((record) => record.archived_at);
+  const donationItems = activeRecords.filter((record) => record.type === "donation");
+  const actItems = activeRecords.filter((record) => record.type === "kindness");
+  const projectItems = activeRecords.filter((record) => record.type === "open_source");
+  const archivedItems =
+    mode === "donations"
+      ? archivedRecords.filter((record) => record.type === "donation")
+      : mode === "acts"
+        ? archivedRecords.filter((record) => record.type === "kindness")
+      : mode === "projects"
+        ? archivedRecords.filter((record) => record.type === "open_source")
+        : archivedRecords;
 
   return (
-    <main className="container-page min-h-screen pt-28 pb-24">
+    <div className="pb-24">
       <div className="space-y-8">
         <div>
           <h1 className="text-4xl font-semibold tracking-tight">
-            {mode === "overview" ? labels.all : mode === "records" ? labels.recordsTitle : labels.projects}
+            {mode === "overview"
+              ? labels.all
+              : mode === "donations"
+                ? labels.donations
+                : mode === "acts"
+                  ? labels.acts
+                  : labels.openWork}
           </h1>
           <p className="mt-3 text-muted">
             {mode === "overview"
               ? labels.overviewLead
-              : mode === "records"
-                ? labels.recordsLead
-                : labels.projectsLead}
+              : mode === "donations"
+                ? labels.donationsLead
+                : mode === "acts"
+                  ? labels.actsLead
+                  : labels.openWorkLead}
           </p>
         </div>
 
@@ -196,30 +243,60 @@ export function DashboardArchiveView({
             {labels.deleteRecordDeleted}
           </div>
         ) : null}
-        {status === "delete_error" ? (
+        {status === "archived" ? (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
+            {labels.archiveRecordDone}
+          </div>
+        ) : null}
+        {status === "restored" ? (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
+            {labels.restoreRecordDone}
+          </div>
+        ) : null}
+        {status === "manage_error" ? (
           <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-sm text-error">
-            {labels.deleteRecordError}
+            {labels.manageRecordError}
           </div>
         ) : null}
 
-        {mode !== "projects" ? (
+        {mode === "overview" || mode === "donations" ? (
           <section className="space-y-4">
             <div>
-              <h2 className="text-2xl font-medium">{labels.records}</h2>
+              <h2 className="text-2xl font-medium">{labels.donations}</h2>
             </div>
-            {renderList(recordItems, labels.recordsEmpty)}
+            {renderList(donationItems, labels.donationsEmpty)}
+          </section>
+        ) : null}
+
+        {mode === "overview" || mode === "acts" ? (
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-medium">{labels.acts}</h2>
+            </div>
+            {renderList(actItems, labels.actsEmpty)}
           </section>
         ) : null}
 
         {mode === "overview" || mode === "projects" ? (
           <section className="space-y-4">
             <div>
-              <h2 className="text-2xl font-medium">{labels.projects}</h2>
+              <h2 className="text-2xl font-medium">{labels.openWork}</h2>
             </div>
-            {renderList(projectItems, labels.projectsEmpty)}
+            {renderList(projectItems, labels.openWorkEmpty)}
           </section>
         ) : null}
+
+        <section className="space-y-4 border-t border-border-subtle pt-8">
+          <div className="flex items-center gap-3">
+            <Archive className="h-5 w-5 text-muted" aria-hidden="true" />
+            <div>
+              <h2 className="text-2xl font-medium">{labels.archivedRecords}</h2>
+              <p className="mt-1 text-sm text-muted">{labels.archivedLead}</p>
+            </div>
+          </div>
+          {renderList(archivedItems, labels.archivedEmpty, { archived: true })}
+        </section>
       </div>
-    </main>
+    </div>
   );
 }

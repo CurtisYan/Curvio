@@ -33,6 +33,21 @@ function initialsFrom(name: string) {
   );
 }
 
+type Profile = {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  principle: string | null;
+  location: string | null;
+  website_url: string | null;
+  github_url: string | null;
+  allow_follow: boolean;
+  is_public: boolean;
+  is_following?: boolean | null;
+};
+
 export default async function UserProfilePage({
   params,
 }: {
@@ -53,7 +68,34 @@ export default async function UserProfilePage({
     { viewer_uuid: user ? user.id : null, username_text: username },
   );
 
-  const profile = Array.isArray(profileRpc) && profileRpc.length > 0 ? profileRpc[0] : null;
+  let profile: Profile | null =
+    Array.isArray(profileRpc) && profileRpc.length > 0 ? (profileRpc[0] as Profile) : null;
+
+  if (!profile) {
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, bio, principle, location, website_url, github_url, allow_follow, is_public")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (profileRow) {
+      let isFollowing = false;
+
+      if (user) {
+        const { data: followRow } = await supabase
+          .from("follows")
+          .select("id")
+          .eq("follower_id", user.id)
+          .eq("following_id", profileRow.id)
+          .maybeSingle();
+
+        isFollowing = Boolean(followRow);
+      }
+
+      profile = { ...profileRow, is_following: isFollowing };
+    }
+  }
+
   const isOwnProfile = user?.id === profile?.id;
 
   if (!profile || (!profile.is_public && !isOwnProfile)) {
@@ -63,9 +105,10 @@ export default async function UserProfilePage({
   const recordsQuery = supabase
     .from("records")
     .select(
-      "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language",
+      "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language, archived_at",
     )
     .eq("user_id", profile.id)
+    .is("archived_at", null)
     .order("date", { ascending: false });
 
   if (!isOwnProfile) {

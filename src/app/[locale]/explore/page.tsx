@@ -22,6 +22,7 @@ export default async function ExplorePage({
       "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name, avatar_url)",
     )
     .eq("is_public", true)
+    .is("archived_at", null)
     .order("date", { ascending: false });
 
   const mappedRecords = (records ?? []).map((record) => {

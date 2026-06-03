@@ -9,14 +9,16 @@ export function DashboardNav({
   locale: Locale;
   labels: {
     all: string;
-    records: string;
-    projects: string;
+    donations: string;
+    acts: string;
+    openWork: string;
   };
 }) {
   const items = [
     { href: "/dashboard", label: labels.all },
-    { href: "/dashboard/records", label: labels.records },
-    { href: "/dashboard/projects", label: labels.projects },
+    { href: "/dashboard/donations", label: labels.donations },
+    { href: "/dashboard/acts", label: labels.acts },
+    { href: "/dashboard/projects", label: labels.openWork },
   ];
 
   return (

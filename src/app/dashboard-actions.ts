@@ -72,9 +72,15 @@ function recordEditRedirect(
 function dashboardRedirect(
   locale: Locale,
   path: string,
-  status: "deleted" | "delete_error",
+  status: "archived" | "restored" | "deleted" | "manage_error",
 ): never {
-  const safePaths = new Set(["dashboard", "dashboard/records", "dashboard/projects"]);
+  const safePaths = new Set([
+    "dashboard",
+    "dashboard/records",
+    "dashboard/donations",
+    "dashboard/acts",
+    "dashboard/projects",
+  ]);
   const safePath = safePaths.has(path) ? path : "dashboard";
   redirect(`/${locale}/${safePath}?status=${status}`);
 }
@@ -269,6 +275,8 @@ export async function createRecordAction(
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   revalidatePath(`/${locale}/dashboard/projects`);
   revalidatePath(`/${locale}/u/${profile.username}`);
 
@@ -348,8 +356,122 @@ export async function updateRecordAction(formData: FormData) {
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   revalidatePath(`/${locale}/dashboard/projects`);
   recordEditRedirect(locale, publicRecordId, "saved");
+}
+
+async function readOwnedRecord(recordId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { supabase, user: null, profile: null, record: null };
+  }
+
+  const [{ data: profile }, { data: record, error: recordError }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("records")
+      .select("id, type, date")
+      .eq("id", recordId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
+
+  return {
+    supabase,
+    user,
+    profile,
+    record: recordError ? null : record,
+  };
+}
+
+async function revalidateRecordSurfaces(locale: Locale, username?: string) {
+  revalidatePath(`/${locale}/dashboard`);
+  revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
+  revalidatePath(`/${locale}/dashboard/projects`);
+  revalidatePath(`/${locale}/explore`);
+
+  if (username) {
+    revalidatePath(`/${locale}/u/${username}`);
+  }
+}
+
+export async function archiveRecordAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const returnPath = readString(formData, "return_path");
+
+  if (!recordId) {
+    dashboardRedirect(locale, returnPath, "manage_error");
+  }
+
+  const { supabase, user, profile, record } = await readOwnedRecord(recordId);
+
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+
+  if (!record) {
+    dashboardRedirect(locale, returnPath, "manage_error");
+  }
+
+  const { error } = await supabase
+    .from("records")
+    .update({ archived_at: new Date().toISOString(), is_public: false })
+    .eq("id", record.id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    dashboardRedirect(locale, returnPath, "manage_error");
+  }
+
+  await revalidateRecordSurfaces(locale, profile?.username);
+  dashboardRedirect(locale, returnPath, "archived");
+}
+
+export async function restoreRecordAction(formData: FormData) {
+  const locale = readLocale(formData);
+  const recordId = readString(formData, "record_id");
+  const returnPath = readString(formData, "return_path");
+
+  if (!recordId) {
+    dashboardRedirect(locale, returnPath, "manage_error");
+  }
+
+  const { supabase, user, profile, record } = await readOwnedRecord(recordId);
+
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+
+  if (!record) {
+    dashboardRedirect(locale, returnPath, "manage_error");
+  }
+
+  const { error } = await supabase
+    .from("records")
+    .update({ archived_at: null })
+    .eq("id", record.id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    dashboardRedirect(locale, returnPath, "manage_error");
+  }
+
+  await revalidateRecordSurfaces(locale, profile?.username);
+  dashboardRedirect(locale, returnPath, "restored");
 }
 
 export async function deleteRecordAction(formData: FormData) {
@@ -359,34 +481,17 @@ export async function deleteRecordAction(formData: FormData) {
   const confirmed = readString(formData, "confirm_delete") === "1";
 
   if (!recordId || !confirmed) {
-    dashboardRedirect(locale, returnPath, "delete_error");
+    dashboardRedirect(locale, returnPath, "manage_error");
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const { supabase, user, profile, record } = await readOwnedRecord(recordId);
 
-  if (userError || !user) {
+  if (!user) {
     redirect(`/${locale}/login`);
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const { data: record, error: recordError } = await supabase
-    .from("records")
-    .select("id, type")
-    .eq("id", recordId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (recordError || !record) {
-    dashboardRedirect(locale, returnPath, "delete_error");
+  if (!record) {
+    dashboardRedirect(locale, returnPath, "manage_error");
   }
 
   const { data: images } = await supabase
@@ -412,17 +517,10 @@ export async function deleteRecordAction(formData: FormData) {
     .eq("user_id", user.id);
 
   if (deleteError) {
-    dashboardRedirect(locale, returnPath, "delete_error");
+    dashboardRedirect(locale, returnPath, "manage_error");
   }
 
-  revalidatePath(`/${locale}/dashboard`);
-  revalidatePath(`/${locale}/dashboard/records`);
-  revalidatePath(`/${locale}/dashboard/projects`);
-
-  if (profile?.username) {
-    revalidatePath(`/${locale}/u/${profile.username}`);
-  }
-
+  await revalidateRecordSurfaces(locale, profile?.username);
   dashboardRedirect(locale, returnPath, "deleted");
 }
 

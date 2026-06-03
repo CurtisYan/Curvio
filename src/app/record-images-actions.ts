@@ -178,6 +178,8 @@ export async function uploadRecordImagesAction(formData: FormData) {
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   revalidatePath(`/${locale}/dashboard/projects`);
   revalidatePath(`/${locale}/explore`);
 
@@ -259,6 +261,8 @@ export async function deleteRecordImageAction(formData: FormData) {
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved");
 }
 
@@ -318,6 +322,8 @@ export async function setCoverImageAction(formData: FormData) {
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "cover"));
 }
 
@@ -386,6 +392,8 @@ export async function moveRecordImageAction(formData: FormData) {
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   redirectToEdit(locale, record ? formatRecordPublicId(record.date, record.id) : recordId, "saved", imageActionMessage(locale, "order"));
 }
 
@@ -433,6 +441,8 @@ export async function updateRecordImageVisibilityAction(formData: FormData) {
 
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
+  revalidatePath(`/${locale}/dashboard/donations`);
+  revalidatePath(`/${locale}/dashboard/acts`);
   revalidatePath(`/${locale}/explore`);
   redirectToEdit(
     locale,

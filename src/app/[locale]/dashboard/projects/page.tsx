@@ -32,7 +32,7 @@ export default async function ProjectsPage({
 
   const { data: records } = await supabase
     .from("records")
-    .select("id, type, title, content, date, is_anonymous, show_amount, amount, tags")
+    .select("id, type, title, content, date, is_anonymous, show_amount, amount, tags, archived_at")
     .eq("user_id", user.id)
     .order("date", { ascending: false });
 

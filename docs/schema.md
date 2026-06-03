@@ -79,6 +79,7 @@ Columns:
 - `language`: content language. Defaults to `en`. Allowed values: `en`, `zh`.
 - `is_public`: whether the record is public. Defaults to `true`.
 - `is_anonymous`: whether the record is published anonymously. Defaults to `false`.
+- `archived_at`: optional archive timestamp. Archived records stay visible to the owner in dashboard archive views, but are excluded from public surfaces and default dashboard active lists.
 - `created_at`: creation time. Defaults to `now()`.
 - `updated_at`: update time. Defaults to `now()`.
 - `public_record_id`: public record identifier. Required.

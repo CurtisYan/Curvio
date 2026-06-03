@@ -4,7 +4,7 @@ import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { createClient } from "@/utils/supabase/server";
 
-export default async function DashboardPage({
+export default async function DonationsPage({
   params,
   searchParams,
 }: {
@@ -47,7 +47,7 @@ export default async function DashboardPage({
         <DashboardArchiveView
           locale={locale}
           labels={messages.dashboard}
-          mode="overview"
+          mode="donations"
           profile={{ username: profile.username, display_name: profile.display_name }}
           records={records ?? []}
           status={status}

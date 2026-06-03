@@ -8,5 +8,5 @@ export default async function RecordsPage({
 }) {
   const { locale: rawLocale } = await params;
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
-  redirect(`/${locale}/dashboard/records`);
+  redirect(`/${locale}/dashboard/donations`);
 }

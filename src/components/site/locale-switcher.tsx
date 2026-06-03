@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { locales, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function LocaleSwitcher({ locale, label }: { locale: Locale; label: string }) {
-  const pathname = usePathname();
   const detailsRef = useRef<HTMLDetailsElement | null>(null);
 
   useEffect(() => {
@@ -31,9 +29,8 @@ export function LocaleSwitcher({ locale, label }: { locale: Locale; label: strin
     };
   }, []);
 
-  function pathFor(targetLocale: Locale) {
-    const parts = pathname.split("/");
-
+  function pathFor(targetLocale: Locale, currentPath = `/${targetLocale}`) {
+    const parts = currentPath.split("/");
     if (locales.includes(parts[1] as Locale)) {
       parts[1] = targetLocale;
     } else {
@@ -60,8 +57,12 @@ export function LocaleSwitcher({ locale, label }: { locale: Locale; label: strin
               "block rounded-lg px-3 py-2 text-sm transition-colors hover:bg-surface-container-low hover:text-primary",
               item === locale ? "text-primary" : "text-muted",
             )}
-            href={pathFor(item)}
+            href={`/${item}`}
             key={item}
+            onClick={(event) => {
+              event.preventDefault();
+              window.location.href = pathFor(item, window.location.pathname);
+            }}
           >
             {item === "en" ? "English" : "中文"}
           </Link>
