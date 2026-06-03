@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RecordCard } from "@/components/records/record-card";
+import { RecordTypeBadge } from "@/components/records/record-type-badge";
 import { Card } from "@/components/ui/card";
 import { localizePath, type Locale } from "@/lib/i18n";
 import { formatRecordPublicId } from "@/lib/record-public-id";
@@ -208,13 +209,10 @@ export function ProfileContentSwitcher({
           ) : (
             Object.entries(recordsByYear).map(([year, yearRecords], index) => (
               <details className="group" key={year} open={index === 0}>
-                <summary className="flex cursor-pointer list-none items-center gap-3 py-2 text-lg font-semibold marker:hidden">
-                  <span>{year}</span>
-                  <span className="text-xs font-normal text-muted group-open:hidden">
-                    {locale === "zh" ? "展开" : "Expand"}
-                  </span>
-                  <span className="hidden text-xs font-normal text-muted group-open:inline">
-                    {locale === "zh" ? "收起" : "Collapse"}
+                <summary className="flex cursor-pointer select-none list-none items-center gap-3 py-2 text-lg font-semibold marker:hidden">
+                  <span className="select-none">{year}</span>
+                  <span className="sr-only">
+                    {locale === "zh" ? "切换年份动态" : "Toggle yearly activity"}
                   </span>
                 </summary>
                 <div className="relative ml-3 mt-3 space-y-5 border-l border-border-subtle pl-6">
@@ -235,9 +233,7 @@ export function ProfileContentSwitcher({
                             day: "numeric",
                           }).format(new Date(record.date))}
                         </time>
-                        <span className="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-muted">
-                          {typeLabels[record.type]}
-                        </span>
+                        <RecordTypeBadge label={typeLabels[record.type]} type={record.type} />
                       </div>
                       <div className="mt-1 font-medium text-foreground group-hover/item:text-primary">
                         {record.title}

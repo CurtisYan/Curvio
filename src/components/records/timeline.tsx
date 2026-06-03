@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
@@ -8,8 +7,7 @@ import { markdownToPlainText } from "@/lib/markdown";
 import { recordTypeToSegment } from "@/lib/record-types";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
-import { RecordIcon } from "./record-icon";
-import { recordLabel } from "./record-label";
+import { RecordTypeBadge } from "./record-type-badge";
 import Link from "next/link";
 
 function initialsFor(name: string) {
@@ -62,8 +60,6 @@ export function Timeline({
                       locale,
                       `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${publicRecordId}`,
                     );
-                    const typeHref = localizePath(locale, `/explore?type=${record.type}`);
-
                     return record.isAnonymous ? (
                       <h3 className="text-xl font-medium">{record.title}</h3>
                     ) : (
@@ -106,10 +102,11 @@ export function Timeline({
                   ) : null}
                 </div>
                 <Link className="inline-flex" href={localizePath(locale, `/explore?type=${record.type}`)}>
-                  <Badge className="transition-colors hover:bg-surface-container-high hover:text-primary">
-                    <RecordIcon className="h-3.5 w-3.5" type={record.type} />
-                    {typeLabels?.[record.type] ?? recordLabel(record.type)}
-                  </Badge>
+                  <RecordTypeBadge
+                    className="transition-colors hover:bg-surface-container-high hover:text-primary"
+                    label={typeLabels?.[record.type]}
+                    type={record.type}
+                  />
                 </Link>
               </div>
               <p className="text-sm leading-6 text-on-surface-variant">

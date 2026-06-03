@@ -21,7 +21,7 @@ Curvio is a restrained public-welfare archive, not a fundraising product.
 
 - Keep one coherent visual language across public/profile/dashboard flows.
 - Public record URL format is fixed: `YYYYMMDD-{uuid}`.
-- Type badges (Donation/Kindness/Open Work) must be clickable and route to filtered Explore.
+- Type badges (Donations/Acts/Open Work) should use `src/components/records/record-type-badge.tsx` so icons, spacing, and muted badge styling stay consistent. When used outside profile tabs/cards, make the badge clickable and route to filtered Explore.
 - Canonical hover utilities live in `src/components/ui/interactive.ts`:
   - `surfaceHover`
   - `surfaceHoverLow`
