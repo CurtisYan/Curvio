@@ -8,6 +8,7 @@ import { recordTypeToSegment } from "@/lib/record-types";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
 import { RecordIcon } from "./record-icon";
+import { RecordImageStrip } from "./record-image-strip";
 import { recordLabel } from "./record-label";
 
 export function RecordCard({
@@ -30,13 +31,6 @@ export function RecordCard({
     `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${publicRecordId}`,
   );
   const typeHref = localizePath(locale, `/explore?type=${record.type}`);
-  const images = (record.images ?? []).slice().sort((a, b) => {
-    if (a.isCover && !b.isCover) return -1;
-    if (!a.isCover && b.isCover) return 1;
-    return 0;
-  });
-  const visibleImages = images.slice(0, 4);
-  const extraImageCount = Math.max(images.length - visibleImages.length, 0);
 
   return (
     <Card className="flex min-h-[260px] flex-col gap-4">
@@ -68,32 +62,7 @@ export function RecordCard({
         </Link>
       )}
       <p className="text-sm leading-6 text-on-surface-variant">{contentSummary}</p>
-      {visibleImages.length > 0 ? (
-        <div className="flex gap-2">
-          {visibleImages.map((image, index) => {
-            const isLastWithMore = index === visibleImages.length - 1 && extraImageCount > 0;
-
-            return (
-              <div
-                className="relative h-14 w-14 overflow-hidden rounded-lg border border-border-subtle bg-surface-container-low"
-                key={image.id}
-              >
-                <img
-                  alt=""
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                  src={image.url}
-                />
-                {isLastWithMore ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-xs font-semibold text-white">
-                    +{extraImageCount}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+      <RecordImageStrip images={record.images} />
       <div className="mt-auto space-y-3 pt-3">
         {record.isAnonymous ? (
           <p className="text-sm text-muted">by {author}</p>

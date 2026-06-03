@@ -7,6 +7,7 @@ import { markdownToPlainText } from "@/lib/markdown";
 import { recordTypeToSegment } from "@/lib/record-types";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { GoodwillRecord } from "@/lib/types";
+import { RecordImageStrip } from "./record-image-strip";
 import { RecordTypeBadge } from "./record-type-badge";
 import Link from "next/link";
 
@@ -112,6 +113,9 @@ export function Timeline({
               <p className="text-sm leading-6 text-on-surface-variant">
                 {markdownToPlainText(record.content)}
               </p>
+              <div className="mt-4">
+                <RecordImageStrip images={record.images} />
+              </div>
               {record.amountHidden ? (
                 <p className="mt-4 text-sm italic text-muted">{hiddenAmountLabel}</p>
               ) : null}
