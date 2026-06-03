@@ -81,7 +81,9 @@
     "principleTwo": "真实优先，数据其次。",
     "principleThree": "长期主义优先，短期热度其次。",
     "boundaryTitle": "Curvio 不会做什么",
-    "boundaryBody": "不提供私人收款入口，不做金额排行榜，不做点赞、排名，也不把用户导向个人募捐。"
+    "boundaryBody": "不提供私人收款入口，不做金额排行榜，不做点赞、排名，也不把用户导向个人募捐。",
+    "contactTitle": "联系",
+    "contactBody": "如果你发现安全问题、平台信息需要更新，或想提出改进建议，可以写信至"
   },
   "privacy": {
     "title": "隐私说明",

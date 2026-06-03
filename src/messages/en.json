@@ -81,7 +81,9 @@
     "principleTwo": "Truth first, metrics second.",
     "principleThree": "Long-term commitment first, short-term heat second.",
     "boundaryTitle": "What Curvio will not do",
-    "boundaryBody": "No private payment links, no donation amount leaderboards, no likes, no rankings, and no personal fundraising funnel."
+    "boundaryBody": "No private payment links, no donation amount leaderboards, no likes, no rankings, and no personal fundraising funnel.",
+    "contactTitle": "Contact",
+    "contactBody": "For security concerns, platform suggestions, or updates to official giving links, write to"
   },
   "privacy": {
     "title": "Privacy",

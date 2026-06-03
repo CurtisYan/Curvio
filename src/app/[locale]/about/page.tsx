@@ -1,4 +1,4 @@
-import { CheckCircle2, Shield, Sparkles } from "lucide-react";
+import { CheckCircle2, Mail, Shield, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
@@ -49,6 +49,20 @@ export default async function AboutPage({
             <div>
               <h2 className="text-2xl font-medium">{messages.about.boundaryTitle}</h2>
               <p className="mt-4 leading-7 text-muted">{messages.about.boundaryBody}</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex gap-4">
+            <Mail className="mt-1 h-5 w-5 shrink-0 text-primary" />
+            <div>
+              <h2 className="text-2xl font-medium">{messages.about.contactTitle}</h2>
+              <p className="mt-4 leading-7 text-muted">
+                {messages.about.contactBody}{" "}
+                <a className="font-medium text-primary hover:text-primary-strong" href="mailto:contact@curvio.org">
+                  contact@curvio.org
+                </a>
+              </p>
             </div>
           </div>
         </Card>
