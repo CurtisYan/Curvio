@@ -43,11 +43,15 @@ export type UserProfile = {
 export type DonationPlatform = {
   id: string;
   name: string;
+  names?: Partial<Record<LocaleCode, string>>;
   description: string;
+  descriptions?: Partial<Record<LocaleCode, string>>;
   officialUrl: string;
   officialUrls?: Partial<Record<LocaleCode, string>>;
   region: string;
+  regions?: Partial<Record<LocaleCode, string>>;
   languages: string[];
+  localizedLanguages?: Partial<Record<LocaleCode, string[]>>;
   category: string;
   note?: string;
 };

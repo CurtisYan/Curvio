@@ -21,7 +21,11 @@ export function PlatformCard({
   visitLabel: string;
 }) {
   const Icon = icons[platform.id as keyof typeof icons] ?? Building2;
+  const name = platform.names?.[locale] ?? platform.name;
+  const description = platform.descriptions?.[locale] ?? platform.description;
   const officialUrl = platform.officialUrls?.[locale] ?? platform.officialUrl;
+  const region = platform.regions?.[locale] ?? platform.region;
+  const languages = platform.localizedLanguages?.[locale] ?? platform.languages;
 
   return (
     <Card className="flex min-h-[250px] flex-col justify-between">
@@ -29,13 +33,13 @@ export function PlatformCard({
         <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-surface-container text-primary">
           <Icon className="h-6 w-6" />
         </div>
-        <h3 className="text-2xl font-medium">{platform.name}</h3>
-        <p className="mt-3 text-sm leading-6 text-muted">{platform.description}</p>
+        <h3 className="text-2xl font-medium">{name}</h3>
+        <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
       </div>
       <div className="mt-6 space-y-4">
         <div className="flex flex-wrap gap-2">
-          <Badge>{platform.region}</Badge>
-          {platform.languages.map((language) => (
+          <Badge>{region}</Badge>
+          {languages.map((language) => (
             <Badge key={language}>{language}</Badge>
           ))}
         </div>
