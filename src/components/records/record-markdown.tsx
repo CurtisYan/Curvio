@@ -45,7 +45,7 @@ const markdownComponents: Components = {
       <img
         alt={typeof alt === "string" ? alt : ""}
         className={cn(
-          "my-4 w-full rounded-xl border border-border-subtle bg-surface-container-low object-cover",
+          "mx-auto my-5 max-h-[520px] w-auto max-w-full rounded-xl border border-border-subtle bg-surface-container-low object-contain",
           className,
         )}
         loading="lazy"

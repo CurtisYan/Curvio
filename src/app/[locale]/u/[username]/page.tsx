@@ -1,8 +1,6 @@
 ﻿import { Code2, Link as LinkIcon, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button, ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
 import { ProfileContentSwitcher } from "@/components/site/profile-content-switcher";
 import { getDictionary, isLocale, localizePath, type Locale } from "@/lib/i18n";
 import FollowButton from "@/components/site/follow-button";
@@ -105,7 +103,7 @@ export default async function UserProfilePage({
   const recordsQuery = supabase
     .from("records")
     .select(
-      "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language, archived_at",
+      "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)",
     )
     .eq("user_id", profile.id)
     .is("archived_at", null)
@@ -152,6 +150,14 @@ export default async function UserProfilePage({
     projectUrl: record.project_url ?? undefined,
     tags: record.tags ?? [],
     language: record.language,
+    images: (record.record_images ?? [])
+      .filter((image) => isOwnProfile || image.visibility === "public")
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((image) => ({
+        id: image.id,
+        url: image.r2_url,
+        isCover: image.is_cover,
+      })),
   }));
 
   const currentYear = new Date().getFullYear();

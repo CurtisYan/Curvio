@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { DashboardArchiveView } from "@/components/dashboard/dashboard-archive-view";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -32,7 +32,7 @@ export default async function ActsPage({
 
   const { data: records } = await supabase
     .from("records")
-    .select("id, type, title, content, date, is_anonymous, show_amount, amount, tags, archived_at")
+    .select("id, type, title, content, date, is_anonymous, show_amount, amount, tags, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)")
     .eq("user_id", user.id)
     .order("date", { ascending: false });
 
@@ -56,3 +56,4 @@ export default async function ActsPage({
     </main>
   );
 }
+

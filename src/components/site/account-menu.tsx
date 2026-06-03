@@ -98,6 +98,7 @@ export function AccountMenu({
           >
             {labels.dashboard}
           </Link>
+          <div className="border-t border-border-subtle" />
           <Link
             className="block px-4 py-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary"
             href={profileHref}

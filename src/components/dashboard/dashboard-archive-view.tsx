@@ -17,6 +17,13 @@ type DashboardRecord = {
   amount: number | null;
   tags: string[] | null;
   archived_at: string | null;
+  record_images?: Array<{
+    id: string;
+    r2_url: string;
+    sort_order: number | null;
+    is_cover: boolean | null;
+    visibility: "public" | "private";
+  }> | null;
 };
 
 type ProfileSummary = {
@@ -92,6 +99,13 @@ export function DashboardArchiveView({
     amountHidden: !record.show_amount && Boolean(record.amount),
     tags: record.tags ?? [],
     language: locale,
+    images: (record.record_images ?? [])
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((image) => ({
+        id: image.id,
+        url: image.r2_url,
+        isCover: image.is_cover,
+      })),
   }));
 
   const returnPath =
@@ -139,6 +153,13 @@ export function DashboardArchiveView({
                     amountHidden: !record.show_amount && Boolean(record.amount),
                     tags: record.tags ?? [],
                     language: locale,
+                    images: (record.record_images ?? [])
+                      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                      .map((image) => ({
+                        id: image.id,
+                        url: image.r2_url,
+                        isCover: image.is_cover,
+                      })),
                   }
                 }
                 typeLabels={recordTypeLabels}

@@ -19,7 +19,7 @@ export default async function ExplorePage({
   const { data: records } = await supabase
     .from("records")
     .select(
-      "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name, avatar_url)",
+      "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, organization_name, platform_name, project_url, tags, language, profiles(username, display_name, avatar_url), record_images(id, r2_url, sort_order, is_cover, visibility)",
     )
     .eq("is_public", true)
     .is("archived_at", null)
@@ -45,6 +45,14 @@ export default async function ExplorePage({
       projectUrl: record.project_url ?? undefined,
       tags: record.tags ?? [],
       language: record.language ?? "en",
+      images: (record.record_images ?? [])
+        .filter((image) => image.visibility === "public")
+        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+        .map((image) => ({
+          id: image.id,
+          url: image.r2_url,
+          isCover: image.is_cover,
+        })),
     };
   });
 

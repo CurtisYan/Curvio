@@ -19,6 +19,11 @@ export type GoodwillRecord = {
   projectUrl?: string;
   tags: string[];
   language: LocaleCode;
+  images?: Array<{
+    id: string;
+    url: string;
+    isCover?: boolean | null;
+  }>;
 };
 
 export type UserProfile = {

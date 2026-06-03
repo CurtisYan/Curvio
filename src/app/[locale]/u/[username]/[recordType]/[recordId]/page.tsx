@@ -238,7 +238,7 @@ export default async function RecordDetailPage({
             <div className="mb-6 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low">
               <img
                 alt={record.title}
-                className="h-full w-full object-cover"
+                className="mx-auto max-h-[520px] w-auto max-w-full object-contain"
                 loading="lazy"
                 src={cover.r2_url}
               />
@@ -255,7 +255,7 @@ export default async function RecordDetailPage({
                 >
                   <img
                     alt={record.title}
-                    className="h-full w-full object-cover"
+                    className="mx-auto max-h-80 w-auto max-w-full object-contain"
                     loading="lazy"
                     src={image.r2_url}
                   />
