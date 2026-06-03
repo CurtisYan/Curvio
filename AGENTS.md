@@ -1,5 +1,7 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# Agent Notes
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+Shared project rules live in `CLAUDE.md`. Read that file before making code, schema, copy, or deployment changes.
+
+## Next.js Version Note
+
+This project uses a newer Next.js version with breaking changes from older conventions. Check the local Next.js docs in `node_modules/next/dist/docs/` when touching framework APIs, routing, config, or build behavior.
