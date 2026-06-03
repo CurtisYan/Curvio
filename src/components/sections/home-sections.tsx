@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { PlatformCard } from "@/components/sections/platform-card";
 import { StatsGrid } from "@/components/sections/stats-grid";
 import { Timeline } from "@/components/records/timeline";
+import { donationPlatforms } from "@/lib/donation-platforms";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { createClient } from "@/utils/supabase/server";
@@ -23,7 +24,6 @@ export async function HomeSections({
     { count: openWorkRecords },
     { count: memberCount },
     { data: recentRecords },
-    { data: platformRows },
   ] = await Promise.all([
     supabase
       .from("records")
@@ -55,11 +55,6 @@ export async function HomeSections({
       )
       .eq("is_public", true)
       .order("date", { ascending: false })
-      .limit(3),
-    supabase
-      .from("donation_platforms")
-      .select("id, name, description, official_url, official_url_zh, region, languages, category")
-      .order("created_at", { ascending: true })
       .limit(3),
   ]);
 
@@ -102,16 +97,7 @@ export async function HomeSections({
     };
   });
 
-  const platforms = (platformRows ?? []).map((platform) => ({
-    id: platform.id,
-    name: platform.name,
-    description: platform.description,
-    officialUrl: platform.official_url,
-    officialUrls: platform.official_url_zh ? { zh: platform.official_url_zh } : undefined,
-    region: platform.region ?? "",
-    languages: platform.languages ?? [],
-    category: platform.category ?? "",
-  }));
+  const platforms = donationPlatforms.slice(0, 3);
 
   return (
     <main className="pt-16">
@@ -135,7 +121,7 @@ export async function HomeSections({
       <AnimatedSection className="container-narrow pb-20">
         <div className="rounded-2xl border border-[#f0ebe1] bg-[#fdfbf6] p-8 text-center shadow-[0_8px_24px_rgba(0,0,0,0.03)] md:p-10">
           <p className="text-lg italic leading-8 text-foreground">
-            “{messages.founderNote}”
+            {`"${messages.founderNote}"`}
           </p>
           <div className="mt-6 text-xs font-medium uppercase tracking-[0.24em] text-primary">
             {messages.founder}

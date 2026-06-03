@@ -25,9 +25,18 @@ export function ResetPasswordClient({
 }) {
   const searchParams = useSearchParams();
   const queryError = searchParams.get("error") ?? undefined;
+  const safeQueryError = queryError === "Password must be at least 6 characters."
+    ? labels.passwordTooShort
+    : queryError;
   const [ready, setReady] = useState(false);
   const [sessionError, setSessionError] = useState<string | undefined>();
-  const error = queryError ?? sessionError;
+  const error = safeQueryError ?? sessionError;
+
+  useEffect(() => {
+    if (queryError) {
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.hash}`);
+    }
+  }, [queryError]);
 
   useEffect(() => {
     if (queryError) {

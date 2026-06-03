@@ -14,9 +14,6 @@ export default async function PrivacyPage({
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
       <header>
-        <p className="mb-4 text-xs font-medium uppercase tracking-[0.24em] text-primary">
-          Curvio
-        </p>
         <h1 className="text-5xl font-semibold leading-tight tracking-tight">
           {messages.privacy.title}
         </h1>

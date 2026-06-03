@@ -32,6 +32,8 @@ export function AuthShell({
   error,
   challenge = false,
   defaultEmail = "",
+  defaultUsername = "",
+  defaultDisplayName = "",
 }: {
   locale: Locale;
   title: string;
@@ -43,6 +45,8 @@ export function AuthShell({
   error?: string;
   challenge?: boolean;
   defaultEmail?: string;
+  defaultUsername?: string;
+  defaultDisplayName?: string;
 }) {
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const showTurnstile = Boolean(turnstileSiteKey) && (mode === "register" || (mode === "login" && challenge));
@@ -65,12 +69,12 @@ export function AuthShell({
             <>
               <label className="space-y-3 text-sm font-medium">
                 {labels.username}
-                <Input autoComplete="username" maxLength={20} minLength={4} name="username" pattern="[a-z0-9_]+" placeholder="elara_writes" required />
+                <Input autoComplete="username" defaultValue={defaultUsername} maxLength={20} minLength={4} name="username" pattern="[a-z0-9_]+" placeholder="elara_writes" required />
                 <p className="text-xs font-normal text-muted">{labels.usernameHelp}</p>
               </label>
               <label className="space-y-3 text-sm font-medium">
                 {labels.displayName}
-                <Input autoComplete="nickname" maxLength={40} minLength={2} name="display_name" placeholder="Elara" required />
+                <Input autoComplete="nickname" defaultValue={defaultDisplayName} maxLength={40} minLength={2} name="display_name" placeholder="Elara" required />
               </label>
             </>
           ) : null}

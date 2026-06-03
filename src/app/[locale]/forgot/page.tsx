@@ -1,4 +1,5 @@
 import { ForgotPasswordShell } from "@/components/site/forgot-password-shell";
+import { CleanUrlOnMount } from "@/components/site/clean-url-on-mount";
 import { sendResetAction } from "@/app/auth-actions";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -30,6 +31,7 @@ export default async function ForgotPage({
   }
 
   return (
+    <>
     <ForgotPasswordShell
       labels={{
         email: messages.auth.email,
@@ -46,5 +48,7 @@ export default async function ForgotPage({
       error={safeError}
       sent={cookieSent}
     />
+    {error ? <CleanUrlOnMount /> : null}
+    </>
   );
 }

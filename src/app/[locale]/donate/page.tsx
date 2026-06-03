@@ -1,7 +1,7 @@
 import { Info } from "lucide-react";
 import { PlatformCard } from "@/components/sections/platform-card";
 import { Card } from "@/components/ui/card";
-import { donationPlatforms } from "@/lib/mock-data";
+import { donationPlatforms } from "@/lib/donation-platforms";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
 export default async function DonatePage({

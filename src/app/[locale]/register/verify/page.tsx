@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { resendOtpAction, verifyOtpAction } from "@/app/auth-actions";
+import { CleanUrlOnMount } from "@/components/site/clean-url-on-mount";
 import { VerifyOtpShell } from "@/components/site/verify-otp-shell";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { isUnsafeQueryMessage, safeQueryMessage } from "@/lib/safe-query-message";
@@ -30,6 +31,7 @@ export default async function VerifyRegisterPage({
   const safeError = safeQueryMessage(error, messages.auth.temporaryError);
 
   return (
+    <>
     <VerifyOtpShell
       email={email}
       error={safeError}
@@ -39,5 +41,7 @@ export default async function VerifyRegisterPage({
       sent={sent === "1"}
       verifyAction={verifyOtpAction}
     />
+    {error || sent ? <CleanUrlOnMount /> : null}
+    </>
   );
 }
