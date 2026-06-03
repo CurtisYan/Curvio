@@ -109,7 +109,10 @@
     "emptyOpenWork": "还没有开放贡献。",
     "emptyAnnualSummary": "还没有年度总结。",
     "emptyFollowing": "还没有关注任何人。",
-    "emptyFollowers": "还没有粉丝。"
+    "emptyFollowers": "还没有粉丝。",
+    "activity": "动态",
+    "statistics": "统计",
+    "emptyActivity": "暂无动态。"
   },
   "auth": {
     "loginTitle": "登录 Curvio",
@@ -266,7 +269,7 @@
     "sectionDonations": "捐赠",
     "sectionProjects": "开放贡献",
     "sectionKindness": "善意行动",
-    "sectionAnnual": "年度总结",
+    "sectionAnnual": "统计",
     "visible": "显示",
     "dragHandle": "拖动排序",
     "privacyTitle": "隐私设置",

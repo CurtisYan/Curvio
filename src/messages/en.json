@@ -109,7 +109,10 @@
     "emptyOpenWork": "No open-work records yet.",
     "emptyAnnualSummary": "No annual summary yet.",
     "emptyFollowing": "No following yet.",
-    "emptyFollowers": "No followers yet."
+    "emptyFollowers": "No followers yet.",
+    "activity": "Activity",
+    "statistics": "Statistics",
+    "emptyActivity": "No activity yet."
   },
   "auth": {
     "loginTitle": "Sign in to Curvio",
@@ -266,7 +269,7 @@
     "sectionDonations": "Donations",
     "sectionProjects": "Open Work",
     "sectionKindness": "Acts",
-    "sectionAnnual": "Annual summary",
+    "sectionAnnual": "Statistics",
     "visible": "Visible",
     "dragHandle": "Drag to reorder",
     "privacyTitle": "Privacy",

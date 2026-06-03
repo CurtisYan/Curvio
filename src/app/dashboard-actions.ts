@@ -457,7 +457,7 @@ export async function restoreRecordAction(formData: FormData) {
   }
 
   if (!record) {
-    dashboardRedirect(locale, returnPath, "manage_error");
+    dashboardRedirect(locale, returnPath, "deleted");
   }
 
   const { error } = await supabase

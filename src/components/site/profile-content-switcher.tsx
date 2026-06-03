@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RecordCard } from "@/components/records/record-card";
 import { Card } from "@/components/ui/card";
-import type { Locale } from "@/lib/i18n";
+import { localizePath, type Locale } from "@/lib/i18n";
+import { formatRecordPublicId } from "@/lib/record-public-id";
+import { recordTypeToSegment } from "@/lib/record-types";
 import type { GoodwillRecord } from "@/lib/types";
 
 type SocialProfile = {
@@ -14,7 +16,7 @@ type SocialProfile = {
   avatar_url?: string | null;
 };
 
-type ActiveTab = "donations" | "kindness" | "open_source" | "annual_summary" | "following" | "followers";
+type ActiveTab = "activity" | "donations" | "kindness" | "open_source" | "statistics" | "following" | "followers";
 
 function initialsFrom(name: string) {
   return (
@@ -59,15 +61,15 @@ export function ProfileContentSwitcher({
   following: SocialProfile[];
   followers: SocialProfile[];
   labels: {
+    activity: string;
     donations: string;
     kindness: string;
     openWork: string;
+    statistics: string;
     annualSummary: string;
     following: string;
     followers: string;
-    publicLedger: string;
     recordedActs: string;
-    hiddenAmount: string;
     recordDonation: string;
     recordKindness: string;
     recordOpenWork: string;
@@ -79,31 +81,37 @@ export function ProfileContentSwitcher({
     emptyAnnualSummary: string;
     emptyFollowing: string;
     emptyFollowers: string;
+    emptyActivity: string;
   };
 }) {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("annual_summary");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("activity");
   const typeLabels = {
     donation: labels.recordDonation,
     kindness: labels.recordKindness,
     open_source: labels.recordOpenWork,
   };
+  const allRecords = [...records.donations, ...records.kindness, ...records.open_source].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
+  const recordsByYear = allRecords.reduce<Record<string, GoodwillRecord[]>>((groups, record) => {
+    const year = String(new Date(record.date).getFullYear());
+    groups[year] = [...(groups[year] ?? []), record];
+    return groups;
+  }, {});
 
   useEffect(() => {
     const setFromHash = () => {
-      try {
-        const hash = (window.location.hash || "").replace("#", "");
-        if (
-          hash === "following" ||
-          hash === "followers" ||
-          hash === "donations" ||
-          hash === "kindness" ||
-          hash === "open_source" ||
-          hash === "annual_summary"
-        ) {
-          setActiveTab(hash as ActiveTab);
-        }
-      } catch (e) {
-        // ignore
+      const hash = (window.location.hash || "").replace("#", "");
+      if (
+        hash === "activity" ||
+        hash === "following" ||
+        hash === "followers" ||
+        hash === "donations" ||
+        hash === "kindness" ||
+        hash === "open_source" ||
+        hash === "statistics"
+      ) {
+        setActiveTab(hash as ActiveTab);
       }
     };
 
@@ -113,176 +121,218 @@ export function ProfileContentSwitcher({
   }, []);
 
   useEffect(() => {
-    try {
-      if (activeTab === "following" || activeTab === "followers") {
-        window.history.replaceState(null, "", `#${activeTab}`);
-      } else {
-        window.history.replaceState(null, "", `#`);
-      }
-    } catch (e) {
-      // ignore
+    if (activeTab === "activity") {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      return;
     }
+
+    window.history.replaceState(null, "", `#${activeTab}`);
   }, [activeTab]);
+
+  const tabClass = (tab: ActiveTab) =>
+    `rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+      activeTab === tab
+        ? "border-primary bg-primary text-white shadow-sm"
+        : "border-border-subtle bg-surface-offwhite text-muted hover:bg-surface-container-low hover:text-primary"
+    }`;
+
+  const socialTabClass = (tab: ActiveTab) =>
+    `rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+      activeTab === tab
+        ? "border-primary bg-primary text-white shadow-sm"
+        : "border-transparent text-muted hover:border-border-subtle hover:bg-surface-container-low hover:text-primary"
+    }`;
+
+  const renderRecords = (items: GoodwillRecord[], emptyLabel: string) => (
+    <div className="space-y-6">
+      {items.length === 0 ? (
+        <div className="text-muted">{emptyLabel}</div>
+      ) : (
+        items.map((record) => (
+          <RecordCard
+            anonymousLabel={labels.anonymous}
+            key={record.id}
+            locale={locale}
+            record={record}
+            typeLabels={typeLabels}
+          />
+        ))
+      )}
+    </div>
+  );
 
   return (
     <section className="mt-12 space-y-8">
       <div className="flex flex-wrap gap-3">
         {[
+          { key: "activity", label: labels.activity },
           { key: "donations", label: labels.donations },
           { key: "kindness", label: labels.kindness },
           { key: "open_source", label: labels.openWork },
-          { key: "annual_summary", label: labels.annualSummary },
+          { key: "statistics", label: labels.statistics },
         ].map((tab) => (
           <button
+            className={tabClass(tab.key as ActiveTab)}
             key={tab.key}
-            type="button"
             onClick={() => setActiveTab(tab.key as ActiveTab)}
-            className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-              activeTab === tab.key
-                ? "border-surface-container-high bg-surface-container-high text-foreground"
-                : "border-border-subtle bg-surface-offwhite text-muted hover:bg-surface-container-low hover:text-primary"
-            }`}
+            type="button"
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-3">
         <button
-          type="button"
+          className={socialTabClass("following")}
           onClick={() => setActiveTab("following")}
-          className="text-sm text-muted transition-opacity hover:text-primary hover:opacity-90"
           title={locale === "zh" ? "点击查看已关注列表" : "Click to view following list"}
+          type="button"
         >
           {labels.following} ({following.length})
         </button>
         <button
-          type="button"
+          className={socialTabClass("followers")}
           onClick={() => setActiveTab("followers")}
-          className="text-sm text-muted transition-opacity hover:text-primary hover:opacity-90"
           title={locale === "zh" ? "点击查看粉丝列表" : "Click to view followers list"}
+          type="button"
         >
           {labels.followers} ({followers.length})
         </button>
       </div>
 
-          {activeTab === "donations" && (
-            <div className="space-y-6">
-              {records.donations.length === 0 ? (
-                <div className="text-muted">{labels.emptyDonations}</div>
-              ) : (
-                records.donations.map((r) => (
-                  <RecordCard
-                    anonymousLabel={labels.anonymous}
-                    key={r.id}
-                    locale={locale}
-                    record={r}
-                    typeLabels={typeLabels}
-                  />
-                ))
-              )}
-            </div>
+      {activeTab === "activity" ? (
+        <div className="space-y-6">
+          {allRecords.length === 0 ? (
+            <div className="text-muted">{labels.emptyActivity}</div>
+          ) : (
+            Object.entries(recordsByYear).map(([year, yearRecords], index) => (
+              <details className="group" key={year} open={index === 0}>
+                <summary className="flex cursor-pointer list-none items-center gap-3 py-2 text-lg font-semibold marker:hidden">
+                  <span>{year}</span>
+                  <span className="text-xs font-normal text-muted group-open:hidden">
+                    {locale === "zh" ? "展开" : "Expand"}
+                  </span>
+                  <span className="hidden text-xs font-normal text-muted group-open:inline">
+                    {locale === "zh" ? "收起" : "Collapse"}
+                  </span>
+                </summary>
+                <div className="relative ml-3 mt-3 space-y-5 border-l border-border-subtle pl-6">
+                  {yearRecords.map((record) => (
+                    <Link
+                      className="group/item relative block rounded-lg px-3 py-2 transition-colors hover:bg-surface-container-low"
+                      href={localizePath(
+                        locale,
+                        `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${formatRecordPublicId(record.date, record.id)}`,
+                      )}
+                      key={record.id}
+                    >
+                      <span className="absolute -left-[29px] mt-2 h-2.5 w-2.5 rounded-full border border-primary bg-surface-offwhite" />
+                      <div className="flex flex-wrap items-center gap-3">
+                        <time className="text-sm text-muted">
+                          {new Intl.DateTimeFormat(locale, {
+                            month: "long",
+                            day: "numeric",
+                          }).format(new Date(record.date))}
+                        </time>
+                        <span className="rounded-full bg-surface-container-low px-2 py-0.5 text-xs text-muted">
+                          {typeLabels[record.type]}
+                        </span>
+                      </div>
+                      <div className="mt-1 font-medium text-foreground group-hover/item:text-primary">
+                        {record.title}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ))
           )}
-          {activeTab === "kindness" && (
-            <div className="space-y-6">
-              {records.kindness.length === 0 ? (
-                <div className="text-muted">{labels.emptyKindness}</div>
-              ) : (
-                records.kindness.map((r) => (
-                  <RecordCard
-                    anonymousLabel={labels.anonymous}
-                    key={r.id}
-                    locale={locale}
-                    record={r}
-                    typeLabels={typeLabels}
-                  />
-                ))
-              )}
-            </div>
-          )}
-          {activeTab === "open_source" && (
-            <div className="space-y-6">
-              {records.open_source.length === 0 ? (
-                <div className="text-muted">{labels.emptyOpenWork}</div>
-              ) : (
-                records.open_source.map((r) => (
-                  <RecordCard
-                    anonymousLabel={labels.anonymous}
-                    key={r.id}
-                    locale={locale}
-                    record={r}
-                    typeLabels={typeLabels}
-                  />
-                ))
-              )}
-            </div>
-          )}
-          {activeTab === "annual_summary" && (
-            <div className="space-y-6">
-              {!annualSummary ? (
-                <div className="text-muted">{labels.emptyAnnualSummary}</div>
-              ) : (
-                <Card className="p-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">{labels.annualSummary} — {annualSummary.year}</h3>
-                    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      <div className="text-sm text-muted">{labels.recordedActs}: <span className="text-foreground font-medium">{annualSummary.totalRecords}</span></div>
-                      <div className="text-sm text-muted">{labels.recordDonation}: <span className="text-foreground font-medium">{annualSummary.donations}</span></div>
-                      <div className="text-sm text-muted">{labels.recordKindness}: <span className="text-foreground font-medium">{annualSummary.kindness}</span></div>
-                      <div className="text-sm text-muted">{labels.recordOpenWork}: <span className="text-foreground font-medium">{annualSummary.openSource}</span></div>
-                    </div>
+        </div>
+      ) : null}
+
+      {activeTab === "donations" ? renderRecords(records.donations, labels.emptyDonations) : null}
+      {activeTab === "kindness" ? renderRecords(records.kindness, labels.emptyKindness) : null}
+      {activeTab === "open_source" ? renderRecords(records.open_source, labels.emptyOpenWork) : null}
+
+      {activeTab === "statistics" ? (
+        <div className="space-y-6">
+          {!annualSummary ? (
+            <div className="text-muted">{labels.emptyAnnualSummary}</div>
+          ) : (
+            <Card className="p-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {labels.annualSummary} - {annualSummary.year}
+                </h3>
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="text-sm text-muted">
+                    {labels.recordedActs}: <span className="font-medium text-foreground">{annualSummary.totalRecords}</span>
                   </div>
-                </Card>
-              )}
-            </div>
+                  <div className="text-sm text-muted">
+                    {labels.recordDonation}: <span className="font-medium text-foreground">{annualSummary.donations}</span>
+                  </div>
+                  <div className="text-sm text-muted">
+                    {labels.recordKindness}: <span className="font-medium text-foreground">{annualSummary.kindness}</span>
+                  </div>
+                  <div className="text-sm text-muted">
+                    {labels.recordOpenWork}: <span className="font-medium text-foreground">{annualSummary.openSource}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
           )}
-          {activeTab === "following" && (
-            <div id="following" className="space-y-4 scroll-mt-24">
-              {following.length === 0 ? (
-                <div className="text-muted">{labels.emptyFollowing}</div>
-              ) : (
-                following.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/${locale}/u/${p.username}`}
-                    className="flex items-center gap-3"
-                  >
-                    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-sm font-medium text-primary">
-                      <SocialAvatar name={p.display_name || p.username} url={p.avatar_url} />
-                    </span>
-                    <div>
-                      <div className="font-medium">{p.display_name || p.username}</div>
-                      <div className="text-muted text-sm">@{p.username}</div>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
+        </div>
+      ) : null}
+
+      {activeTab === "following" ? (
+        <div className="space-y-4 scroll-mt-24" id="following">
+          {following.length === 0 ? (
+            <div className="text-muted">{labels.emptyFollowing}</div>
+          ) : (
+            following.map((profile) => (
+              <SocialProfileLink key={profile.id} locale={locale} profile={profile} />
+            ))
           )}
-          {activeTab === "followers" && (
-            <div id="followers" className="space-y-4 scroll-mt-24">
-              {followers.length === 0 ? (
-                <div className="text-muted">{labels.emptyFollowers}</div>
-              ) : (
-                followers.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/${locale}/u/${p.username}`}
-                    className="flex items-center gap-3"
-                  >
-                    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-sm font-medium text-primary">
-                      <SocialAvatar name={p.display_name || p.username} url={p.avatar_url} />
-                    </span>
-                    <div>
-                      <div className="font-medium">{p.display_name || p.username}</div>
-                      <div className="text-muted text-sm">@{p.username}</div>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
+        </div>
+      ) : null}
+
+      {activeTab === "followers" ? (
+        <div className="space-y-4 scroll-mt-24" id="followers">
+          {followers.length === 0 ? (
+            <div className="text-muted">{labels.emptyFollowers}</div>
+          ) : (
+            followers.map((profile) => (
+              <SocialProfileLink key={profile.id} locale={locale} profile={profile} />
+            ))
           )}
-        </section>
-    );
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function SocialProfileLink({
+  locale,
+  profile,
+}: {
+  locale: Locale;
+  profile: SocialProfile;
+}) {
+  const name = profile.display_name || profile.username;
+
+  return (
+    <Link
+      className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-surface-container-low"
+      href={`/${locale}/u/${profile.username}`}
+    >
+      <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border-subtle bg-surface-container-high text-sm font-medium text-primary">
+        <SocialAvatar name={name} url={profile.avatar_url} />
+      </span>
+      <div>
+        <div className="font-medium">{name}</div>
+        <div className="text-sm text-muted">@{profile.username}</div>
+      </div>
+    </Link>
+  );
 }

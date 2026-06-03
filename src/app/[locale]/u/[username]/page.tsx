@@ -1,4 +1,4 @@
-import { Code2, Link as LinkIcon, MapPin } from "lucide-react";
+﻿import { Code2, Link as LinkIcon, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -190,7 +190,7 @@ export default async function UserProfilePage({
               <p className="mt-1 text-sm text-muted">@{profile.username}</p>
               <p className="mt-2 text-muted">
                 {(profile.bio ?? "").trim() ? profile.bio : profile.principle}
-                <span className="mx-2">•</span>
+                <span className="mx-2">·</span>
                 <a
                   href="#following"
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${surfaceHover}`}
@@ -198,7 +198,7 @@ export default async function UserProfilePage({
                 >
                   {followingCount ?? 0} {messages.profile.following}
                 </a>
-                <span className="mx-2">•</span>
+                <span className="mx-2">·</span>
                 <a
                   href="#followers"
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${surfaceHover}`}
@@ -252,11 +252,13 @@ export default async function UserProfilePage({
         followers={(followerProfiles ?? []) as Array<{ id: string; username: string; display_name: string; avatar_url?: string | null }>}
         following={(followingProfiles ?? []) as Array<{ id: string; username: string; display_name: string; avatar_url?: string | null }>}
         labels={{
+          activity: messages.profile.activity,
           annualSummary: messages.profile.annualSummary,
           anonymous: messages.common.anonymous,
           by: messages.common.by,
           donations: messages.profile.donations,
           emptyAnnualSummary: messages.profile.emptyAnnualSummary,
+          emptyActivity: messages.profile.emptyActivity,
           emptyDonations: messages.profile.emptyDonations,
           emptyFollowers: messages.profile.emptyFollowers,
           emptyFollowing: messages.profile.emptyFollowing,
@@ -264,14 +266,13 @@ export default async function UserProfilePage({
           emptyOpenWork: messages.profile.emptyOpenWork,
           followers: messages.profile.followers,
           following: messages.profile.following,
-          hiddenAmount: messages.common.hiddenAmount,
           kindness: messages.profile.kindness,
           openWork: messages.profile.openWork,
-          publicLedger: messages.profile.publicLedger,
           recordDonation: messages.common.recordDonation,
           recordKindness: messages.common.recordKindness,
           recordOpenWork: messages.common.recordOpenWork,
           recordedActs: messages.profile.recordedActs,
+          statistics: messages.profile.statistics,
         }}
         locale={locale}
         records={recordsByType}
@@ -279,3 +280,4 @@ export default async function UserProfilePage({
     </main>
   );
 }
+
