@@ -113,7 +113,7 @@ export default async function UserProfilePage({
     ? supabase
         .from("records")
         .select(
-          "id, type, title, content, date, is_anonymous, amount, show_amount, organization_name, platform_name, project_url, tags, language, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)",
+          "id, type, title, content, date, is_anonymous, amount, currency, show_amount, organization_name, platform_name, project_url, tags, language, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)",
         )
         .eq("user_id", profile.id)
         .is("archived_at", null)
@@ -121,7 +121,7 @@ export default async function UserProfilePage({
     : supabase
         .from("public_records")
         .select(
-          "id, type, title, content, date, is_anonymous, amount_hidden, organization_name, platform_name, project_url, tags, language",
+          "id, type, title, content, date, is_anonymous, amount, currency, show_amount, amount_hidden, organization_name, platform_name, project_url, tags, language",
         )
         .eq("username", profile.username)
         .order("date", { ascending: false });
@@ -178,8 +178,10 @@ export default async function UserProfilePage({
       authorUsername: profile.username,
       authorDisplayName: profile.display_name,
       isAnonymous: record.is_anonymous,
+      amount: "amount" in record ? record.amount : null,
+      currency: "currency" in record ? record.currency : null,
       amountHidden: isOwnProfile
-        ? Boolean("amount" in record ? record.amount : null) && !("show_amount" in record ? record.show_amount : false)
+        ? ("amount" in record ? record.amount !== null : false) && !("show_amount" in record ? record.show_amount : false)
         : Boolean("amount_hidden" in record ? record.amount_hidden : false),
       organizationName: record.organization_name ?? undefined,
       platformName: record.platform_name ?? undefined,
@@ -201,12 +203,18 @@ export default async function UserProfilePage({
   const annualRecords = records.filter(
     (record) => new Date(record.date).getFullYear() === currentYear,
   );
+  const annualMonths = new Set(annualRecords.map((record) => new Date(record.date).getMonth()));
+  const firstAnnualRecord = annualRecords.at(-1);
+  const latestAnnualRecord = annualRecords.at(0);
   const annualSummary = {
     year: currentYear,
     totalRecords: annualRecords.length,
     donations: annualRecords.filter((record) => record.type === "donation").length,
     kindness: annualRecords.filter((record) => record.type === "kindness").length,
     openSource: annualRecords.filter((record) => record.type === "open_source").length,
+    activeMonths: annualMonths.size,
+    firstRecordDate: firstAnnualRecord?.date ?? null,
+    latestRecordDate: latestAnnualRecord?.date ?? null,
   };
   const profileInitials = profile.avatar_url ? null : initialsFrom(profile.display_name);
 

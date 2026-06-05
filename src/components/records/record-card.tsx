@@ -15,11 +15,15 @@ export function RecordCard({
   record,
   locale,
   anonymousLabel,
+  hiddenAmountLabel,
+  privateAmountLabel,
   typeLabels,
 }: {
   record: GoodwillRecord;
   locale: Locale;
   anonymousLabel: string;
+  hiddenAmountLabel?: string;
+  privateAmountLabel?: string;
   typeLabels?: Partial<Record<GoodwillRecord["type"], string>>;
 }) {
   const author = record.isAnonymous ? anonymousLabel : record.authorDisplayName;
@@ -31,6 +35,9 @@ export function RecordCard({
     `/u/${record.authorUsername}/${recordTypeToSegment(record.type)}/${publicRecordId}`,
   );
   const typeHref = localizePath(locale, `/explore?type=${record.type}`);
+  const amountLabel = locale === "zh" ? "金额已隐藏" : "Hidden amount";
+  const privateLabel = locale === "zh" ? "他人不可见" : "Hidden from others";
+  const hasAmount = record.amount !== null && record.amount !== undefined;
 
   return (
     <Card className="flex min-h-[260px] flex-col gap-4">
@@ -74,6 +81,20 @@ export function RecordCard({
             by {author}
           </Link>
         )}
+        {hasAmount ? (
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+            <span>
+              {record.amount} {record.currency ?? ""}
+            </span>
+            {record.amountHidden ? (
+              <span className="rounded-full border border-border-subtle bg-surface-container-low px-2 py-0.5 text-xs">
+                {privateAmountLabel ?? privateLabel}
+              </span>
+            ) : null}
+          </div>
+        ) : record.amountHidden ? (
+          <p className="text-sm italic text-muted">{hiddenAmountLabel ?? amountLabel}</p>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           {record.tags.map((tag) => (
             <Badge key={tag}>{tag}</Badge>

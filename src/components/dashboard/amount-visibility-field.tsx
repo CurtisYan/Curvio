@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -116,61 +116,57 @@ export function AmountVisibilityField({
         </div>
       </div>
       <input name="show_amount" type="hidden" value={isHidden ? "0" : "1"} />
-      {isHidden ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-container-low px-3 py-3 text-sm text-muted">
-          {labels.amountHidden}
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-[1fr_168px]">
-            <Input
-              defaultValue={defaultAmount}
-              inputMode="decimal"
-              name="amount"
-              placeholder={labels.amountPlaceholder}
-            />
-            <div className="relative" ref={currencyMenuRef}>
-              <button
-                aria-label={labels.currency}
-                className="flex h-11 w-full items-center justify-between rounded-lg border border-border-subtle bg-surface-offwhite px-3 text-sm text-foreground transition-colors hover:border-primary/50"
-                onClick={() => setCurrencyMenuOpen((value) => !value)}
-                type="button"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="text-base font-semibold">{selectedCurrency.symbol}</span>
-                  <span>{selectedCurrency.code}</span>
-                </span>
-                <ChevronDown className="h-4 w-4 text-muted" />
-              </button>
-              {currencyMenuOpen ? (
-                <div className="absolute right-0 top-12 z-20 w-64 rounded-xl border border-border-subtle bg-surface-offwhite p-1 shadow-[0_16px_40px_rgba(0,0,0,0.08)]">
-                  {currencies.map((item) => (
-                    <button
-                      className={cn(
-                        "flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-surface-container-low hover:text-primary",
-                        currency === item.code && "bg-primary/10 text-primary",
-                      )}
-                      key={item.code}
-                      onClick={() => {
-                        setCurrency(item.code);
-                        setCurrencyMenuOpen(false);
-                      }}
-                      type="button"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="text-base font-semibold">{item.symbol}</span>
-                        <span>{item.code}</span>
-                      </span>
-                      <span className="text-xs text-muted">{currency === item.code ? "Selected" : ""}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+      <div className="grid gap-3 sm:grid-cols-[1fr_168px]">
+        <Input
+          defaultValue={defaultAmount}
+          inputMode="decimal"
+          name="amount"
+          placeholder={labels.amountPlaceholder}
+        />
+        <div className="relative" ref={currencyMenuRef}>
+          <button
+            aria-label={labels.currency}
+            className="flex h-11 w-full items-center justify-between rounded-lg border border-border-subtle bg-surface-offwhite px-3 text-sm text-foreground transition-colors hover:border-primary/50"
+            onClick={() => setCurrencyMenuOpen((value) => !value)}
+            type="button"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-base font-semibold">{selectedCurrency.symbol}</span>
+              <span>{selectedCurrency.code}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 text-muted" />
+          </button>
+          {currencyMenuOpen ? (
+            <div className="absolute right-0 top-12 z-20 w-64 rounded-xl border border-border-subtle bg-surface-offwhite p-1 shadow-[0_16px_40px_rgba(0,0,0,0.08)]">
+              {currencies.map((item) => (
+                <button
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm transition-colors hover:bg-surface-container-low hover:text-primary",
+                    currency === item.code && "bg-primary/10 text-primary",
+                  )}
+                  key={item.code}
+                  onClick={() => {
+                    setCurrency(item.code);
+                    setCurrencyMenuOpen(false);
+                  }}
+                  type="button"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-base font-semibold">{item.symbol}</span>
+                    <span>{item.code}</span>
+                  </span>
+                  <span className="text-xs text-muted">{currency === item.code ? "Selected" : ""}</span>
+                </button>
+              ))}
             </div>
-          </div>
-          <input name="currency" type="hidden" value={currency} />
-        </>
-      )}
+          ) : null}
+        </div>
+      </div>
+      <input name="currency" type="hidden" value={currency} />
+      <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low px-3 py-2 text-xs text-muted">
+        {isHidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+        {isHidden ? labels.amountHidden : labels.amountVisible}
+      </div>
     </div>
   );
 }

@@ -104,6 +104,13 @@ export default async function RecordDetailPage({
   const publicRecordId = "public_record_id" in record && record.public_record_id
     ? record.public_record_id
     : formatRecordPublicId(record.date, record.id);
+  const recordAmount = "amount" in record ? record.amount : null;
+  const recordCurrency = "currency" in record ? record.currency : null;
+  const recordShowsAmount =
+    "show_amount" in record ? Boolean(record.show_amount) : Boolean(recordAmount);
+  const recordHasHiddenAmount =
+    "amount_hidden" in record ? Boolean(record.amount_hidden) : Boolean(recordAmount) && !recordShowsAmount;
+  const ownerHiddenAmountLabel = locale === "zh" ? "他人不可见" : "Hidden from others";
   const ownerReturnPath =
     record.type === "donation"
       ? "dashboard/donations"
@@ -229,11 +236,18 @@ export default async function RecordDetailPage({
           </p>
         ) : null}
 
-        {"show_amount" in record && record.show_amount && record.amount ? (
-          <div className="text-sm text-muted">
-            {record.amount} {record.currency ?? ""}
+        {recordAmount !== null && recordAmount !== undefined && (recordShowsAmount || isOwner) ? (
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+            <span>
+              {recordAmount} {recordCurrency ?? ""}
+            </span>
+            {isOwner && !recordShowsAmount ? (
+              <span className="rounded-full border border-border-subtle bg-surface-container-low px-2 py-0.5 text-xs text-muted">
+                {ownerHiddenAmountLabel}
+              </span>
+            ) : null}
           </div>
-        ) : (("amount" in record && record.amount) || ("amount_hidden" in record && record.amount_hidden)) ? (
+        ) : recordHasHiddenAmount ? (
           <div className="text-sm italic text-muted">{messages.common.hiddenAmount}</div>
         ) : null}
 

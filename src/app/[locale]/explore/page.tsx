@@ -28,7 +28,7 @@ export default async function ExplorePage({
   const { data: records } = await supabase
     .from("public_records")
     .select(
-      "id, type, title, content, reflection, date, is_anonymous, amount_hidden, organization_name, platform_name, project_url, tags, language, username, display_name, avatar_url",
+      "id, type, title, content, reflection, date, is_anonymous, amount, currency, amount_hidden, organization_name, platform_name, project_url, tags, language, username, display_name, avatar_url",
     )
     .order("date", { ascending: false });
 
@@ -62,6 +62,8 @@ export default async function ExplorePage({
         record.display_name ?? record.username ?? messages.common.anonymous,
       authorAvatarUrl: record.avatar_url ?? undefined,
       isAnonymous: record.is_anonymous,
+      amount: record.amount,
+      currency: record.currency,
       amountHidden: Boolean(record.amount_hidden),
       organizationName: record.organization_name ?? undefined,
       platformName: record.platform_name ?? undefined,

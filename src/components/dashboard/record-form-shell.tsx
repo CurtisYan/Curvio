@@ -46,7 +46,7 @@ function readFormDraft(form: HTMLFormElement, editorMode: EditorMode): RecordDra
     editorMode,
     isAnonymous: formData.has("is_anonymous"),
     isPublic: formData.has("is_public"),
-    showAmount: String(formData.get("show_amount") ?? "0"),
+    showAmount: String(formData.get("show_amount") ?? "1"),
     title: String(formData.get("title") ?? ""),
     type: (String(formData.get("type") ?? "donation") as RecordDraft["type"]),
     updatedAt: Date.now(),
@@ -158,7 +158,7 @@ export function RecordFormShell({
             editorMode: parsed.editorMode === "plain" ? "plain" : "markdown",
             isAnonymous: Boolean(parsed.isAnonymous),
             isPublic: parsed.isPublic !== false,
-            showAmount: parsed.showAmount === "1" ? "1" : "0",
+            showAmount: parsed.showAmount === "0" ? "0" : "1",
             title: typeof parsed.title === "string" ? parsed.title : "",
             type:
               parsed.type === "kindness" || parsed.type === "open_source"
@@ -320,7 +320,7 @@ export function RecordFormShell({
           <AmountVisibilityField
             defaultAmount={initialDraft?.amount ?? ""}
             defaultCurrency={initialDraft?.currency ?? "USD"}
-            defaultHidden={(initialDraft?.showAmount ?? "0") !== "1"}
+            defaultHidden={initialDraft?.showAmount === "0"}
             labels={labels}
           />
         </section>

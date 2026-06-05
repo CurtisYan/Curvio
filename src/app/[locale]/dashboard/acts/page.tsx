@@ -32,7 +32,7 @@ export default async function ActsPage({
 
   const { data: records } = await supabase
     .from("records")
-    .select("id, type, title, content, date, is_anonymous, show_amount, amount, tags, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)")
+    .select("id, type, title, content, date, is_anonymous, show_amount, amount, currency, tags, archived_at, record_images(id, r2_url, sort_order, is_cover, visibility)")
     .eq("user_id", user.id)
     .order("date", { ascending: false });
 

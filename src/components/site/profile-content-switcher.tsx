@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { CalendarDays, Layers3, ListChecks, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { RecordCard } from "@/components/records/record-card";
 import { RecordTypeBadge } from "@/components/records/record-type-badge";
@@ -58,6 +59,9 @@ export function ProfileContentSwitcher({
     donations: number;
     kindness: number;
     openSource: number;
+    activeMonths: number;
+    firstRecordDate: string | null;
+    latestRecordDate: string | null;
   };
   following: SocialProfile[];
   followers: SocialProfile[];
@@ -99,6 +103,44 @@ export function ProfileContentSwitcher({
     groups[year] = [...(groups[year] ?? []), record];
     return groups;
   }, {});
+  const summaryLabels =
+    locale === "zh"
+      ? {
+          activeMonths: "活跃月份",
+          firstRecord: "年度首条",
+          latestRecord: "最近记录",
+          noDate: "暂无",
+          primaryType: "主要类型",
+          quietYear: "今年还没有公开记录",
+          timeline: "年度节奏",
+          total: "全年记录",
+        }
+      : {
+          activeMonths: "Active months",
+          firstRecord: "First record",
+          latestRecord: "Latest record",
+          noDate: "None yet",
+          primaryType: "Primary type",
+          quietYear: "No public records this year",
+          timeline: "Yearly rhythm",
+          total: "Year records",
+        };
+  const annualBreakdown = [
+    { label: labels.recordDonation, value: annualSummary.donations, tone: "bg-primary" },
+    { label: labels.recordKindness, value: annualSummary.kindness, tone: "bg-tertiary" },
+    { label: labels.recordOpenWork, value: annualSummary.openSource, tone: "bg-secondary" },
+  ];
+  const primaryAnnualType = annualBreakdown.reduce(
+    (best, item) => (item.value > best.value ? item : best),
+    annualBreakdown[0],
+  );
+  const formatSummaryDate = (value: string | null) =>
+    value
+      ? new Intl.DateTimeFormat(locale, {
+          month: "short",
+          day: "numeric",
+        }).format(new Date(value))
+      : summaryLabels.noDate;
 
   useEffect(() => {
     const setFromHash = () => {
@@ -152,8 +194,10 @@ export function ProfileContentSwitcher({
         items.map((record) => (
           <RecordCard
             anonymousLabel={labels.anonymous}
+            hiddenAmountLabel={locale === "zh" ? "金额已隐藏" : "Hidden amount"}
             key={record.id}
             locale={locale}
+            privateAmountLabel={locale === "zh" ? "他人不可见" : "Hidden from others"}
             record={record}
             typeLabels={typeLabels}
           />
@@ -253,27 +297,101 @@ export function ProfileContentSwitcher({
 
       {activeTab === "statistics" ? (
         <div className="space-y-6">
-          {!annualSummary ? (
+          {!annualSummary || annualSummary.totalRecords === 0 ? (
             <div className="text-muted">{labels.emptyAnnualSummary}</div>
           ) : (
-            <Card className="p-6">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {labels.annualSummary} - {annualSummary.year}
-                </h3>
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <div className="text-sm text-muted">
-                    {labels.recordedActs}: <span className="font-medium text-foreground">{annualSummary.totalRecords}</span>
+            <Card className="overflow-hidden rounded-lg p-0">
+              <div className="border-b border-border-subtle bg-surface-container-low px-5 py-4 sm:px-6">
+                <p className="text-xs font-semibold uppercase text-muted">
+                  {labels.annualSummary}
+                </p>
+                <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+                  <h3 className="text-2xl font-semibold text-foreground">
+                    {annualSummary.year}
+                  </h3>
+                  <span className="rounded-full border border-border-subtle bg-surface-offwhite px-3 py-1 text-xs font-medium text-on-surface-variant">
+                    {summaryLabels.timeline}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
+                <div className="border-b border-border-subtle p-5 md:border-r md:border-b-0 sm:p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-white">
+                      <ListChecks className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted">{summaryLabels.total}</div>
+                      <div className="mt-1 flex items-baseline gap-2">
+                        <span className="text-5xl font-semibold leading-none tracking-normal text-foreground">
+                          {annualSummary.totalRecords}
+                        </span>
+                        <span className="text-sm text-muted">{labels.recordedActs}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted">
-                    {labels.recordDonation}: <span className="font-medium text-foreground">{annualSummary.donations}</span>
+
+                  <div className="mt-6 space-y-4">
+                    {annualBreakdown.map((item) => {
+                      const percent =
+                        annualSummary.totalRecords > 0
+                          ? Math.round((item.value / annualSummary.totalRecords) * 100)
+                          : 0;
+
+                      return (
+                        <div key={item.label}>
+                          <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                            <span className="font-medium text-on-surface-variant">{item.label}</span>
+                            <span className="text-muted">
+                              {item.value} · {percent}%
+                            </span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-surface-container">
+                            <div
+                              className={`h-full rounded-full ${item.tone}`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="text-sm text-muted">
-                    {labels.recordKindness}: <span className="font-medium text-foreground">{annualSummary.kindness}</span>
-                  </div>
-                  <div className="text-sm text-muted">
-                    {labels.recordOpenWork}: <span className="font-medium text-foreground">{annualSummary.openSource}</span>
-                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-px bg-border-subtle sm:grid-cols-2 md:grid-cols-1">
+                  {[
+                    {
+                      icon: CalendarDays,
+                      label: summaryLabels.activeMonths,
+                      value: `${annualSummary.activeMonths}/12`,
+                    },
+                    {
+                      icon: Layers3,
+                      label: summaryLabels.primaryType,
+                      value: primaryAnnualType.value > 0 ? primaryAnnualType.label : summaryLabels.quietYear,
+                    },
+                    {
+                      icon: TrendingUp,
+                      label: summaryLabels.latestRecord,
+                      value: formatSummaryDate(annualSummary.latestRecordDate),
+                    },
+                    {
+                      icon: CalendarDays,
+                      label: summaryLabels.firstRecord,
+                      value: formatSummaryDate(annualSummary.firstRecordDate),
+                    },
+                  ].map((item) => (
+                    <div className="bg-surface-offwhite p-5" key={item.label}>
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted">
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </div>
+                      <div className="mt-2 text-lg font-semibold leading-snug text-foreground">
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </Card>

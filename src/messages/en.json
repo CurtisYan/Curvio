@@ -154,7 +154,8 @@
     "verificationCode": "Verification code",
     "verifyEmail": "Verify and continue",
     "resendCode": "Resend code",
-    "codeSent": "A new verification code has been sent."
+    "codeSent": "A new verification code has been sent.",
+    "resendCooldown": "For security, you can request a new code in {seconds} seconds."
   },
   "dashboard": {
     "title": "Dashboard",

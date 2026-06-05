@@ -156,7 +156,7 @@ export async function createRecordAction(
   const currency = readString(formData, "currency");
   let amountValue: number | null = null;
 
-  if (showAmount && amountRaw) {
+  if (amountRaw) {
     const parsed = Number.parseFloat(amountRaw);
     if (Number.isNaN(parsed)) {
       return { status: "error", message: recordFormMessage(locale, "amount") };
@@ -195,9 +195,9 @@ export async function createRecordAction(
       language: locale,
       is_public: formData.has("is_public"),
       is_anonymous: formData.has("is_anonymous"),
-      show_amount: showAmount,
+      show_amount: showAmount && amountValue !== null,
       amount: amountValue,
-      currency: showAmount ? currency || null : null,
+      currency: amountValue !== null ? currency || null : null,
     })
     .select("id, date")
     .single();
@@ -305,7 +305,7 @@ export async function updateRecordAction(formData: FormData) {
   const currency = readString(formData, "currency");
   let amountValue: number | null = null;
 
-  if (showAmount && amountRaw) {
+  if (amountRaw) {
     const parsed = Number.parseFloat(amountRaw);
     if (Number.isNaN(parsed)) {
       recordEditRedirect(locale, recordId, "error", "Amount must be a valid number.");
@@ -342,9 +342,9 @@ export async function updateRecordAction(formData: FormData) {
       title,
       date,
       content,
-      show_amount: showAmount,
-      amount: showAmount ? amountValue : null,
-      currency: showAmount ? currency || null : null,
+      show_amount: showAmount && amountValue !== null,
+      amount: amountValue,
+      currency: amountValue !== null ? currency || null : null,
       is_public: formData.has("is_public"),
       is_anonymous: formData.has("is_anonymous"),
     })

@@ -116,7 +116,18 @@ export function Timeline({
               <div className="mt-4">
                 <RecordImageStrip images={record.images} />
               </div>
-              {record.amountHidden ? (
+              {record.amount !== null && record.amount !== undefined ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted">
+                  <span>
+                    {record.amount} {record.currency ?? ""}
+                  </span>
+                  {record.amountHidden ? (
+                    <span className="rounded-full border border-border-subtle bg-surface-container-low px-2 py-0.5 text-xs">
+                      {locale === "zh" ? "他人不可见" : "Hidden from others"}
+                    </span>
+                  ) : null}
+                </div>
+              ) : record.amountHidden ? (
                 <p className="mt-4 text-sm italic text-muted">{hiddenAmountLabel}</p>
               ) : null}
             </Card>

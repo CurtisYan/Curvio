@@ -154,7 +154,8 @@
     "verificationCode": "验证码",
     "verifyEmail": "验证并继续",
     "resendCode": "重新发送验证码",
-    "codeSent": "新的验证码已发送。"
+    "codeSent": "新的验证码已发送。",
+    "resendCooldown": "出于安全考虑，请 {seconds} 秒后再重新发送验证码。"
   },
   "dashboard": {
     "title": "控制台",

@@ -104,6 +104,14 @@ function verificationCodeMessage(locale: Locale) {
   return localized(locale, "Please enter the 8-digit verification code.", "请输入 8 位验证码。");
 }
 
+function resendCooldownMessage(locale: Locale, seconds: number) {
+  return localized(
+    locale,
+    `For security, you can request a new code in ${seconds} seconds.`,
+    `出于安全考虑，请 ${seconds} 秒后再重新发送验证码。`,
+  );
+}
+
 function resetRateLimitMessage(locale: Locale) {
   return localized(locale, "Too many reset requests. Please try again later.", "重置请求过于频繁，请稍后再试。");
 }
@@ -118,6 +126,11 @@ function resetLinkInvalidMessage(locale: Locale) {
 
 function publicAuthErrorMessage(locale: Locale, message: string) {
   const lowerMessage = message.toLowerCase();
+  const cooldownMatch = message.match(/(\d+)\s*seconds?/i);
+
+  if (lowerMessage.includes("for security purposes") && cooldownMatch) {
+    return resendCooldownMessage(locale, Number(cooldownMatch[1]));
+  }
 
   if (
     lowerMessage.includes("invalid login credentials") ||
@@ -455,7 +468,7 @@ export async function verifyOtpAction(formData: FormData) {
   });
 
   if (error) {
-    fail(locale, "register/verify", publicAuthErrorMessage(locale, error.message));
+    failWithParams(locale, "register/verify", publicAuthErrorMessage(locale, error.message), { email });
   }
 
   revalidatePath("/", "layout");
@@ -480,7 +493,7 @@ export async function resendOtpAction(formData: FormData) {
   });
 
   if (error) {
-    fail(locale, "register/verify", publicAuthErrorMessage(locale, error.message));
+    failWithParams(locale, "register/verify", publicAuthErrorMessage(locale, error.message), { email });
   }
 
   redirect(`/${locale}/register/verify?email=${encodeURIComponent(email)}&sent=1`);

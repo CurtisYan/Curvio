@@ -15,6 +15,7 @@ type DashboardRecord = {
   is_anonymous: boolean;
   show_amount: boolean;
   amount: number | null;
+  currency: string | null;
   tags: string[] | null;
   archived_at: string | null;
   record_images?: Array<{
@@ -96,7 +97,9 @@ export function DashboardArchiveView({
     authorUsername: profile.username,
     authorDisplayName: profile.display_name,
     isAnonymous: record.is_anonymous,
-    amountHidden: !record.show_amount && Boolean(record.amount),
+    amount: record.amount,
+    currency: record.currency,
+    amountHidden: !record.show_amount && record.amount !== null,
     tags: record.tags ?? [],
     language: locale,
     images: (record.record_images ?? [])
@@ -150,7 +153,9 @@ export function DashboardArchiveView({
                     authorUsername: profile.username,
                     authorDisplayName: profile.display_name,
                     isAnonymous: record.is_anonymous,
-                    amountHidden: !record.show_amount && Boolean(record.amount),
+                    amount: record.amount,
+                    currency: record.currency,
+                    amountHidden: !record.show_amount && record.amount !== null,
                     tags: record.tags ?? [],
                     language: locale,
                     images: (record.record_images ?? [])

@@ -94,6 +94,7 @@ export function RecordFilters({
         {filtered.map((record) => (
           <RecordCard
             anonymousLabel={labels.anonymous}
+            hiddenAmountLabel={locale === "zh" ? "金额已隐藏" : "Hidden amount"}
             key={record.id}
             locale={locale}
             record={record}

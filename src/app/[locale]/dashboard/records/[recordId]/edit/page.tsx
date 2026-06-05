@@ -106,7 +106,7 @@ export default async function EditRecordPage({
             labels={messages.dashboard}
             defaultAmount={record.amount ? String(record.amount) : ""}
             defaultCurrency={record.currency ?? "USD"}
-            defaultHidden={!record.show_amount}
+            defaultHidden={Boolean(record.amount) && !record.show_amount}
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
