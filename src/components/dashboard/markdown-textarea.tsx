@@ -35,6 +35,7 @@ export const MarkdownTextarea = forwardRef<
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("write");
   const [value, setValue] = useState(defaultValue);
+  const [localImagePreviewUrls, setLocalImagePreviewUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setValue(defaultValue);
@@ -62,8 +63,18 @@ export const MarkdownTextarea = forwardRef<
 
   useEffect(() => {
     function onInsertMarkdown(event: Event) {
-      const customEvent = event as CustomEvent<{ markdown?: string }>;
+      const customEvent = event as CustomEvent<{
+        markdown?: string;
+        previewUrl?: string;
+        token?: string;
+      }>;
       const markdown = customEvent.detail?.markdown;
+      const previewUrl = customEvent.detail?.previewUrl;
+      const token = customEvent.detail?.token;
+
+      if (token && previewUrl) {
+        setLocalImagePreviewUrls((current) => ({ ...current, [token]: previewUrl }));
+      }
 
       if (typeof markdown === "string" && markdown) {
         insertMarkdownAtCursor(markdown);
@@ -122,12 +133,17 @@ export const MarkdownTextarea = forwardRef<
             const markdown =
               event.dataTransfer.getData("application/x-curvio-markdown") ||
               event.dataTransfer.getData("text/plain");
+            const token = event.dataTransfer.getData("application/x-curvio-image-token");
+            const previewUrl = event.dataTransfer.getData("application/x-curvio-preview-url");
 
             if (!markdown.includes("curvio-image:")) {
               return;
             }
 
             event.preventDefault();
+            if (token && previewUrl) {
+              setLocalImagePreviewUrls((current) => ({ ...current, [token]: previewUrl }));
+            }
             insertMarkdownAtCursor(markdown);
           }}
           onChange={(event) => updateValue(event.target.value)}
@@ -139,7 +155,9 @@ export const MarkdownTextarea = forwardRef<
       ) : (
         <div className="min-h-32 rounded-lg border border-border-subtle bg-surface-offwhite px-3 py-3">
           {value.trim() ? (
-            <RecordMarkdown imagePreviewUrls={imagePreviewUrls}>{value}</RecordMarkdown>
+            <RecordMarkdown imagePreviewUrls={{ ...imagePreviewUrls, ...localImagePreviewUrls }}>
+              {value}
+            </RecordMarkdown>
           ) : (
             <p className="text-sm text-muted">{labels.markdownEmptyPreview}</p>
           )}

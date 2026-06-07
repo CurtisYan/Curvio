@@ -1,6 +1,7 @@
 "use client";
 
 import { ImagePlus, TextCursorInput, Trash2 } from "lucide-react";
+import type { DragEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -143,6 +144,20 @@ export function RecordImagePicker({
     return `\n\n![${labels.imageMarkdownAlt ?? item.file.name}](curvio-image:${item.token})\n\n`;
   }
 
+  function setImageDragData(event: DragEvent, item: ImageItem) {
+    if (item.visibility !== "public") {
+      event.preventDefault();
+      return;
+    }
+
+    const markdown = createImageMarkdown(item);
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData("application/x-curvio-image-token", item.token);
+    event.dataTransfer.setData("application/x-curvio-preview-url", item.preview);
+    event.dataTransfer.setData("application/x-curvio-markdown", markdown);
+    event.dataTransfer.setData("text/plain", markdown);
+  }
+
   function insertImage(item: ImageItem) {
     const markdown = createImageMarkdown(item);
 
@@ -153,7 +168,7 @@ export function RecordImagePicker({
 
     window.dispatchEvent(
       new CustomEvent("curvio:insert-markdown", {
-        detail: { markdown },
+        detail: { markdown, previewUrl: item.preview, token: item.token },
       }),
     );
   }
@@ -217,29 +232,19 @@ export function RecordImagePicker({
         </button>
         {items.map((item, index) => (
           <div
-            className="group w-36 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
+            className={cn(
+              "group w-36 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low",
+              item.visibility === "public" && "cursor-grab active:cursor-grabbing",
+            )}
+            draggable={item.visibility === "public"}
             key={item.token}
+            onDragStart={(event) => setImageDragData(event, item)}
           >
             <div className="relative h-24 w-full">
               <img
                 alt=""
-                className={cn(
-                  "h-full w-full object-cover",
-                  item.visibility === "public" && "cursor-grab active:cursor-grabbing",
-                )}
-                draggable={item.visibility === "public"}
-                onDragStart={(event) => {
-                  if (item.visibility !== "public") {
-                    event.preventDefault();
-                    return;
-                  }
-
-                  const markdown = createImageMarkdown(item);
-                  event.dataTransfer.effectAllowed = "copy";
-                  event.dataTransfer.setData("application/x-curvio-image-token", item.token);
-                  event.dataTransfer.setData("application/x-curvio-markdown", markdown);
-                  event.dataTransfer.setData("text/plain", markdown);
-                }}
+                className="h-full w-full object-cover"
+                draggable={false}
                 src={item.preview}
               />
               <button
