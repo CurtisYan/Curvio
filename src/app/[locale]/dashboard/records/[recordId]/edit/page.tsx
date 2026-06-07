@@ -153,6 +153,8 @@ export default async function EditRecordPage({
               imagePrivate: messages.dashboard.imagePrivate,
               imagePublic: messages.dashboard.imagePublic,
               insertImage: messages.dashboard.insertImage,
+              imageMarkdownAlt: messages.dashboard.imageMarkdownAlt,
+              deleteImage: messages.dashboard.deleteImage,
               privateImageInsertHint: messages.dashboard.privateImageInsertHint,
               imageTooLarge: messages.dashboard.imageTooLarge,
               imageTypeUnsupported: messages.dashboard.imageTypeUnsupported,

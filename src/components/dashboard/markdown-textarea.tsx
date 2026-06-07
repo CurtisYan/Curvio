@@ -45,20 +45,24 @@ export const MarkdownTextarea = forwardRef<
     onValueChange?.(nextValue);
   }
 
+  function insertMarkdownAtCursor(text: string) {
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? value.length;
+    const end = textarea?.selectionEnd ?? value.length;
+    const nextValue = `${value.slice(0, start)}${text}${value.slice(end)}`;
+    const nextCursor = start + text.length;
+
+    setPreviewMode("write");
+    updateValue(nextValue);
+    window.setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(nextCursor, nextCursor);
+    }, 0);
+  }
+
   useImperativeHandle(ref, () => ({
     insertMarkdown(text: string) {
-      const textarea = textareaRef.current;
-      const start = textarea?.selectionStart ?? value.length;
-      const end = textarea?.selectionEnd ?? value.length;
-      const nextValue = `${value.slice(0, start)}${text}${value.slice(end)}`;
-      const nextCursor = start + text.length;
-
-      setPreviewMode("write");
-      updateValue(nextValue);
-      window.setTimeout(() => {
-        textareaRef.current?.focus();
-        textareaRef.current?.setSelectionRange(nextCursor, nextCursor);
-      }, 0);
+      insertMarkdownAtCursor(text);
     },
   }));
 
@@ -89,6 +93,26 @@ export const MarkdownTextarea = forwardRef<
       <input name={name} type="hidden" value={value} />
       {!isMarkdown || previewMode === "write" ? (
         <Textarea
+          onDragOver={(event) => {
+            if (
+              event.dataTransfer.types.includes("application/x-curvio-markdown") ||
+              event.dataTransfer.types.includes("application/x-curvio-image-token")
+            ) {
+              event.preventDefault();
+            }
+          }}
+          onDrop={(event) => {
+            const markdown =
+              event.dataTransfer.getData("application/x-curvio-markdown") ||
+              event.dataTransfer.getData("text/plain");
+
+            if (!markdown.includes("curvio-image:")) {
+              return;
+            }
+
+            event.preventDefault();
+            insertMarkdownAtCursor(markdown);
+          }}
           onChange={(event) => updateValue(event.target.value)}
           placeholder={placeholder}
           ref={textareaRef}

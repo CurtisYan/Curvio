@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, TextCursorInput } from "lucide-react";
+import { ImagePlus, TextCursorInput, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -52,9 +52,11 @@ export function RecordImagePicker({
     imagePublic: string;
     imagePrivate: string;
     insertImage: string;
+    imageMarkdownAlt?: string;
     privateImageInsertHint: string;
     imageTooLarge: string;
     imageTypeUnsupported: string;
+    deleteImage?: string;
   };
   onInsertImage?: (token: string) => void;
   onPreviewUrlsChange?: (previewUrls: Record<string, string>) => void;
@@ -63,6 +65,7 @@ export function RecordImagePicker({
   const itemsRef = useRef<ImageItem[]>([]);
   const [items, setItems] = useState<ImageItem[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const remaining = Math.max(maxCount - existingCount - items.length, 0);
 
@@ -89,6 +92,57 @@ export function RecordImagePicker({
     setItems(nextItems);
   }
 
+  function addFiles(selectedFiles: File[]) {
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    setErrorMessage("");
+    const acceptedFiles: File[] = [];
+    for (const file of selectedFiles) {
+      if (!allowedImageTypes.has(file.type)) {
+        setErrorMessage(labels.imageTypeUnsupported);
+        continue;
+      }
+
+      if (file.size > maxImageSize) {
+        setErrorMessage(labels.imageTooLarge);
+        continue;
+      }
+
+      acceptedFiles.push(file);
+    }
+
+    if (acceptedFiles.length === 0) {
+      return;
+    }
+
+    const nextItems = [
+      ...itemsRef.current,
+      ...acceptedFiles.slice(0, remaining).map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+        token: createImageToken(),
+        visibility: "public" as const,
+      })),
+    ];
+    updateItems(nextItems);
+  }
+
+  function removeImage(index: number) {
+    const target = items[index];
+    if (!target) {
+      return;
+    }
+
+    URL.revokeObjectURL(target.preview);
+    updateItems(items.filter((_item, currentIndex) => currentIndex !== index));
+  }
+
+  function createImageMarkdown(item: ImageItem) {
+    return `\n\n![${labels.imageMarkdownAlt ?? item.file.name}](curvio-image:${item.token})\n\n`;
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
@@ -105,7 +159,32 @@ export function RecordImagePicker({
           {errorMessage}
         </div>
       ) : null}
-      <div className="flex flex-wrap gap-3">
+      <div
+        className={cn(
+          "flex flex-wrap gap-3 rounded-xl border border-transparent transition-colors",
+          isDraggingOver && "border-primary/30 bg-primary/5",
+        )}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setIsDraggingOver(false);
+          }
+        }}
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes("Files")) {
+            event.preventDefault();
+            setIsDraggingOver(true);
+          }
+        }}
+        onDrop={(event) => {
+          if (!event.dataTransfer.files.length) {
+            return;
+          }
+
+          event.preventDefault();
+          setIsDraggingOver(false);
+          addFiles(Array.from(event.dataTransfer.files));
+        }}
+      >
         <button
           aria-label={labels.addImages}
           className={cn(
@@ -123,11 +202,39 @@ export function RecordImagePicker({
         </button>
         {items.map((item, index) => (
           <div
-            className="w-36 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
+            className="group w-36 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
             key={item.token}
           >
-            <div className="h-24 w-full">
-              <img alt="" className="h-full w-full object-cover" src={item.preview} />
+            <div className="relative h-24 w-full">
+              <img
+                alt=""
+                className={cn(
+                  "h-full w-full object-cover",
+                  item.visibility === "public" && "cursor-grab active:cursor-grabbing",
+                )}
+                draggable={item.visibility === "public"}
+                onDragStart={(event) => {
+                  if (item.visibility !== "public") {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  const markdown = createImageMarkdown(item);
+                  event.dataTransfer.effectAllowed = "copy";
+                  event.dataTransfer.setData("application/x-curvio-image-token", item.token);
+                  event.dataTransfer.setData("application/x-curvio-markdown", markdown);
+                  event.dataTransfer.setData("text/plain", markdown);
+                }}
+                src={item.preview}
+              />
+              <button
+                aria-label={labels.deleteImage ?? "Remove image"}
+                className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/70 bg-surface/90 text-error opacity-0 shadow-sm transition-opacity hover:bg-error/10 focus:opacity-100 group-hover:opacity-100"
+                onClick={() => removeImage(index)}
+                type="button"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
             <div className="space-y-2 p-2">
               <input name="image_visibility" type="hidden" value={item.visibility} />
@@ -181,37 +288,8 @@ export function RecordImagePicker({
         multiple
         name={name}
         onChange={(event) => {
-          const selected = Array.from(event.target.files ?? []);
-          if (selected.length === 0) {
-            return;
-          }
-
-          setErrorMessage("");
-          const acceptedFiles: File[] = [];
-          for (const file of selected) {
-            if (!allowedImageTypes.has(file.type)) {
-              setErrorMessage(labels.imageTypeUnsupported);
-              continue;
-            }
-
-            if (file.size > maxImageSize) {
-              setErrorMessage(labels.imageTooLarge);
-              continue;
-            }
-
-            acceptedFiles.push(file);
-          }
-
-          const nextItems = [
-            ...items,
-            ...acceptedFiles.slice(0, remaining).map((file) => ({
-              file,
-              preview: URL.createObjectURL(file),
-              token: createImageToken(),
-              visibility: "public" as const,
-            })),
-          ];
-          updateItems(nextItems);
+          addFiles(Array.from(event.target.files ?? []));
+          event.target.value = "";
         }}
         ref={inputRef}
         type="file"

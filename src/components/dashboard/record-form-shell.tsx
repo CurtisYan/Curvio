@@ -100,6 +100,7 @@ export function RecordFormShell({
     imagePrivate: string;
     insertImage: string;
     imageMarkdownAlt: string;
+    deleteImage?: string;
     privateImageInsertHint: string;
     imageTooLarge: string;
     imageTypeUnsupported: string;
@@ -380,6 +381,8 @@ export function RecordFormShell({
               imagePrivate: labels.imagePrivate,
               imagePublic: labels.imagePublic,
               insertImage: labels.insertImage,
+              imageMarkdownAlt: labels.imageMarkdownAlt,
+              deleteImage: labels.deleteImage,
               privateImageInsertHint: labels.privateImageInsertHint,
               imageTooLarge: labels.imageTooLarge,
               imageTypeUnsupported: labels.imageTypeUnsupported,
