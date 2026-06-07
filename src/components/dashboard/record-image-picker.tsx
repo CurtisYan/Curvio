@@ -144,7 +144,7 @@ export function RecordImagePicker({
     return `\n\n![${labels.imageMarkdownAlt ?? item.file.name}](curvio-image:${item.token})\n\n`;
   }
 
-  function setImageDragData(event: DragEvent, item: ImageItem) {
+  function setImageDragData(event: DragEvent<HTMLElement>, item: ImageItem) {
     if (item.visibility !== "public") {
       event.preventDefault();
       return;
@@ -156,6 +156,15 @@ export function RecordImagePicker({
     event.dataTransfer.setData("application/x-curvio-preview-url", item.preview);
     event.dataTransfer.setData("application/x-curvio-markdown", markdown);
     event.dataTransfer.setData("text/plain", markdown);
+
+    const dragImage = event.currentTarget.querySelector("img");
+    if (dragImage) {
+      event.dataTransfer.setDragImage(
+        dragImage,
+        Math.min(dragImage.width / 2, 72),
+        Math.min(dragImage.height / 2, 48),
+      );
+    }
   }
 
   function insertImage(item: ImageItem) {
@@ -234,17 +243,22 @@ export function RecordImagePicker({
           <div
             className={cn(
               "group w-36 overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low",
-              item.visibility === "public" && "cursor-grab active:cursor-grabbing",
             )}
-            draggable={item.visibility === "public"}
             key={item.token}
-            onDragStart={(event) => setImageDragData(event, item)}
           >
-            <div className="relative h-24 w-full">
+            <div
+              className={cn(
+                "relative h-24 w-full",
+                item.visibility === "public" && "cursor-grab active:cursor-grabbing",
+              )}
+              draggable={item.visibility === "public"}
+              onDragStart={(event) => setImageDragData(event, item)}
+            >
               <img
                 alt=""
                 className="h-full w-full object-cover"
-                draggable={false}
+                draggable={item.visibility === "public"}
+                onDragStart={(event) => setImageDragData(event, item)}
                 src={item.preview}
               />
               <button
