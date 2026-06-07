@@ -26,7 +26,7 @@ export default async function EditRecordPage({
   searchParams: Promise<{ status?: string; message?: string }>;
 }) {
   const { locale: rawLocale, recordId } = await params;
-  const { status } = await searchParams;
+  const { status, message } = await searchParams;
   const dbRecordId = resolveRecordId(recordId);
 
   const locale: Locale = isLocale(rawLocale) ? rawLocale : "en";
@@ -79,7 +79,7 @@ export default async function EditRecordPage({
         ) : null}
         {status === "error" ? (
           <div className="rounded-lg border border-error/20 bg-error/5 px-3 py-2 text-sm text-error">
-            {messages.dashboard.editError}
+            {message || messages.dashboard.editError}
           </div>
         ) : null}
         <form action={updateRecordAction} className="space-y-6">
@@ -109,13 +109,23 @@ export default async function EditRecordPage({
             defaultHidden={Boolean(record.amount) && !record.show_amount}
           />
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
-              <input defaultChecked={record.is_public} name="is_public" type="checkbox" />
+            <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
               {messages.dashboard.visibilityPublic}
+              <input
+                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
+                defaultChecked={record.is_public}
+                name="is_public"
+                type="checkbox"
+              />
             </label>
-            <label className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-container-low p-3 text-sm">
-              <input defaultChecked={record.is_anonymous} name="is_anonymous" type="checkbox" />
+            <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
               {messages.dashboard.anonymous}
+              <input
+                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
+                defaultChecked={record.is_anonymous}
+                name="is_anonymous"
+                type="checkbox"
+              />
             </label>
           </div>
           <Button type="submit">{messages.dashboard.saveChanges}</Button>

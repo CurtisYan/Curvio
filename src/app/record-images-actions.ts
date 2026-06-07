@@ -158,17 +158,29 @@ export async function uploadRecordImagesAction(formData: FormData) {
 
   const shouldSetCover = !existingCover;
 
-  const uploads = await Promise.all(
-    files.map((file, index) =>
-      uploadRecordImageToR2({
+  const uploads: Awaited<ReturnType<typeof uploadRecordImageToR2>>[] = [];
+  const uploadedKeys: string[] = [];
+
+  try {
+    for (const [index, file] of files.entries()) {
+      const upload = await uploadRecordImageToR2({
         userId: user.id,
         recordId,
         type: recordTypeValue,
         file,
         imageNumber: currentCount + index + 1,
-      }),
-    ),
-  );
+      });
+      uploads.push(upload);
+      uploadedKeys.push(upload.key);
+    }
+  } catch (error) {
+    redirectToEdit(
+      locale,
+      publicRecordId,
+      "error",
+      error instanceof Error ? error.message : imageActionMessage(locale, "upload"),
+    );
+  }
 
   const rows = uploads.map((upload, index) => ({
     record_id: recordId,
@@ -185,7 +197,8 @@ export async function uploadRecordImagesAction(formData: FormData) {
   const { error: insertError } = await supabase.from("record_images").insert(rows);
 
   if (insertError) {
-    redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
+    await Promise.allSettled(uploadedKeys.map((key) => deleteRecordImageFromR2(key)));
+    redirectToEdit(locale, publicRecordId, "error", insertError.message || imageActionMessage(locale, "save"));
   }
 
   const content = readString(formData, "content");
