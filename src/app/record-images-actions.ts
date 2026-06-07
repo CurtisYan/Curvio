@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
+import {
+  removeMarkdownImageReferences,
+  replaceImagePlaceholders,
+} from "@/lib/record-image-markdown";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import type { RecordType } from "@/lib/types";
 import { deleteRecordImageFromR2, uploadRecordImageToR2 } from "@/utils/r2";
@@ -79,12 +83,19 @@ function readImageVisibilities(formData: FormData) {
     .map((value) => (value === "private" ? "private" : "public"));
 }
 
+function readImageTokens(formData: FormData) {
+  return formData
+    .getAll("image_token")
+    .map((value) => (typeof value === "string" ? value.trim() : ""));
+}
+
 export async function uploadRecordImagesAction(formData: FormData) {
   const locale = readLocale(formData);
   const recordId = readString(formData, "record_id");
   const recordTypeValue = readString(formData, "record_type");
   const files = readFiles(formData, "images");
   const imageVisibilities = readImageVisibilities(formData);
+  const imageTokens = readImageTokens(formData);
 
   if (!recordId) {
     redirect(`/${locale}/dashboard/records`);
@@ -148,12 +159,13 @@ export async function uploadRecordImagesAction(formData: FormData) {
   const shouldSetCover = !existingCover;
 
   const uploads = await Promise.all(
-    files.map((file) =>
+    files.map((file, index) =>
       uploadRecordImageToR2({
         userId: user.id,
         recordId,
         type: recordTypeValue,
         file,
+        imageNumber: currentCount + index + 1,
       }),
     ),
   );
@@ -174,6 +186,26 @@ export async function uploadRecordImagesAction(formData: FormData) {
 
   if (insertError) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
+  }
+
+  const content = readString(formData, "content");
+  if (content) {
+    const publicImageUrlsByToken = new Map<string, string>();
+    uploads.forEach((upload, index) => {
+      const token = imageTokens[index];
+      if (token && (imageVisibilities[index] ?? "public") === "public") {
+        publicImageUrlsByToken.set(token, upload.url);
+      }
+    });
+
+    const contentWithImages = replaceImagePlaceholders(content, publicImageUrlsByToken);
+    if (contentWithImages !== content) {
+      await supabase
+        .from("records")
+        .update({ content: contentWithImages })
+        .eq("id", recordId)
+        .eq("user_id", user.id);
+    }
   }
 
   revalidatePath(`/${locale}/dashboard`);
@@ -207,7 +239,7 @@ export async function deleteRecordImageAction(formData: FormData) {
 
   const { data: image, error: imageError } = await supabase
     .from("record_images")
-    .select("id, r2_key, is_cover")
+    .select("id, r2_key, r2_url, is_cover")
     .eq("id", imageId)
     .eq("record_id", recordId)
     .eq("user_id", user.id)
@@ -219,7 +251,7 @@ export async function deleteRecordImageAction(formData: FormData) {
 
   const { data: record } = await supabase
     .from("records")
-    .select("id, date")
+    .select("id, date, content")
     .eq("id", recordId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -238,6 +270,17 @@ export async function deleteRecordImageAction(formData: FormData) {
 
   if (deleteError) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "delete"));
+  }
+
+  if (record?.content) {
+    const nextContent = removeMarkdownImageReferences(record.content, [image.r2_url]);
+    if (nextContent !== record.content) {
+      await supabase
+        .from("records")
+        .update({ content: nextContent })
+        .eq("id", recordId)
+        .eq("user_id", user.id);
+    }
   }
 
   if (image.is_cover) {
@@ -419,7 +462,7 @@ export async function updateRecordImageVisibilityAction(formData: FormData) {
 
   const { data: record } = await supabase
     .from("records")
-    .select("id, date")
+    .select("id, date, content")
     .eq("id", recordId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -427,6 +470,14 @@ export async function updateRecordImageVisibilityAction(formData: FormData) {
   if (!record) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "record"));
   }
+
+  const { data: image } = await supabase
+    .from("record_images")
+    .select("r2_url")
+    .eq("id", imageId)
+    .eq("record_id", recordId)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   const { error: updateError } = await supabase
     .from("record_images")
@@ -437,6 +488,17 @@ export async function updateRecordImageVisibilityAction(formData: FormData) {
 
   if (updateError) {
     redirectToEdit(locale, recordId, "error", imageActionMessage(locale, "save"));
+  }
+
+  if (visibility === "private" && image?.r2_url && record.content) {
+    const nextContent = removeMarkdownImageReferences(record.content, [image.r2_url]);
+    if (nextContent !== record.content) {
+      await supabase
+        .from("records")
+        .update({ content: nextContent })
+        .eq("id", recordId)
+        .eq("user_id", user.id);
+    }
   }
 
   revalidatePath(`/${locale}/dashboard`);

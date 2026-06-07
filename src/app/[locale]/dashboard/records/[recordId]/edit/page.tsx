@@ -132,6 +132,7 @@ export default async function EditRecordPage({
           <input name="locale" type="hidden" value={locale} />
           <input name="record_id" type="hidden" value={record.id} />
           <input name="record_type" type="hidden" value={record.type} />
+          <input name="content" type="hidden" value={record.content} />
           <RecordImagePicker
             existingCount={images?.length ?? 0}
             labels={{
@@ -222,12 +223,31 @@ export default async function EditRecordPage({
                       <input
                         name="visibility"
                         type="hidden"
-                        value={image.visibility === "private" ? "public" : "private"}
+                        value="public"
                       />
-                      <Button type="submit" variant="secondary">
-                        {image.visibility === "private"
-                          ? messages.dashboard.makeImagePublic
-                          : messages.dashboard.makeImagePrivate}
+                      <Button
+                        disabled={image.visibility !== "private"}
+                        type="submit"
+                        variant="secondary"
+                      >
+                        {messages.dashboard.imagePublic}
+                      </Button>
+                    </form>
+                    <form action={updateRecordImageVisibilityAction}>
+                      <input name="locale" type="hidden" value={locale} />
+                      <input name="record_id" type="hidden" value={record.id} />
+                      <input name="image_id" type="hidden" value={image.id} />
+                      <input
+                        name="visibility"
+                        type="hidden"
+                        value="private"
+                      />
+                      <Button
+                        disabled={image.visibility === "private"}
+                        type="submit"
+                        variant="secondary"
+                      >
+                        {messages.dashboard.imagePrivate}
                       </Button>
                     </form>
                     <form action={deleteRecordImageAction}>

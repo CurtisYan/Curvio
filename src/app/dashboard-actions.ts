@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n";
+import { replaceImagePlaceholders } from "@/lib/record-image-markdown";
 import { formatRecordPublicId } from "@/lib/record-public-id";
 import { recordTypeToSegment } from "@/lib/record-types";
 import type { RecordType } from "@/lib/types";
@@ -35,12 +36,6 @@ function readImageTokens(formData: FormData) {
   return formData
     .getAll("image_token")
     .map((value) => (typeof value === "string" ? value.trim() : ""));
-}
-
-function replaceImagePlaceholders(content: string, imageUrlsByToken: Map<string, string>) {
-  return content.replace(/curvio-image:([a-zA-Z0-9_-]+)/g, (_match, token: string) => {
-    return imageUrlsByToken.get(token) ?? "";
-  });
 }
 
 const recordTypeValues: RecordType[] = ["donation", "kindness", "open_source"];
@@ -213,12 +208,13 @@ export async function createRecordAction(
 
     try {
       const uploads: Awaited<ReturnType<typeof uploadRecordImageToR2>>[] = [];
-      for (const file of files) {
+      for (const [index, file] of files.entries()) {
         const upload = await uploadRecordImageToR2({
           userId: user.id,
           recordId: record.id,
           type: typeValue,
           file,
+          imageNumber: index + 1,
         });
         uploadedKeys.push(upload.key);
         uploads.push(upload);

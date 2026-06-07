@@ -50,6 +50,12 @@ function getExtensionFromMimeType(type: string) {
   }
 }
 
+function createRecordImageFileName(imageNumber: number | undefined, extension: string) {
+  const index = Math.max(1, Math.floor(imageNumber ?? 1));
+  const shortId = randomUUID().replace(/-/g, "").slice(0, 8);
+  return `image-${String(index).padStart(2, "0")}-${shortId}.${extension}`;
+}
+
 export async function uploadAvatarToR2(userId: string, file: File) {
   if (!allowedAvatarTypes.has(file.type)) {
     throw new Error("Avatar must be a PNG, JPG, or WebP image.");
@@ -83,11 +89,13 @@ export async function uploadRecordImageToR2({
   recordId,
   type,
   file,
+  imageNumber,
 }: {
   userId: string;
   recordId: string;
   type: RecordType;
   file: File;
+  imageNumber?: number;
 }) {
   if (!allowedRecordImageTypes.has(file.type)) {
     throw new Error("Record image must be a PNG, JPG, or WebP image.");
@@ -99,8 +107,8 @@ export async function uploadRecordImageToR2({
 
   const extension = getExtensionFromMimeType(file.type);
   const typeSegment = recordTypeToSegment(type);
-  const assetId = randomUUID();
-  const key = `records/${userId}/${typeSegment}/${recordId}/${assetId}.${extension}`;
+  const fileName = createRecordImageFileName(imageNumber, extension);
+  const key = `records/${userId}/${typeSegment}/${recordId}/${fileName}`;
   const body = Buffer.from(await file.arrayBuffer());
 
   await getClient().send(
