@@ -225,6 +225,7 @@
     "imagesLead": "上传、删除、排序、设置主图，或将指定图片设为私有。",
     "imagesEmpty": "暂无图片。",
     "addImages": "上传图片",
+    "saveSelectedImages": "保存更改",
     "setCover": "设为主图",
     "coverLabel": "主图",
     "makeImagePublic": "公开展示",

@@ -60,6 +60,23 @@ export const MarkdownTextarea = forwardRef<
     }, 0);
   }
 
+  useEffect(() => {
+    function onInsertMarkdown(event: Event) {
+      const customEvent = event as CustomEvent<{ markdown?: string }>;
+      const markdown = customEvent.detail?.markdown;
+
+      if (typeof markdown === "string" && markdown) {
+        insertMarkdownAtCursor(markdown);
+      }
+    }
+
+    window.addEventListener("curvio:insert-markdown", onInsertMarkdown);
+
+    return () => {
+      window.removeEventListener("curvio:insert-markdown", onInsertMarkdown);
+    };
+  });
+
   useImperativeHandle(ref, () => ({
     insertMarkdown(text: string) {
       insertMarkdownAtCursor(text);

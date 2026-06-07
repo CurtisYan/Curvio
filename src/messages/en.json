@@ -225,6 +225,7 @@
     "imagesLead": "Add, remove, reorder, choose a cover image, or keep selected images visible only in your dashboard.",
     "imagesEmpty": "No images yet.",
     "addImages": "Upload images",
+    "saveSelectedImages": "Save changes",
     "setCover": "Set cover",
     "coverLabel": "Cover",
     "makeImagePublic": "Show publicly",

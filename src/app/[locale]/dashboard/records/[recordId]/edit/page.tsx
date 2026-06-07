@@ -9,11 +9,13 @@ import {
 } from "@/app/record-images-actions";
 import { AmountVisibilityField } from "@/components/dashboard/amount-visibility-field";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { MarkdownTextarea } from "@/components/dashboard/markdown-textarea";
 import { RecordImagePicker } from "@/components/dashboard/record-image-picker";
+import { CleanUrlOnMount } from "@/components/site/clean-url-on-mount";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { resolveRecordId } from "@/lib/record-public-id";
 import { createClient } from "@/utils/supabase/server";
@@ -65,6 +67,7 @@ export default async function EditRecordPage({
 
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
+      {status ? <CleanUrlOnMount /> : null}
       <DashboardNav locale={locale} labels={messages.dashboard} />
 
       <Card className="mt-8 space-y-6">
@@ -100,7 +103,18 @@ export default async function EditRecordPage({
           </div>
           <label className="space-y-2 text-sm font-medium">
             {messages.dashboard.fieldDescription}
-            <Textarea defaultValue={record.content} name="content" required />
+            <MarkdownTextarea
+              defaultValue={record.content}
+              editorMode="markdown"
+              labels={{
+                markdownEmptyPreview: messages.dashboard.markdownEmptyPreview,
+                markdownPreview: messages.dashboard.markdownPreview,
+                markdownWrite: messages.dashboard.markdownWrite,
+              }}
+              name="content"
+              placeholder={messages.dashboard.descriptionPlaceholder}
+              required
+            />
           </label>
           <AmountVisibilityField
             labels={messages.dashboard}
@@ -162,7 +176,7 @@ export default async function EditRecordPage({
             name="images"
           />
           <Button type="submit" variant="secondary">
-            {messages.dashboard.addImages}
+            {messages.dashboard.saveSelectedImages}
           </Button>
         </form>
 

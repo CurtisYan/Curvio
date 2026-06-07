@@ -143,6 +143,21 @@ export function RecordImagePicker({
     return `\n\n![${labels.imageMarkdownAlt ?? item.file.name}](curvio-image:${item.token})\n\n`;
   }
 
+  function insertImage(item: ImageItem) {
+    const markdown = createImageMarkdown(item);
+
+    if (onInsertImage) {
+      onInsertImage(item.token);
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("curvio:insert-markdown", {
+        detail: { markdown },
+      }),
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
@@ -268,7 +283,7 @@ export function RecordImagePicker({
               {item.visibility === "public" ? (
                 <button
                   className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-subtle bg-surface px-2 py-1.5 text-[11px] font-medium text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
-                  onClick={() => onInsertImage?.(item.token)}
+                  onClick={() => insertImage(item)}
                   type="button"
                 >
                   <TextCursorInput className="h-3.5 w-3.5" />
