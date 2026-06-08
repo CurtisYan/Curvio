@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
 import { LocaleSwitcher } from "./locale-switcher";
 import { SearchTrigger } from "./search-trigger";
@@ -55,6 +59,34 @@ export function SiteHeader({
     username?: string | null;
   } | null;
 }) {
+  const [isMobileNavCollapsed, setIsMobileNavCollapsed] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      if (currentScrollY < 16) {
+        setIsMobileNavCollapsed(false);
+      } else if (scrollDelta > 6 && currentScrollY > 80) {
+        setIsMobileNavCollapsed(true);
+      } else if (scrollDelta < -6) {
+        setIsMobileNavCollapsed(false);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const nav = [
     { href: "/explore", label: messages.nav.explore },
     { href: "/donate", label: messages.nav.donate },
@@ -121,7 +153,14 @@ export function SiteHeader({
             )}
           </div>
         </div>
-        <nav className="flex h-11 items-center gap-2 overflow-x-auto border-t border-border-subtle md:hidden">
+        <nav
+          className={cn(
+            "flex items-center gap-2 overflow-x-auto border-t transition-[height,opacity,border-color] duration-200 ease-out md:hidden",
+            isMobileNavCollapsed
+              ? "h-0 border-transparent opacity-0"
+              : "h-11 border-border-subtle opacity-100",
+          )}
+        >
           {nav.map((item) => (
             <Link
               className="inline-flex h-8 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-container-low hover:text-primary"
