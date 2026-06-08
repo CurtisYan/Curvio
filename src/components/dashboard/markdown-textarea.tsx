@@ -1,12 +1,30 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { RecordMarkdown } from "@/components/records/record-markdown";
-import { Textarea } from "@/components/ui/input";
+import dynamic from "next/dynamic";
+import type { ImagePreviewHandler, MDXEditorMethods, ViewMode } from "@mdxeditor/editor";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { EditorMode } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
-type PreviewMode = "write" | "preview";
+const RecordMarkdownEditorCore = dynamic(
+  () =>
+    import("./record-markdown-editor-core").then(
+      (module) => module.RecordMarkdownEditorCore,
+    ),
+  {
+    loading: () => (
+      <div aria-busy className="min-h-40 rounded-lg border border-border-subtle bg-surface-offwhite" />
+    ),
+    ssr: false,
+  },
+);
 
 export type MarkdownTextareaHandle = {
   insertMarkdown: (text: string) => void;
@@ -20,8 +38,10 @@ export const MarkdownTextarea = forwardRef<
       markdownWrite: string;
       markdownPreview: string;
       markdownEmptyPreview: string;
+      uploadImage?: string;
     };
     name: string;
+    locale?: "en" | "zh";
     placeholder: string;
     imagePreviewUrls?: Record<string, string>;
     defaultValue?: string;
@@ -29,37 +49,57 @@ export const MarkdownTextarea = forwardRef<
     required?: boolean;
   }
 >(function MarkdownTextarea(
-  { defaultValue = "", editorMode, imagePreviewUrls, labels, name, onValueChange, placeholder, required },
+  { defaultValue = "", editorMode, imagePreviewUrls, labels, locale = "en", name, onValueChange, placeholder },
   ref,
 ) {
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>("write");
+  const editorRef = useRef<MDXEditorMethods | null>(null);
+  const mountedRef = useRef(false);
   const [value, setValue] = useState(defaultValue);
   const [localImagePreviewUrls, setLocalImagePreviewUrls] = useState<Record<string, string>>({});
+  const mergedImagePreviewUrls = useMemo(
+    () => ({ ...imagePreviewUrls, ...localImagePreviewUrls }),
+    [imagePreviewUrls, localImagePreviewUrls],
+  );
+  const previewUrlsRef = useRef(mergedImagePreviewUrls);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    previewUrlsRef.current = mergedImagePreviewUrls;
+  }, [mergedImagePreviewUrls]);
 
   useEffect(() => {
     setValue(defaultValue);
   }, [defaultValue]);
 
-  function updateValue(nextValue: string) {
+  const updateValue = useCallback((nextValue: string) => {
+    if (!mountedRef.current) {
+      return;
+    }
+
     setValue(nextValue);
     onValueChange?.(nextValue);
-  }
+  }, [onValueChange]);
 
-  function insertMarkdownAtCursor(text: string) {
-    const textarea = textareaRef.current;
-    const start = textarea?.selectionStart ?? value.length;
-    const end = textarea?.selectionEnd ?? value.length;
-    const nextValue = `${value.slice(0, start)}${text}${value.slice(end)}`;
-    const nextCursor = start + text.length;
+  const insertMarkdownAtCursor = useCallback(
+    (text: string) => {
+      const editor = editorRef.current;
 
-    setPreviewMode("write");
-    updateValue(nextValue);
-    window.setTimeout(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(nextCursor, nextCursor);
-    }, 0);
-  }
+      if (editor) {
+        editor.focus(() => editor.insertMarkdown(text), { defaultSelection: "rootEnd" });
+        return;
+      }
+
+      updateValue(`${value}${text}`);
+    },
+    [updateValue, value],
+  );
 
   useEffect(() => {
     function onInsertMarkdown(event: Event) {
@@ -86,7 +126,7 @@ export const MarkdownTextarea = forwardRef<
     return () => {
       window.removeEventListener("curvio:insert-markdown", onInsertMarkdown);
     };
-  });
+  }, [insertMarkdownAtCursor]);
 
   useImperativeHandle(ref, () => ({
     insertMarkdown(text: string) {
@@ -94,75 +134,30 @@ export const MarkdownTextarea = forwardRef<
     },
   }));
 
-  const isMarkdown = editorMode === "markdown";
+  const initialViewMode: ViewMode = editorMode === "plain" ? "source" : "rich-text";
+  const imagePreviewHandler = useCallback<NonNullable<ImagePreviewHandler>>(async (source) => {
+    const token = source.match(/^curvio-image:([a-zA-Z0-9_-]+)$/)?.[1];
+
+    if (token) {
+      return previewUrlsRef.current[token] ?? source;
+    }
+
+    return source;
+  }, []);
 
   return (
     <div className="space-y-2">
-      {isMarkdown ? (
-        <div className="inline-grid grid-cols-2 overflow-hidden rounded-lg border border-border-subtle bg-surface">
-          {(["write", "preview"] as const).map((nextMode) => (
-            <button
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium transition-colors",
-                previewMode === nextMode
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted hover:bg-surface-container-low hover:text-primary",
-                nextMode === "preview" && "border-l border-border-subtle",
-              )}
-              key={nextMode}
-              onClick={() => setPreviewMode(nextMode)}
-              type="button"
-            >
-              {nextMode === "write" ? labels.markdownWrite : labels.markdownPreview}
-            </button>
-          ))}
-        </div>
-      ) : null}
       <input name={name} type="hidden" value={value} />
-      {!isMarkdown || previewMode === "write" ? (
-        <Textarea
-          onDragOver={(event) => {
-            if (
-              event.dataTransfer.types.includes("application/x-curvio-markdown") ||
-              event.dataTransfer.types.includes("application/x-curvio-image-token")
-            ) {
-              event.preventDefault();
-            }
-          }}
-          onDrop={(event) => {
-            const markdown =
-              event.dataTransfer.getData("application/x-curvio-markdown") ||
-              event.dataTransfer.getData("text/plain");
-            const token = event.dataTransfer.getData("application/x-curvio-image-token");
-            const previewUrl = event.dataTransfer.getData("application/x-curvio-preview-url");
-
-            if (!markdown.includes("curvio-image:")) {
-              return;
-            }
-
-            event.preventDefault();
-            if (token && previewUrl) {
-              setLocalImagePreviewUrls((current) => ({ ...current, [token]: previewUrl }));
-            }
-            insertMarkdownAtCursor(markdown);
-          }}
-          onChange={(event) => updateValue(event.target.value)}
-          placeholder={placeholder}
-          ref={textareaRef}
-          required={required}
-          value={value}
-        />
-      ) : (
-        <div className="min-h-32 rounded-lg border border-border-subtle bg-surface-offwhite px-3 py-3">
-          {value.trim() ? (
-            <RecordMarkdown imagePreviewUrls={{ ...imagePreviewUrls, ...localImagePreviewUrls }}>
-              {value}
-            </RecordMarkdown>
-          ) : (
-            <p className="text-sm text-muted">{labels.markdownEmptyPreview}</p>
-          )}
-        </div>
-      )}
+      <RecordMarkdownEditorCore
+        editorRef={editorRef}
+        imagePreviewHandler={imagePreviewHandler}
+        initialViewMode={initialViewMode}
+        locale={locale}
+        markdown={value}
+        onChange={updateValue}
+        placeholder={placeholder}
+        uploadImageLabel={labels.uploadImage ?? "Upload image"}
+      />
     </div>
   );
 });

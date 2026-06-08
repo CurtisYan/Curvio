@@ -2,7 +2,6 @@
 
 import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { CircleHelp } from "lucide-react";
 import { createRecordAction } from "@/app/dashboard-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AmountVisibilityField } from "./amount-visibility-field";
 import type { EditorMode } from "@/lib/types";
-import { MarkdownTextarea, type MarkdownTextareaHandle } from "./markdown-textarea";
+import { MarkdownTextarea } from "./markdown-textarea";
 import { RecordImagePicker } from "./record-image-picker";
 
 function localDateInputValue() {
@@ -129,7 +128,6 @@ export function RecordFormShell({
     [locale, userId],
   );
   const formRef = useRef<HTMLFormElement | null>(null);
-  const markdownRef = useRef<MarkdownTextareaHandle | null>(null);
   const [state, formAction] = useActionState(createRecordAction, {
     status: "idle",
   });
@@ -217,11 +215,6 @@ export function RecordFormShell({
     };
   }, [draftLoaded, saveDraft]);
 
-  function insertImage(token: string) {
-    setEditorMode("markdown");
-    markdownRef.current?.insertMarkdown(`\n\n![${labels.imageMarkdownAlt}](curvio-image:${token})\n\n`);
-  }
-
   return (
     <Card className="space-y-6">
       <form
@@ -297,18 +290,7 @@ export function RecordFormShell({
               />
             </label>
             <label className="space-y-2 text-sm font-medium">
-              <span className="flex items-center gap-1.5">
-                {labels.fieldDate}
-                <span className="group relative inline-flex">
-                  <CircleHelp
-                    aria-label={labels.fieldDateHelp}
-                    className="h-3.5 w-3.5 text-muted"
-                  />
-                  <span className="pointer-events-none absolute left-1/2 top-6 z-10 hidden w-64 -translate-x-1/2 rounded-lg border border-border-subtle bg-surface px-3 py-2 text-xs font-normal leading-5 text-muted shadow-sm group-hover:block">
-                    {labels.fieldDateHelp}
-                  </span>
-                </span>
-              </span>
+              {labels.fieldDate}
               <Input
                 aria-label={labels.fieldDate}
                 defaultValue={initialDate}
@@ -329,28 +311,6 @@ export function RecordFormShell({
         <section className="space-y-4 border-t border-border-subtle pt-6">
           <h3 className="text-lg font-medium">{labels.storySection}</h3>
           <div className="space-y-2 text-sm font-medium">
-            <div className="flex items-center gap-1.5">
-              <p>{labels.fieldDescription}</p>
-              <span className="group relative inline-flex">
-                <button
-                  aria-label={labels.fieldDescriptionHelp}
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-container-low hover:text-primary"
-                  type="button"
-                >
-                  <CircleHelp className="h-3.5 w-3.5" />
-                </button>
-                <span className="absolute left-6 top-0 z-10 hidden w-72 rounded-lg border border-border-subtle bg-surface px-3 py-2 text-xs font-normal leading-5 text-muted shadow-sm group-hover:block group-focus-within:block">
-                  <span className="block">{labels.fieldDescriptionHelp}</span>
-                  <button
-                    className="mt-2 rounded-md border border-border-subtle bg-surface-offwhite px-2 py-1 text-xs font-medium text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
-                    onClick={() => setEditorMode(editorMode === "markdown" ? "plain" : "markdown")}
-                    type="button"
-                  >
-                    {editorMode === "markdown" ? labels.markdownOff : labels.markdownOn}
-                  </button>
-                </span>
-              </span>
-            </div>
             <MarkdownTextarea
               editorMode={editorMode}
               defaultValue={initialDraft?.content ?? ""}
@@ -359,38 +319,35 @@ export function RecordFormShell({
                 markdownEmptyPreview: labels.markdownEmptyPreview,
                 markdownPreview: labels.markdownPreview,
                 markdownWrite: labels.markdownWrite,
+                uploadImage: labels.addImages,
               }}
+              locale={locale === "zh" ? "zh" : "en"}
               name="content"
               onValueChange={saveDraft}
               placeholder={labels.descriptionPlaceholder}
-              ref={markdownRef}
               required
             />
+            <RecordImagePicker
+              existingCount={0}
+              hidden
+              labels={{
+                addImages: labels.addImages,
+                imagesNote: labels.imagesNote,
+                imagesRemaining: labels.imagesRemaining,
+                imagesSelected: labels.imagesSelected,
+                imagePrivate: labels.imagePrivate,
+                imagePublic: labels.imagePublic,
+                insertImage: labels.insertImage,
+                imageMarkdownAlt: labels.imageMarkdownAlt,
+                deleteImage: labels.deleteImage,
+                privateImageInsertHint: labels.privateImageInsertHint,
+                imageTooLarge: labels.imageTooLarge,
+                imageTypeUnsupported: labels.imageTypeUnsupported,
+              }}
+              name="images"
+              onPreviewUrlsChange={setImagePreviewUrls}
+            />
           </div>
-        </section>
-
-        <section className="space-y-4 border-t border-border-subtle pt-6">
-          <h3 className="text-lg font-medium">{labels.imagesSection}</h3>
-          <RecordImagePicker
-            existingCount={0}
-            labels={{
-              addImages: labels.addImages,
-              imagesNote: labels.imagesNote,
-              imagesRemaining: labels.imagesRemaining,
-              imagesSelected: labels.imagesSelected,
-              imagePrivate: labels.imagePrivate,
-              imagePublic: labels.imagePublic,
-              insertImage: labels.insertImage,
-              imageMarkdownAlt: labels.imageMarkdownAlt,
-              deleteImage: labels.deleteImage,
-              privateImageInsertHint: labels.privateImageInsertHint,
-              imageTooLarge: labels.imageTooLarge,
-              imageTypeUnsupported: labels.imageTypeUnsupported,
-            }}
-            name="images"
-            onInsertImage={insertImage}
-            onPreviewUrlsChange={setImagePreviewUrls}
-          />
         </section>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">

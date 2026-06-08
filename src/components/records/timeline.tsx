@@ -114,7 +114,7 @@ export function Timeline({
                 {markdownToPlainText(record.content)}
               </p>
               <div className="mt-4">
-                <RecordImageStrip images={record.images} />
+                <RecordImageStrip images={record.images} size="md" />
               </div>
               {record.amount !== null && record.amount !== undefined ? (
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted">

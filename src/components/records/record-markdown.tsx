@@ -2,6 +2,53 @@ import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markd
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
+function readHtmlAttributes(value: string) {
+  const attrs: Record<string, string> = {};
+  const attrPattern = /([a-zA-Z][\w:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = attrPattern.exec(value))) {
+    attrs[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? "";
+  }
+
+  return attrs;
+}
+
+function escapeMarkdownText(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/]/g, "\\]");
+}
+
+function escapeMarkdownTitle(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function readImageScale(alt: string) {
+  const match = alt.match(/^(.*?)(?:\|(?:(?:\d+)x(?:\d+),\s*)?(50|75|100)%)$/);
+
+  return {
+    altText: match ? match[1] : alt,
+    scale: match ? Number(match[2]) : undefined,
+  };
+}
+
+function normalizeImageHtml(markdown: string) {
+  return markdown.replace(/<img\b[^>]*>/gi, (tag) => {
+    const attrs = readHtmlAttributes(tag);
+    const src = attrs.src;
+
+    if (!src) {
+      return "";
+    }
+
+    const alt = escapeMarkdownText(attrs.alt ?? "");
+    const width = attrs.width && /^\d+$/.test(attrs.width) ? attrs.width : "";
+    const title = width ? `curvio-width:${width}` : attrs.title ?? "";
+    const titlePart = title ? ` "${escapeMarkdownTitle(title)}"` : "";
+
+    return `![${alt}](${src}${titlePart})`;
+  });
+}
+
 const markdownComponents: Components = {
   a: ({ className, ...props }) => (
     <a
@@ -35,21 +82,29 @@ const markdownComponents: Components = {
   h3: ({ className, ...props }) => (
     <h4 className={cn("text-lg font-medium text-foreground", className)} {...props} />
   ),
-  img: ({ alt, className, src, ...props }) => {
+  hr: ({ className, ...props }) => (
+    <hr className={cn("my-6 border-border-subtle", className)} {...props} />
+  ),
+  img: ({ alt, className, src, title, ...props }) => {
     if (typeof src !== "string" || !src) {
       return null;
     }
 
+    const { altText, scale } = readImageScale(typeof alt === "string" ? alt : "");
+    const width = typeof title === "string" ? title.match(/^curvio-width:(\d+)$/)?.[1] : undefined;
+
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        alt={typeof alt === "string" ? alt : ""}
+        alt={altText}
         className={cn(
           "mx-auto my-5 max-h-[520px] w-auto max-w-full rounded-xl border border-border-subtle bg-surface-container-low object-contain",
           className,
         )}
         loading="lazy"
         src={src}
+        style={scale ? { width: `${scale}%` } : width ? { width: `${width}px` } : undefined}
+        title={width ? undefined : title}
         {...props}
       />
     );
@@ -98,9 +153,9 @@ export function RecordMarkdown({
   className?: string;
   imagePreviewUrls?: Record<string, string>;
 }) {
-  const markdown = imagePreviewUrls
+  const markdown = normalizeImageHtml(imagePreviewUrls
     ? children.replace(/curvio-image:([a-zA-Z0-9_-]+)/g, (match, token: string) => imagePreviewUrls[token] ?? match)
-    : children;
+    : children);
 
   return (
     <div className={cn("space-y-4", className)}>

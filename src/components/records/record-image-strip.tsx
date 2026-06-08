@@ -2,8 +2,10 @@ import type { GoodwillRecord } from "@/lib/types";
 
 export function RecordImageStrip({
   images,
+  size = "sm",
 }: {
   images?: GoodwillRecord["images"];
+  size?: "sm" | "md" | "lg";
 }) {
   const sortedImages = (images ?? []).slice().sort((a, b) => {
     if (a.isCover && !b.isCover) return -1;
@@ -17,6 +19,12 @@ export function RecordImageStrip({
     return null;
   }
 
+  const sizeClass = {
+    sm: "h-14 w-14",
+    md: "h-16 w-16",
+    lg: "h-20 w-20",
+  }[size];
+
   return (
     <div className="flex gap-2">
       {visibleImages.map((image, index) => {
@@ -24,7 +32,7 @@ export function RecordImageStrip({
 
         return (
           <div
-            className="relative h-14 w-14 overflow-hidden rounded-lg border border-border-subtle bg-surface-container-low"
+            className={`relative ${sizeClass} overflow-hidden rounded-lg border border-border-subtle bg-surface-container-low`}
             key={image.id}
           >
             <img

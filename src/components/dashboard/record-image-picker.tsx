@@ -41,10 +41,12 @@ export function RecordImagePicker({
   labels,
   onInsertImage,
   onPreviewUrlsChange,
+  hidden = false,
 }: {
   name: string;
   maxCount?: number;
   existingCount?: number;
+  hidden?: boolean;
   labels: {
     addImages: string;
     imagesSelected: string;
@@ -64,6 +66,7 @@ export function RecordImagePicker({
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const itemsRef = useRef<ImageItem[]>([]);
+  const autoInsertNextFilesRef = useRef(false);
   const [items, setItems] = useState<ImageItem[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -75,6 +78,24 @@ export function RecordImagePicker({
       itemsRef.current.forEach((item) => URL.revokeObjectURL(item.preview));
     };
   }, []);
+
+  useEffect(() => {
+    function onOpenImagePicker(event: Event) {
+      if (remaining === 0) {
+        return;
+      }
+
+      const customEvent = event as CustomEvent<{ insert?: boolean }>;
+      autoInsertNextFilesRef.current = Boolean(customEvent.detail?.insert);
+      inputRef.current?.click();
+    }
+
+    window.addEventListener("curvio:open-image-picker", onOpenImagePicker);
+
+    return () => {
+      window.removeEventListener("curvio:open-image-picker", onOpenImagePicker);
+    };
+  }, [remaining]);
 
   function updateItems(nextItems: ImageItem[]) {
     itemsRef.current = nextItems;
@@ -118,16 +139,21 @@ export function RecordImagePicker({
       return;
     }
 
-    const nextItems = [
-      ...itemsRef.current,
-      ...acceptedFiles.slice(0, remaining).map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-        token: createImageToken(),
-        visibility: "public" as const,
-      })),
-    ];
+    const newItems = acceptedFiles.slice(0, remaining).map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      token: createImageToken(),
+      visibility: "public" as const,
+    }));
+    const nextItems = [...itemsRef.current, ...newItems];
     updateItems(nextItems);
+
+    if (autoInsertNextFilesRef.current) {
+      autoInsertNextFilesRef.current = false;
+      window.setTimeout(() => {
+        newItems.forEach((item) => insertImage(item));
+      }, 0);
+    }
   }
 
   function removeImage(index: number) {
@@ -141,7 +167,7 @@ export function RecordImagePicker({
   }
 
   function createImageMarkdown(item: ImageItem) {
-    return `\n\n![${labels.imageMarkdownAlt ?? item.file.name}](curvio-image:${item.token})\n\n`;
+    return `\n\n![${labels.imageMarkdownAlt ?? item.file.name}|100%](curvio-image:${item.token})\n\n`;
   }
 
   function setImageDragData(event: DragEvent<HTMLElement>, item: ImageItem) {
@@ -179,6 +205,36 @@ export function RecordImagePicker({
       new CustomEvent("curvio:insert-markdown", {
         detail: { markdown, previewUrl: item.preview, token: item.token },
       }),
+    );
+  }
+
+  const fileInput = (
+    <input
+      accept="image/png,image/jpeg,image/webp"
+      className="sr-only"
+      multiple
+      name={name}
+      onChange={(event) => {
+        addFiles(Array.from(event.target.files ?? []));
+      }}
+      ref={inputRef}
+      type="file"
+    />
+  );
+
+  const hiddenFields = items.map((item) => (
+    <span key={item.token}>
+      <input name="image_visibility" type="hidden" value={item.visibility} />
+      <input name="image_token" type="hidden" value={item.token} />
+    </span>
+  ));
+
+  if (hidden) {
+    return (
+      <div className="sr-only">
+        {hiddenFields}
+        {fileInput}
+      </div>
     );
   }
 
@@ -316,18 +372,7 @@ export function RecordImagePicker({
         ))}
       </div>
       <p className="text-xs text-muted">{labels.imagesNote}</p>
-      <input
-        accept="image/png,image/jpeg,image/webp"
-        className="sr-only"
-        multiple
-        name={name}
-        onChange={(event) => {
-          addFiles(Array.from(event.target.files ?? []));
-          event.target.value = "";
-        }}
-        ref={inputRef}
-        type="file"
-      />
+      {fileInput}
     </div>
   );
 }

@@ -69,7 +69,7 @@ export function RecordCard({
         </Link>
       )}
       <p className="text-sm leading-6 text-on-surface-variant">{contentSummary}</p>
-      <RecordImageStrip images={record.images} />
+      <RecordImageStrip images={record.images} size="lg" />
       <div className="mt-auto space-y-3 pt-3">
         {record.isAnonymous ? (
           <p className="text-sm text-muted">by {author}</p>

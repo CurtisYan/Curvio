@@ -1,12 +1,5 @@
 import { redirect } from "next/navigation";
 import { updateRecordAction } from "@/app/dashboard-actions";
-import {
-  deleteRecordImageAction,
-  moveRecordImageAction,
-  setCoverImageAction,
-  updateRecordImageVisibilityAction,
-  uploadRecordImagesAction,
-} from "@/app/record-images-actions";
 import { AmountVisibilityField } from "@/components/dashboard/amount-visibility-field";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { MarkdownTextarea } from "@/components/dashboard/markdown-textarea";
@@ -55,7 +48,7 @@ export default async function EditRecordPage({
 
   const { data: images } = await supabase
     .from("record_images")
-    .select("id, r2_url, sort_order, is_cover, visibility")
+    .select("id")
     .eq("record_id", record.id)
     .order("sort_order", { ascending: true });
 
@@ -101,8 +94,7 @@ export default async function EditRecordPage({
               <Input defaultValue={record.date} name="date" required type="date" />
             </label>
           </div>
-          <label className="space-y-2 text-sm font-medium">
-            {messages.dashboard.fieldDescription}
+          <div className="space-y-2 text-sm font-medium">
             <MarkdownTextarea
               defaultValue={record.content}
               editorMode="markdown"
@@ -110,12 +102,33 @@ export default async function EditRecordPage({
                 markdownEmptyPreview: messages.dashboard.markdownEmptyPreview,
                 markdownPreview: messages.dashboard.markdownPreview,
                 markdownWrite: messages.dashboard.markdownWrite,
+                uploadImage: messages.dashboard.addImages,
               }}
+              locale={locale}
               name="content"
               placeholder={messages.dashboard.descriptionPlaceholder}
               required
             />
-          </label>
+          </div>
+          <RecordImagePicker
+            existingCount={images?.length ?? 0}
+            hidden
+            labels={{
+              addImages: messages.dashboard.addImages,
+              imagesNote: messages.dashboard.imagesNote,
+              imagesRemaining: messages.dashboard.imagesRemaining,
+              imagesSelected: messages.dashboard.imagesSelected,
+              imagePrivate: messages.dashboard.imagePrivate,
+              imagePublic: messages.dashboard.imagePublic,
+              insertImage: messages.dashboard.insertImage,
+              imageMarkdownAlt: messages.dashboard.imageMarkdownAlt,
+              deleteImage: messages.dashboard.deleteImage,
+              privateImageInsertHint: messages.dashboard.privateImageInsertHint,
+              imageTooLarge: messages.dashboard.imageTooLarge,
+              imageTypeUnsupported: messages.dashboard.imageTypeUnsupported,
+            }}
+            name="images"
+          />
           <AmountVisibilityField
             labels={messages.dashboard}
             defaultAmount={record.amount ? String(record.amount) : ""}
@@ -144,156 +157,6 @@ export default async function EditRecordPage({
           </div>
           <Button type="submit">{messages.dashboard.saveChanges}</Button>
         </form>
-      </Card>
-
-      <Card className="mt-8 space-y-6">
-        <div>
-          <h2 className="text-2xl font-medium">{messages.dashboard.imagesTitle}</h2>
-          <p className="mt-2 text-sm text-muted">{messages.dashboard.imagesLead}</p>
-        </div>
-
-        <form action={uploadRecordImagesAction} className="space-y-3">
-          <input name="locale" type="hidden" value={locale} />
-          <input name="record_id" type="hidden" value={record.id} />
-          <input name="record_type" type="hidden" value={record.type} />
-          <input name="content" type="hidden" value={record.content} />
-          <RecordImagePicker
-            existingCount={images?.length ?? 0}
-            labels={{
-              addImages: messages.dashboard.addImages,
-              imagesNote: messages.dashboard.imagesNote,
-              imagesRemaining: messages.dashboard.imagesRemaining,
-              imagesSelected: messages.dashboard.imagesSelected,
-              imagePrivate: messages.dashboard.imagePrivate,
-              imagePublic: messages.dashboard.imagePublic,
-              insertImage: messages.dashboard.insertImage,
-              imageMarkdownAlt: messages.dashboard.imageMarkdownAlt,
-              deleteImage: messages.dashboard.deleteImage,
-              privateImageInsertHint: messages.dashboard.privateImageInsertHint,
-              imageTooLarge: messages.dashboard.imageTooLarge,
-              imageTypeUnsupported: messages.dashboard.imageTypeUnsupported,
-            }}
-            name="images"
-          />
-          <Button type="submit" variant="secondary">
-            {messages.dashboard.saveSelectedImages}
-          </Button>
-        </form>
-
-        {images && images.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {images.map((image, index) => (
-              <div
-                className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-container-low"
-                key={image.id}
-              >
-                <div className="aspect-square">
-                  <img
-                    alt={record.title}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    src={image.r2_url}
-                  />
-                </div>
-                <div className="space-y-3 p-4">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <span>#{image.sort_order}</span>
-                    {image.is_cover ? (
-                      <Badge className="border border-primary/20 bg-primary/10 text-primary">
-                        {messages.dashboard.coverLabel}
-                      </Badge>
-                    ) : null}
-                    <Badge>
-                      {image.visibility === "private"
-                        ? messages.dashboard.imagePrivate
-                        : messages.dashboard.imagePublic}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <form action={moveRecordImageAction}>
-                      <input name="locale" type="hidden" value={locale} />
-                      <input name="record_id" type="hidden" value={record.id} />
-                      <input name="image_id" type="hidden" value={image.id} />
-                      <input name="direction" type="hidden" value="up" />
-                      <Button disabled={index === 0} type="submit" variant="ghost">
-                        {messages.dashboard.moveUp}
-                      </Button>
-                    </form>
-                    <form action={moveRecordImageAction}>
-                      <input name="locale" type="hidden" value={locale} />
-                      <input name="record_id" type="hidden" value={record.id} />
-                      <input name="image_id" type="hidden" value={image.id} />
-                      <input name="direction" type="hidden" value="down" />
-                      <Button
-                        disabled={index === images.length - 1}
-                        type="submit"
-                        variant="ghost"
-                      >
-                        {messages.dashboard.moveDown}
-                      </Button>
-                    </form>
-                    {!image.is_cover ? (
-                      <form action={setCoverImageAction}>
-                        <input name="locale" type="hidden" value={locale} />
-                        <input name="record_id" type="hidden" value={record.id} />
-                        <input name="image_id" type="hidden" value={image.id} />
-                        <Button type="submit" variant="secondary">
-                          {messages.dashboard.setCover}
-                        </Button>
-                      </form>
-                    ) : null}
-                    <form action={updateRecordImageVisibilityAction}>
-                      <input name="locale" type="hidden" value={locale} />
-                      <input name="record_id" type="hidden" value={record.id} />
-                      <input name="image_id" type="hidden" value={image.id} />
-                      <input
-                        name="visibility"
-                        type="hidden"
-                        value="public"
-                      />
-                      <Button
-                        disabled={image.visibility !== "private"}
-                        type="submit"
-                        variant="secondary"
-                      >
-                        {messages.dashboard.imagePublic}
-                      </Button>
-                    </form>
-                    <form action={updateRecordImageVisibilityAction}>
-                      <input name="locale" type="hidden" value={locale} />
-                      <input name="record_id" type="hidden" value={record.id} />
-                      <input name="image_id" type="hidden" value={image.id} />
-                      <input
-                        name="visibility"
-                        type="hidden"
-                        value="private"
-                      />
-                      <Button
-                        disabled={image.visibility === "private"}
-                        type="submit"
-                        variant="secondary"
-                      >
-                        {messages.dashboard.imagePrivate}
-                      </Button>
-                    </form>
-                    <form action={deleteRecordImageAction}>
-                      <input name="locale" type="hidden" value={locale} />
-                      <input name="record_id" type="hidden" value={record.id} />
-                      <input name="image_id" type="hidden" value={image.id} />
-                      <Button type="submit" variant="ghost">
-                        {messages.dashboard.deleteImage}
-                      </Button>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-border-subtle bg-surface-container-low px-4 py-4 text-sm text-muted">
-            {messages.dashboard.imagesEmpty}
-          </div>
-        )}
       </Card>
     </main>
   );

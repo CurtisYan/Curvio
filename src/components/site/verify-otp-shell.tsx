@@ -47,15 +47,21 @@ export function VerifyOtpShell({
   resendAction: (formData: FormData) => void | Promise<void>;
 }) {
   const initialCooldown = useMemo(() => readCooldownSeconds(error) || (sent ? 60 : 0), [error, sent]);
-  const [cooldown, setCooldown] = useState(initialCooldown);
+  const [cooldownState, setCooldownState] = useState({
+    initialCooldown,
+    seconds: initialCooldown,
+  });
   const lockedEmail = Boolean(email);
+  let cooldown = cooldownState.seconds;
+
+  if (cooldownState.initialCooldown !== initialCooldown) {
+    cooldown = initialCooldown;
+    setCooldownState({ initialCooldown, seconds: initialCooldown });
+  }
+
   const displayedError = cooldown > 0
     ? labels.resendCooldown.replace("{seconds}", String(cooldown))
     : error;
-
-  useEffect(() => {
-    setCooldown(initialCooldown);
-  }, [initialCooldown]);
 
   useEffect(() => {
     if (cooldown <= 0) {
@@ -63,7 +69,10 @@ export function VerifyOtpShell({
     }
 
     const timer = window.setInterval(() => {
-      setCooldown((seconds) => Math.max(0, seconds - 1));
+      setCooldownState((current) => ({
+        ...current,
+        seconds: Math.max(0, current.seconds - 1),
+      }));
     }, 1000);
 
     return () => window.clearInterval(timer);

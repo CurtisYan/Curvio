@@ -45,6 +45,7 @@ function isRecordType(value: string): value is RecordType {
 }
 
 const MAX_RECORD_IMAGES = 15;
+const unresolvedImagePlaceholderPattern = /curvio-image:[a-zA-Z0-9_-]+/;
 
 type RecordFormState = {
   status: "idle" | "error";
@@ -144,6 +145,10 @@ export async function createRecordAction(
 
   if (files.length > MAX_RECORD_IMAGES) {
     return { status: "error", message: recordFormMessage(locale, "imageLimit") };
+  }
+
+  if (files.length === 0 && unresolvedImagePlaceholderPattern.test(content)) {
+    return { status: "error", message: recordFormMessage(locale, "imageSaveFailed") };
   }
 
   const showAmount = readString(formData, "show_amount") === "1";
@@ -248,6 +253,11 @@ export async function createRecordAction(
       }
 
       const contentWithImages = replaceImagePlaceholders(content, publicImageUrlsByToken);
+      if (unresolvedImagePlaceholderPattern.test(contentWithImages)) {
+        await cleanupCreatedRecord({ recordId: record.id, uploadedKeys });
+        return { status: "error", message: recordFormMessage(locale, "imageSaveFailed") };
+      }
+
       if (contentWithImages !== content) {
         const { error: contentUpdateError } = await supabase
           .from("records")
@@ -287,6 +297,9 @@ export async function updateRecordAction(formData: FormData) {
   const title = readString(formData, "title");
   const date = readString(formData, "date");
   const content = readString(formData, "content");
+  const files = readFiles(formData, "images");
+  const imageVisibilities = readImageVisibilities(formData);
+  const imageTokens = readImageTokens(formData);
 
   if (!recordId) {
     redirect(`/${locale}/dashboard/records`);
@@ -294,6 +307,10 @@ export async function updateRecordAction(formData: FormData) {
 
   if (!title || !date || !content) {
     recordEditRedirect(locale, recordId, "error", "Missing required fields.");
+  }
+
+  if (files.length > MAX_RECORD_IMAGES) {
+    recordEditRedirect(locale, recordId, "error", recordFormMessage(locale, "imageLimit"));
   }
 
   const showAmount = readString(formData, "show_amount") === "1";
@@ -321,7 +338,7 @@ export async function updateRecordAction(formData: FormData) {
 
   const { data: record, error: recordError } = await supabase
     .from("records")
-    .select("id, date")
+    .select("id, date, type")
     .eq("id", recordId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -330,14 +347,102 @@ export async function updateRecordAction(formData: FormData) {
     recordEditRedirect(locale, recordId, "error", "Record not found.");
   }
 
-  const publicRecordId = formatRecordPublicId(record.date, record.id);
+  let nextContent = content;
+  const uploadedKeys: string[] = [];
+  const insertedImageIds: string[] = [];
+
+  if (files.length > 0) {
+    const { count, error: countError } = await supabase
+      .from("record_images")
+      .select("id", { count: "exact", head: true })
+      .eq("record_id", recordId);
+
+    if (countError) {
+      recordEditRedirect(locale, recordId, "error", recordFormMessage(locale, "imageSaveFailed"));
+    }
+
+    const currentCount = count ?? 0;
+    if (currentCount + files.length > MAX_RECORD_IMAGES) {
+      recordEditRedirect(locale, recordId, "error", recordFormMessage(locale, "imageLimit"));
+    }
+
+    const uploads: Awaited<ReturnType<typeof uploadRecordImageToR2>>[] = [];
+
+    try {
+      for (const [index, file] of files.entries()) {
+        const upload = await uploadRecordImageToR2({
+          userId: user.id,
+          recordId,
+          type: record.type,
+          file,
+          imageNumber: currentCount + index + 1,
+        });
+        uploadedKeys.push(upload.key);
+        uploads.push(upload);
+      }
+    } catch (error) {
+      recordEditRedirect(
+        locale,
+        recordId,
+        "error",
+        error instanceof Error ? error.message : recordFormMessage(locale, "uploadFailed"),
+      );
+    }
+
+    const rows = uploads.map((upload, index) => ({
+      record_id: recordId,
+      user_id: user.id,
+      r2_key: upload.key,
+      r2_url: upload.url,
+      mime_type: files[index].type,
+      file_size: files[index].size,
+      sort_order: currentCount + index + 1,
+      is_cover: currentCount === 0 && index === 0,
+      visibility: imageVisibilities[index] ?? "public",
+    }));
+
+    const { data: insertedImages, error: insertError } = await supabase
+      .from("record_images")
+      .insert(rows)
+      .select("id");
+
+    if (insertError) {
+      await Promise.allSettled(uploadedKeys.map((key) => deleteRecordImageFromR2(key)));
+      recordEditRedirect(locale, recordId, "error", recordFormMessage(locale, "imageSaveFailed"));
+    }
+
+    insertedImageIds.push(...(insertedImages ?? []).map((image) => image.id));
+
+    const publicImageUrlsByToken = new Map<string, string>();
+    uploads.forEach((upload, index) => {
+      const token = imageTokens[index];
+      if (token && (imageVisibilities[index] ?? "public") === "public") {
+        publicImageUrlsByToken.set(token, upload.url);
+      }
+    });
+    nextContent = replaceImagePlaceholders(content, publicImageUrlsByToken);
+  }
+
+  if (unresolvedImagePlaceholderPattern.test(nextContent)) {
+    if (insertedImageIds.length > 0) {
+      await supabase
+        .from("record_images")
+        .delete()
+        .in("id", insertedImageIds)
+        .eq("user_id", user.id);
+    }
+    await Promise.allSettled(uploadedKeys.map((key) => deleteRecordImageFromR2(key)));
+    recordEditRedirect(locale, recordId, "error", recordFormMessage(locale, "imageSaveFailed"));
+  }
+
+  const publicRecordId = formatRecordPublicId(date, record.id);
 
   const { error: updateError } = await supabase
     .from("records")
     .update({
       title,
       date,
-      content,
+      content: nextContent,
       show_amount: showAmount && amountValue !== null,
       amount: amountValue,
       currency: amountValue !== null ? currency || null : null,
@@ -347,6 +452,14 @@ export async function updateRecordAction(formData: FormData) {
     .eq("id", recordId);
 
   if (updateError) {
+    if (insertedImageIds.length > 0) {
+      await supabase
+        .from("record_images")
+        .delete()
+        .in("id", insertedImageIds)
+        .eq("user_id", user.id);
+    }
+    await Promise.allSettled(uploadedKeys.map((key) => deleteRecordImageFromR2(key)));
     recordEditRedirect(locale, recordId, "error", updateError.message);
   }
 
@@ -355,7 +468,18 @@ export async function updateRecordAction(formData: FormData) {
   revalidatePath(`/${locale}/dashboard/donations`);
   revalidatePath(`/${locale}/dashboard/acts`);
   revalidatePath(`/${locale}/dashboard/projects`);
-  recordEditRedirect(locale, publicRecordId, "saved");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.username) {
+    redirect(`/${locale}/u/${profile.username}/${recordTypeToSegment(record.type)}/${publicRecordId}`);
+  }
+
+  recordEditRedirect(locale, recordId, "saved");
 }
 
 async function readOwnedRecord(recordId: string) {
