@@ -35,10 +35,10 @@ import { $getNodeByKey } from "lexical";
 import { ImageUp, Maximize2, Minimize2, Trash2 } from "lucide-react";
 import { useMemo, type MutableRefObject } from "react";
 
-type ImageScale = 50 | 75 | 100;
+type ImageScale = 25 | 50 | 75 | 100;
 
 function readImageScale(alt: string) {
-  const match = alt.match(/^(.*?)(?:\|(?:(?:\d+)x(?:\d+),\s*)?(50|75|100)%)$/);
+  const match = alt.match(/^(.*?)(?:\|(?:(?:\d+)x(?:\d+),\s*)?(25|50|75|100)%)$/);
 
   return {
     altText: match ? match[1] : alt,
@@ -128,8 +128,8 @@ function ImageEditToolbar({
     <div className="curvio-image-toolbar">
       <button
         aria-label={labels.smaller}
-        disabled={scale === 50}
-        onClick={() => updateImageSize(scale === 100 ? 75 : 50)}
+        disabled={scale === 25}
+        onClick={() => updateImageSize(scale === 100 ? 75 : scale === 75 ? 50 : 25)}
         title={labels.smaller}
         type="button"
       >
@@ -138,7 +138,7 @@ function ImageEditToolbar({
       <button
         aria-label={labels.larger}
         disabled={scale === 100}
-        onClick={() => updateImageSize(scale === 50 ? 75 : 100)}
+        onClick={() => updateImageSize(scale === 25 ? 50 : scale === 50 ? 75 : 100)}
         title={labels.larger}
         type="button"
       >

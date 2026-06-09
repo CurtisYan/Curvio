@@ -23,7 +23,7 @@ function escapeMarkdownTitle(value: string) {
 }
 
 function readImageScale(alt: string) {
-  const match = alt.match(/^(.*?)(?:\|(?:(?:\d+)x(?:\d+),\s*)?(50|75|100)%)$/);
+  const match = alt.match(/^(.*?)(?:\|(?:(?:\d+)x(?:\d+),\s*)?(25|50|75|100)%)$/);
 
   return {
     altText: match ? match[1] : alt,
