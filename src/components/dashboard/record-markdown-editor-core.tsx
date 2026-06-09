@@ -98,6 +98,10 @@ function ImageEditToolbar({
       return;
     }
 
+    const image = document
+      .querySelector<HTMLImageElement>(".curvio-mdx-editor [data-editor-block-type='image'] img[class*='_focusedImage']");
+    const baseWidth = image?.naturalWidth || image?.clientWidth || 720;
+
     editor.update(() => {
       const node = $getNodeByKey(nodeKey);
 
@@ -109,7 +113,7 @@ function ImageEditToolbar({
         setWidthAndHeight: (width: number | "inherit", height: number | "inherit") => void;
         setAltText: (altText: string) => void;
       };
-      imageNode.setWidthAndHeight("inherit", "inherit");
+      imageNode.setWidthAndHeight(Math.round(baseWidth * (nextScale / 100)), "inherit");
       imageNode.setAltText(writeImageScale(alt, nextScale));
     });
   }
@@ -231,6 +235,7 @@ export function RecordMarkdownEditorCore({
       }),
       linkPlugin(),
       imagePlugin({
+        allowSetImageDimensions: true,
         disableImageResize: true,
         disableImageSettingsButton: true,
         EditImageToolbar: (props) => <ImageEditToolbar {...props} locale={locale} />,
