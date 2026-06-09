@@ -64,7 +64,8 @@ export function RecordImagePicker({
   onInsertImage?: (token: string) => void;
   onPreviewUrlsChange?: (previewUrls: Record<string, string>) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const pickerInputRef = useRef<HTMLInputElement | null>(null);
+  const submitInputRef = useRef<HTMLInputElement | null>(null);
   const itemsRef = useRef<ImageItem[]>([]);
   const autoInsertNextFilesRef = useRef(false);
   const [items, setItems] = useState<ImageItem[]>([]);
@@ -87,7 +88,7 @@ export function RecordImagePicker({
 
       const customEvent = event as CustomEvent<{ insert?: boolean }>;
       autoInsertNextFilesRef.current = Boolean(customEvent.detail?.insert);
-      inputRef.current?.click();
+      pickerInputRef.current?.click();
     }
 
     window.addEventListener("curvio:open-image-picker", onOpenImagePicker);
@@ -100,7 +101,7 @@ export function RecordImagePicker({
   function updateItems(nextItems: ImageItem[]) {
     itemsRef.current = nextItems;
     setItems(nextItems);
-    syncInputFiles(inputRef.current, nextItems);
+    syncInputFiles(submitInputRef.current, nextItems);
     onPreviewUrlsChange?.(
       Object.fromEntries(nextItems.map((item) => [item.token, item.preview])),
     );
@@ -208,19 +209,20 @@ export function RecordImagePicker({
     );
   }
 
-  const fileInput = (
+  const pickerInput = (
     <input
       accept="image/png,image/jpeg,image/webp"
       className="sr-only"
       multiple
-      name={name}
       onChange={(event) => {
         addFiles(Array.from(event.target.files ?? []));
+        event.currentTarget.value = "";
       }}
-      ref={inputRef}
+      ref={pickerInputRef}
       type="file"
     />
   );
+  const submitInput = <input className="sr-only" multiple name={name} ref={submitInputRef} type="file" />;
 
   const hiddenFields = items.map((item) => (
     <span key={item.token}>
@@ -233,7 +235,8 @@ export function RecordImagePicker({
     return (
       <div className="sr-only">
         {hiddenFields}
-        {fileInput}
+        {pickerInput}
+        {submitInput}
       </div>
     );
   }
@@ -288,7 +291,7 @@ export function RecordImagePicker({
           )}
           onClick={() => {
             if (remaining > 0) {
-              inputRef.current?.click();
+              pickerInputRef.current?.click();
             }
           }}
           type="button"
@@ -372,7 +375,8 @@ export function RecordImagePicker({
         ))}
       </div>
       <p className="text-xs text-muted">{labels.imagesNote}</p>
-      {fileInput}
+      {pickerInput}
+      {submitInput}
     </div>
   );
 }

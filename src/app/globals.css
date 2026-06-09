@@ -153,17 +153,42 @@ select {
 }
 
 .curvio-mdx-content img[alt$="|50%"],
-.curvio-mdx-content img[alt$=", 50%"] {
+.curvio-mdx-content img[alt$=", 50%"],
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|50%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 50%"]) {
   width: 50%;
 }
 
 .curvio-mdx-content img[alt$="|75%"],
-.curvio-mdx-content img[alt$=", 75%"] {
+.curvio-mdx-content img[alt$=", 75%"],
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|75%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 75%"]) {
   width: 75%;
 }
 
 .curvio-mdx-content img[alt$="|100%"],
-.curvio-mdx-content img[alt$=", 100%"] {
+.curvio-mdx-content img[alt$=", 100%"],
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|100%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 100%"]) {
+  width: 100%;
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|50%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|75%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|100%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 50%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 75%"]),
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 100%"]) {
+  display: block;
+  margin-inline: auto;
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|50%"]) img,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|75%"]) img,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|100%"]) img,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 50%"]) img,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 75%"]) img,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 100%"]) img {
   width: 100%;
 }
 
