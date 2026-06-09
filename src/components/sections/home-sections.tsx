@@ -9,6 +9,15 @@ import type { Locale } from "@/lib/i18n";
 import { localizePath } from "@/lib/i18n";
 import { createClient } from "@/utils/supabase/server";
 
+type PublicRecordImage = {
+  id: string;
+  record_id: string;
+  r2_url: string;
+  sort_order: number | null;
+  is_cover: boolean | null;
+  visibility: string | null;
+};
+
 export async function HomeSections({
   locale,
   messages,
@@ -26,37 +35,48 @@ export async function HomeSections({
     { data: recentRecords },
   ] = await Promise.all([
     supabase
-      .from("records")
-      .select("id", { count: "exact", head: true })
-      .eq("is_public", true),
+      .from("public_records")
+      .select("id", { count: "exact", head: true }),
     supabase
-      .from("records")
+      .from("public_records")
       .select("id", { count: "exact", head: true })
-      .eq("is_public", true)
       .eq("type", "donation"),
     supabase
-      .from("records")
+      .from("public_records")
       .select("id", { count: "exact", head: true })
-      .eq("is_public", true)
       .eq("type", "kindness"),
     supabase
-      .from("records")
+      .from("public_records")
       .select("id", { count: "exact", head: true })
-      .eq("is_public", true)
       .eq("type", "open_source"),
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("is_public", true),
     supabase
-      .from("records")
+      .from("public_records")
       .select(
-        "id, type, title, content, reflection, date, is_anonymous, show_amount, amount, currency, organization_name, platform_name, project_url, tags, language, profiles(username, display_name, avatar_url), record_images(id, r2_url, sort_order, is_cover, visibility)",
+        "id, type, title, content, reflection, date, is_anonymous, amount, currency, amount_hidden, organization_name, platform_name, project_url, tags, language, username, display_name, avatar_url",
       )
-      .eq("is_public", true)
       .order("date", { ascending: false })
       .limit(3),
   ]);
+
+  const recordIds = (recentRecords ?? []).map((record) => record.id);
+  const { data: images } = recordIds.length
+    ? await supabase
+        .from("record_images")
+        .select("id, record_id, r2_url, sort_order, is_cover, visibility")
+        .in("record_id", recordIds)
+        .eq("visibility", "public")
+    : { data: [] };
+
+  const imagesByRecordId = new Map<string, PublicRecordImage[]>();
+  for (const image of images ?? []) {
+    const existing = imagesByRecordId.get(image.record_id) ?? [];
+    existing.push(image);
+    imagesByRecordId.set(image.record_id, existing);
+  }
 
   const stats = [
     { label: messages.statTotalRecords, value: totalRecords ?? 0 },
@@ -67,7 +87,7 @@ export async function HomeSections({
   ];
 
   const mappedRecords = (recentRecords ?? []).map((record) => {
-    const profile = Array.isArray(record.profiles) ? record.profiles[0] : record.profiles;
+    const recordImages = imagesByRecordId.get(record.id) ?? [];
     return {
       id: record.id,
       type: record.type,
@@ -75,20 +95,20 @@ export async function HomeSections({
       content: record.content,
       reflection: record.reflection ?? undefined,
       date: record.date,
-      authorUsername: profile?.username ?? "anonymous",
+      authorUsername: record.username ?? "anonymous",
       authorDisplayName:
-        profile?.display_name ?? profile?.username ?? messages.anonymous,
-      authorAvatarUrl: profile?.avatar_url ?? undefined,
+        record.display_name ?? record.username ?? messages.anonymous,
+      authorAvatarUrl: record.avatar_url ?? undefined,
       isAnonymous: record.is_anonymous,
-      amount: record.show_amount ? record.amount : null,
-      currency: record.show_amount ? record.currency : null,
-      amountHidden: Boolean(record.amount) && !record.show_amount,
+      amount: record.amount,
+      currency: record.currency,
+      amountHidden: Boolean(record.amount_hidden),
       organizationName: record.organization_name ?? undefined,
       platformName: record.platform_name ?? undefined,
       projectUrl: record.project_url ?? undefined,
       tags: record.tags ?? [],
       language: record.language ?? "en",
-      images: (record.record_images ?? [])
+      images: recordImages
         .filter((image) => image.visibility === "public")
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
         .map((image) => ({
