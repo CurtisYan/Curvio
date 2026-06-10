@@ -32,7 +32,7 @@ export default async function SettingsPage({
   const { data: currentProfile } = await supabase
     .from("profiles")
     .select(
-      "display_name, avatar_url, bio, principle, website_url, preferred_editor_mode, is_public, allow_follow, hide_amounts_by_default, show_annual_summary",
+      "display_name, avatar_url, bio, principle, website_url, is_public, allow_follow, hide_amounts_by_default, show_annual_summary",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -155,47 +155,6 @@ export default async function SettingsPage({
             }}
             sections={sections}
           />
-        </section>
-
-        <section className="space-y-4 border-t border-border-subtle pt-6">
-          <div>
-            <h2 className="text-xl font-medium">{messages.dashboard.editorPreferenceTitle}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted">
-              {messages.dashboard.editorPreferenceNote}
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
-              <span>
-                <span className="block font-medium">{messages.dashboard.editorMarkdown}</span>
-                <span className="mt-1 block text-xs leading-5 text-muted">
-                  {messages.dashboard.editorMarkdownNote}
-                </span>
-              </span>
-              <input
-                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
-                defaultChecked={(currentProfile?.preferred_editor_mode ?? "markdown") !== "plain"}
-                name="preferred_editor_mode"
-                type="radio"
-                value="markdown"
-              />
-            </label>
-            <label className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-container-low p-4 text-sm">
-              <span>
-                <span className="block font-medium">{messages.dashboard.editorPlain}</span>
-                <span className="mt-1 block text-xs leading-5 text-muted">
-                  {messages.dashboard.editorPlainNote}
-                </span>
-              </span>
-              <input
-                className="h-5 w-5 rounded-lg border border-border-subtle accent-primary"
-                defaultChecked={currentProfile?.preferred_editor_mode === "plain"}
-                name="preferred_editor_mode"
-                type="radio"
-                value="plain"
-              />
-            </label>
-          </div>
         </section>
 
         <section className="space-y-4 border-t border-border-subtle pt-6">

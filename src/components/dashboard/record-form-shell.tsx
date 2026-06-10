@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AmountVisibilityField } from "./amount-visibility-field";
-import type { EditorMode } from "@/lib/types";
 import { MarkdownTextarea } from "./markdown-textarea";
 import { RecordImagePicker } from "./record-image-picker";
 
@@ -25,7 +24,6 @@ type RecordDraft = {
   content: string;
   currency: string;
   date: string;
-  editorMode: EditorMode;
   isAnonymous: boolean;
   isPublic: boolean;
   showAmount: string;
@@ -34,7 +32,7 @@ type RecordDraft = {
   updatedAt: number;
 };
 
-function readFormDraft(form: HTMLFormElement, editorMode: EditorMode): RecordDraft {
+function readFormDraft(form: HTMLFormElement): RecordDraft {
   const formData = new FormData(form);
 
   return {
@@ -42,7 +40,6 @@ function readFormDraft(form: HTMLFormElement, editorMode: EditorMode): RecordDra
     content: String(formData.get("content") ?? ""),
     currency: String(formData.get("currency") ?? "USD"),
     date: String(formData.get("date") ?? ""),
-    editorMode,
     isAnonymous: formData.has("is_anonymous"),
     isPublic: formData.has("is_public"),
     showAmount: String(formData.get("show_amount") ?? "1"),
@@ -71,13 +68,15 @@ export function RecordFormShell({
   title,
   note,
   labels,
-  defaultEditorMode = "markdown",
+  defaultAmountHidden = true,
+  defaultCurrency = "USD",
   userId,
 }: {
   locale: string;
   title: string;
   note: string;
-  defaultEditorMode?: EditorMode;
+  defaultAmountHidden?: boolean;
+  defaultCurrency?: string;
   userId?: string;
   labels: {
     recordSection: string;
@@ -119,8 +118,6 @@ export function RecordFormShell({
     markdownWrite: string;
     markdownPreview: string;
     markdownEmptyPreview: string;
-    markdownOn: string;
-    markdownOff: string;
   };
 }) {
   const draftKey = useMemo(
@@ -133,7 +130,6 @@ export function RecordFormShell({
   });
   const [initialDraft, setInitialDraft] = useState<RecordDraft | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
-  const [editorMode, setEditorMode] = useState<EditorMode>(defaultEditorMode);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<Record<string, string>>({});
   const initialDate = initialDraft?.date || localDateInputValue();
 
@@ -154,7 +150,6 @@ export function RecordFormShell({
             content: typeof parsed.content === "string" ? parsed.content : "",
             currency: typeof parsed.currency === "string" ? parsed.currency : "USD",
             date: typeof parsed.date === "string" ? parsed.date : "",
-            editorMode: parsed.editorMode === "plain" ? "plain" : "markdown",
             isAnonymous: Boolean(parsed.isAnonymous),
             isPublic: parsed.isPublic !== false,
             showAmount: parsed.showAmount === "0" ? "0" : "1",
@@ -167,7 +162,6 @@ export function RecordFormShell({
           };
           window.setTimeout(() => {
             setInitialDraft(restoredDraft);
-            setEditorMode(restoredDraft.editorMode);
           }, 0);
         }
       }
@@ -190,14 +184,14 @@ export function RecordFormShell({
       return;
     }
 
-    const draft = readFormDraft(form, editorMode);
+    const draft = readFormDraft(form);
     if (!hasDraftContent(draft)) {
       window.localStorage.removeItem(draftKey);
       return;
     }
 
     window.localStorage.setItem(draftKey, JSON.stringify(draft));
-  }, [draftKey, draftLoaded, editorMode]);
+  }, [draftKey, draftLoaded]);
 
   useEffect(() => {
     if (!draftLoaded) {
@@ -302,8 +296,8 @@ export function RecordFormShell({
           </div>
           <AmountVisibilityField
             defaultAmount={initialDraft?.amount ?? ""}
-            defaultCurrency={initialDraft?.currency ?? "USD"}
-            defaultHidden={initialDraft?.showAmount === "0"}
+            defaultCurrency={initialDraft?.currency ?? defaultCurrency}
+            defaultHidden={initialDraft ? initialDraft.showAmount === "0" : defaultAmountHidden}
             labels={labels}
           />
         </section>
@@ -312,7 +306,7 @@ export function RecordFormShell({
           <h3 className="text-lg font-medium">{labels.storySection}</h3>
           <div className="space-y-2 text-sm font-medium">
             <MarkdownTextarea
-              editorMode={editorMode}
+              editorMode="markdown"
               defaultValue={initialDraft?.content ?? ""}
               imagePreviewUrls={imagePreviewUrls}
               labels={{

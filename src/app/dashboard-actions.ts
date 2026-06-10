@@ -46,6 +46,12 @@ function isRecordType(value: string): value is RecordType {
 
 const MAX_RECORD_IMAGES = 15;
 const unresolvedImagePlaceholderPattern = /curvio-image:[a-zA-Z0-9_-]+/;
+const supportedCurrencies = new Set(["USD", "CNY", "EUR", "JPY", "GBP", "HKD"]);
+
+function normalizeCurrency(value: string) {
+  const currency = value.toUpperCase();
+  return supportedCurrencies.has(currency) ? currency : "USD";
+}
 
 type RecordFormState = {
   status: "idle" | "error";
@@ -153,7 +159,7 @@ export async function createRecordAction(
 
   const showAmount = readString(formData, "show_amount") === "1";
   const amountRaw = readString(formData, "amount");
-  const currency = readString(formData, "currency");
+  const currency = normalizeCurrency(readString(formData, "currency"));
   let amountValue: number | null = null;
 
   if (amountRaw) {
@@ -279,6 +285,13 @@ export async function createRecordAction(
     }
   }
 
+  if (typeValue === "donation") {
+    await supabase
+      .from("profiles")
+      .update({ last_donation_currency: currency })
+      .eq("id", user.id);
+  }
+
   revalidatePath(`/${locale}/dashboard`);
   revalidatePath(`/${locale}/dashboard/records`);
   revalidatePath(`/${locale}/dashboard/donations`);
@@ -315,7 +328,7 @@ export async function updateRecordAction(formData: FormData) {
 
   const showAmount = readString(formData, "show_amount") === "1";
   const amountRaw = readString(formData, "amount");
-  const currency = readString(formData, "currency");
+  const currency = normalizeCurrency(readString(formData, "currency"));
   let amountValue: number | null = null;
 
   if (amountRaw) {
@@ -461,6 +474,13 @@ export async function updateRecordAction(formData: FormData) {
     }
     await Promise.allSettled(uploadedKeys.map((key) => deleteRecordImageFromR2(key)));
     recordEditRedirect(locale, recordId, "error", updateError.message);
+  }
+
+  if (record.type === "donation") {
+    await supabase
+      .from("profiles")
+      .update({ last_donation_currency: currency })
+      .eq("id", user.id);
   }
 
   revalidatePath(`/${locale}/dashboard`);
@@ -704,7 +724,6 @@ export async function updateProfileSettingsAction(formData: FormData) {
     principle: readString(formData, "principle") || null,
     website_url: websiteUrl,
     preferred_language: locale,
-    preferred_editor_mode: readString(formData, "preferred_editor_mode") === "plain" ? "plain" : "markdown",
     is_public: formData.has("is_public"),
     allow_follow: formData.has("allow_follow"),
     hide_amounts_by_default: formData.has("hide_amounts_by_default"),

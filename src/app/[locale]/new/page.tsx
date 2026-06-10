@@ -22,14 +22,17 @@ export default async function NewRecordPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("preferred_editor_mode")
+    .select("hide_amounts_by_default, last_donation_currency")
     .eq("id", user.id)
     .maybeSingle();
+
+  const defaultCurrency = profile?.last_donation_currency ?? (locale === "zh" ? "CNY" : "USD");
 
   return (
     <main className="container-narrow min-h-screen pt-28 pb-24">
       <RecordFormShell
-        defaultEditorMode={profile?.preferred_editor_mode === "plain" ? "plain" : "markdown"}
+        defaultAmountHidden={profile?.hide_amounts_by_default ?? true}
+        defaultCurrency={defaultCurrency}
         labels={messages.dashboard}
         locale={locale}
         note=""

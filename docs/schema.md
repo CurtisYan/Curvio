@@ -25,7 +25,7 @@ Columns:
 - `github_url`: optional GitHub URL.
 - `blog_url`: optional blog URL.
 - `preferred_language`: required preferred language. Defaults to `en`. Allowed values: `en`, `zh`.
-- `preferred_editor_mode`: required default record editor mode. Defaults to `markdown`. Allowed values: `markdown`, `plain`.
+- `last_donation_currency`: optional last currency used for a donation record. Allowed values: `USD`, `CNY`, `EUR`, `JPY`, `GBP`, `HKD`.
 - `is_public`: whether the profile is public. Defaults to `true`.
 - `allow_follow`: whether other users can follow this profile. Defaults to `true`.
 - `show_annual_summary`: whether to show the annual summary. Defaults to `true`.
@@ -38,7 +38,7 @@ Constraints:
 - Primary key: `profiles_pkey` on `id`.
 - Foreign key: `profiles_id_fkey`, `id` references `auth.users(id)`.
 - Unique: `username`.
-- Checks: username format, display name length, preferred language, preferred editor mode.
+- Checks: username format, display name length, preferred language, last donation currency.
 
 ## 2. follows
 
