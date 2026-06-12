@@ -1,5 +1,9 @@
 # Curvio
 
+<p align="right">
+  <a href="./README.zh-CN.md"><kbd>中文 README</kbd></a>
+</p>
+
 Curvio is an open-source public-good community for recording donations, acts of kindness, and open work.
 
 It is intentionally quiet. It is not a fundraising platform, not a payment product, and not a place for donation rankings. Curvio exists for a simpler reason: to help people keep a long-term record of good things they have done, supported, or built, without turning kindness into performance.
@@ -47,24 +51,4 @@ Then open `http://localhost:3000`.
 
 Copy `.env.example` to `.env.local` and fill in the required Supabase, R2, Turnstile, and site URL values.
 
----
-
-# Curvio 中文说明
-
-Curvio 是一个开源公益记录社区，用来记录捐赠、善意行动和开放贡献。
-
-它不是募捐平台，不提供个人收款入口，不抽成，也不做金额排行榜。它更像一个安静的公益档案：让每个人可以把长期发生的善意保存下来，而不是把善事变成一次性的展示。
-
-Curvio 第一版主要支持三类记录：
-
-- 捐赠记录：记录自己支持过的公益项目或机构。
-- 善意行动：记录非金钱类的帮助、志愿服务、资源分享等。
-- 开放贡献：记录免费、开源、有公共价值的项目。
-
-我做 Curvio 的起点很简单：想记录学生时期那些并不大的捐赠。金额不大，但习惯很重要。我希望它能帮助更多人把善意安静、长期地保存下来，也让开源和公益之间产生一点真实的连接。
-
-Curvio 的原则是克制、真实、长期主义。记录优先，社交其次；真实优先，数据其次；长期坚持优先，短期热度其次。
-
-目前它支持公开个人主页、公开/私有记录、金额隐藏、匿名发布、记录图片公开/私有可见、中英文双语、公开档案搜索，以及官方公益平台入口。隐私上，Curvio 只收集运行账号、主页、记录和展示偏好所需的数据；因为不处理捐款，所以不会采集银行卡或支付扣款信息。
-
-我认可并推荐该社区：[Linux Do](https://linux.do/)
+I recognize and recommend this community: [Linux Do](https://linux.do/)
