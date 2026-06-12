@@ -152,6 +152,17 @@ select {
   object-fit: contain;
 }
 
+.curvio-mdx-editor [data-editor-block-type="image"] {
+  display: block;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"] > div {
+  width: 100%;
+}
+
 .curvio-mdx-content img[alt$="|25%"],
 .curvio-mdx-content img[alt$=", 25%"] {
   width: 25%;
@@ -184,12 +195,35 @@ select {
   z-index: 2;
   display: inline-flex;
   gap: 0.25rem;
+  opacity: 0;
+  pointer-events: none;
   border: 1px solid var(--border-subtle);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--surface-offwhite) 94%, transparent);
   padding: 0.25rem;
   box-shadow: 0 8px 20px rgb(0 0 0 / 0.12);
   backdrop-filter: blur(8px);
+  transition: opacity 150ms ease;
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[class*="_focusedImage"]) .curvio-image-toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|25%"]) .curvio-image-toolbar,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 25%"]) .curvio-image-toolbar {
+  left: calc(37.5% + 0.5rem);
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|50%"]) .curvio-image-toolbar,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 50%"]) .curvio-image-toolbar {
+  left: calc(25% + 0.5rem);
+}
+
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$="|75%"]) .curvio-image-toolbar,
+.curvio-mdx-editor [data-editor-block-type="image"]:has(img[alt$=", 75%"]) .curvio-image-toolbar {
+  left: calc(12.5% + 0.5rem);
 }
 
 .curvio-image-toolbar button {

@@ -98,10 +98,6 @@ function ImageEditToolbar({
       return;
     }
 
-    const image = document
-      .querySelector<HTMLImageElement>(".curvio-mdx-editor [data-editor-block-type='image'] img[class*='_focusedImage']");
-    const baseWidth = image?.naturalWidth || image?.clientWidth || 720;
-
     editor.update(() => {
       const node = $getNodeByKey(nodeKey);
 
@@ -113,7 +109,7 @@ function ImageEditToolbar({
         setWidthAndHeight: (width: number | "inherit", height: number | "inherit") => void;
         setAltText: (altText: string) => void;
       };
-      imageNode.setWidthAndHeight(Math.round(baseWidth * (nextScale / 100)), "inherit");
+      imageNode.setWidthAndHeight("inherit", "inherit");
       imageNode.setAltText(writeImageScale(alt, nextScale));
     });
   }
@@ -133,6 +129,7 @@ function ImageEditToolbar({
       <button
         aria-label={labels.smaller}
         disabled={scale === 25}
+        onMouseDown={(event) => event.preventDefault()}
         onClick={() => updateImageSize(scale === 100 ? 75 : scale === 75 ? 50 : 25)}
         title={labels.smaller}
         type="button"
@@ -142,13 +139,20 @@ function ImageEditToolbar({
       <button
         aria-label={labels.larger}
         disabled={scale === 100}
+        onMouseDown={(event) => event.preventDefault()}
         onClick={() => updateImageSize(scale === 25 ? 50 : scale === 50 ? 75 : 100)}
         title={labels.larger}
         type="button"
       >
         <Maximize2 className="h-4 w-4" />
       </button>
-      <button aria-label={labels.delete} onClick={deleteImage} title={labels.delete} type="button">
+      <button
+        aria-label={labels.delete}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={deleteImage}
+        title={labels.delete}
+        type="button"
+      >
         <Trash2 className="h-4 w-4" />
       </button>
     </div>
